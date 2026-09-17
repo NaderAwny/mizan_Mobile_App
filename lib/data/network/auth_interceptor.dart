@@ -18,7 +18,10 @@ class AuthInterceptor extends Interceptor {
   final List<Completer<void>> _pendingRequests = [];
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     final token = await tokenLocalDataSource.getAccessToken();
     if (token != null) options.headers['Authorization'] = 'Bearer $token';
     handler.next(options);
@@ -33,7 +36,8 @@ class AuthInterceptor extends Interceptor {
       _pendingRequests.add(completer);
       try {
         await completer.future;
-        return handler.resolve(await _retry(err.requestOptions));
+        final freshToken = await tokenLocalDataSource.getAccessToken();
+        return handler.resolve(await _retry(err.requestOptions, freshToken));
       } catch (_) {
         return handler.next(err);
       }
@@ -53,8 +57,9 @@ class AuthInterceptor extends Interceptor {
         data: {'refreshToken': refreshToken},
       );
       final data = response.data['data'];
+      final newAccessToken = data['token'];
       await tokenLocalDataSource.saveSession(
-        accessToken: data['token'],
+        accessToken: newAccessToken,
         refreshToken: data['refreshToken'],
         expiresInSeconds: data['expiresInSeconds'],
       );
@@ -62,7 +67,9 @@ class AuthInterceptor extends Interceptor {
         c.complete();
       }
       _pendingRequests.clear();
-      return handler.resolve(await _retry(err.requestOptions));
+      // لازم نبعت التوكن الجديد مع الريتراي، مش هيدر الطلب الأصلي اللي
+      // لسه فيه Bearer التوكن القديم المنتهي.
+      return handler.resolve(await _retry(err.requestOptions, newAccessToken));
     } catch (e) {
       for (final c in _pendingRequests) {
         c.completeError(e);
@@ -76,8 +83,12 @@ class AuthInterceptor extends Interceptor {
     }
   }
 
-  Future<Response> _retry(RequestOptions o) {
-    final options = Options(method: o.method, headers: o.headers);
+  Future<Response> _retry(RequestOptions o, String? newAccessToken) {
+    final headers = Map<String, dynamic>.from(o.headers);
+    if (newAccessToken != null) {
+      headers['Authorization'] = 'Bearer $newAccessToken';
+    }
+    final options = Options(method: o.method, headers: headers);
     return authDio.request(
       o.path,
       data: o.data,

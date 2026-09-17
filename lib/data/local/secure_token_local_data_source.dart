@@ -38,11 +38,14 @@ class SecureTokenLocalDataSource implements TokenLocalDataSource {
 
   @override
   Future<bool> hasValidSession() async {
+    // مهم: _kExpiresAt بيتخزن من expiresInSeconds بتاع الـ ACCESS token (30 دقيقة)
+    // مش عمر الـ refresh token (30 يوم)، فمينفعش نستخدمه هنا كمقياس لصلاحية
+    // الجلسة كلها — ده كان سبب الـ logout التلقائي كل نص ساعة.
+    // وجود الـ refresh token نفسه كافي؛ لو هو فعلاً منتهي أو متسحب من السيرفر،
+    // أول ريكوست هيرجع 401 والـ AuthInterceptor هيحاول يجدده ولو فشل هيعمل
+    // logout فعلي وقتها (session_manager.notifySessionExpired).
     final r = await getRefreshToken();
-    if (r == null || r.isEmpty) return false;
-    final expiresAt = await _getExpiresAt();
-    if (expiresAt == null) return false;
-    return DateTime.now().isBefore(expiresAt);
+    return r != null && r.isNotEmpty;
   }
 
   @override
