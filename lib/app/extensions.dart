@@ -30,3 +30,13 @@ extension NonNullBool on bool? {
     }
   }
 }
+
+extension NonNullNum on num? {
+  num orZeroNum() {
+    if (this == null) {
+      return Constants.zero;
+    } else {
+      return this!;
+    }
+  }
+}

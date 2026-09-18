@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:mizan/app/constants.dart';
 import 'package:mizan/data/response/auth_session_responses/auth_session_responses.dart';
 import 'package:mizan/data/response/base_responses/base_responses.dart';
+import 'package:mizan/data/response/contact_responses/contact_responses.dart';
 import 'package:mizan/data/response/register_responses/register_responses.dart';
 import 'package:retrofit/error_logger.dart';
 import 'package:retrofit/http.dart';
@@ -32,4 +33,40 @@ abstract class AppServiceClient {
 
   @POST("/api/auth/logout")
   Future<BaseResponse> logout(@Body() Map<String, dynamic> body);
+
+  // ======================== Contacts Endpoints ========================
+  @POST("/api/contacts")
+  Future<ContactResponse> createContact(@Body() Map<String, dynamic> body);
+
+  @GET("/api/contacts")
+  Future<ContactsPageResponse> getContacts(
+    @Query("page") int page,
+    @Query("pageSize") int pageSize,
+    @Query("search") String? search,
+  );
+
+  // VIP endpoint placed before {id} to avoid collision
+  @GET("/api/contacts/vip")
+  Future<ContactsPageResponse> getVipContacts(
+    @Query("page") int page,
+    @Query("pageSize") int pageSize,
+  );
+
+  @GET("/api/contacts/{id}")
+  Future<ContactResponse> getContactById(@Path("id") String id);
+
+  @PATCH("/api/contacts/{id}/toggle-vip")
+  Future<ContactResponse> toggleVip(@Path("id") String id);
+
+  @GET("/api/contacts/{id}/transactions")
+  Future<ContactProfileResponse> getContactProfile(@Path("id") String id);
+
+  @PUT("/api/contacts/{id}")
+  Future<ContactResponse> updateContact(
+    @Path("id") String id,
+    @Body() Map<String, dynamic> body,
+  );
+
+  @DELETE("/api/contacts/{id}")
+  Future<void> deleteContact(@Path("id") String id);
 }

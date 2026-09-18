@@ -22,6 +22,11 @@ import 'package:mizan/presentation/transactions/transactions_view.dart';
 // HomeView — Mizan Financial Dashboard (Figma Node 3:10)
 // High-performance modular architecture with smooth tab micro-interactions
 // ─────────────────────────────────────────────────────────────────────────────
+class SwitchHomeTabNotification extends Notification {
+  final int targetIndex;
+  const SwitchHomeTabNotification(this.targetIndex);
+}
+
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
 
@@ -49,25 +54,43 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: ColorManager.background,
-      body: IndexedStack(
-        index: _currentTabIndex,
-        children: [
-          _buildHomeDashboardTab(),
-          const TransactionsView(),
-          const CustomersView(),
-          const InstallmentsView(),
-          const AnalyticsView(),
-        ],
-      ),
-      floatingActionButton: _currentTabIndex == 0
-          ? _buildSmartVoiceFAB()
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: _currentTabIndex,
-        onTap: _onTabSelected,
+    return PopScope(
+      canPop: _currentTabIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && _currentTabIndex != 0) {
+          setState(() {
+            _currentTabIndex = 0;
+          });
+        }
+      },
+      child: NotificationListener<SwitchHomeTabNotification>(
+        onNotification: (notification) {
+          setState(() {
+            _currentTabIndex = notification.targetIndex;
+          });
+          return true;
+        },
+        child: Scaffold(
+          backgroundColor: ColorManager.background,
+          body: IndexedStack(
+            index: _currentTabIndex,
+            children: [
+              _buildHomeDashboardTab(),
+              const TransactionsView(),
+              const CustomersView(),
+              const InstallmentsView(),
+              const AnalyticsView(),
+            ],
+          ),
+          floatingActionButton: _currentTabIndex == 0
+              ? _buildSmartVoiceFAB()
+              : null,
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+          bottomNavigationBar: CustomBottomNavBar(
+            currentIndex: _currentTabIndex,
+            onTap: _onTabSelected,
+          ),
+        ),
       ),
     );
   }

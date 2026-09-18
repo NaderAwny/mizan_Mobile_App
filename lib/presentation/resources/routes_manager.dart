@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:mizan/domain/model/contact_model.dart';
 import 'package:mizan/presentation/analytics/analytics_view.dart';
 import 'package:mizan/presentation/auth_verification/auth_verification.dart';
+import 'package:mizan/presentation/customers/contact_form_view.dart';
+import 'package:mizan/presentation/customers/contact_profile_view.dart';
 import 'package:mizan/presentation/customers/customers_view.dart';
 import 'package:mizan/presentation/home.dart';
 import 'package:mizan/presentation/installments/installments_view.dart';
@@ -32,6 +35,8 @@ class Routes {
 
   // Navigation Tabs & Sub-screens
   static const String customersRoute = "/customers";
+  static const String contactFormRoute = "/contactForm";
+  static const String contactProfileRoute = "/contactProfile";
   static const String transactionsRoute = "/transactions";
   static const String installmentsRoute = "/installments";
   static const String analyticsRoute = "/analytics";
@@ -98,6 +103,16 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => const HomeView());
       case Routes.customersRoute:
         return MaterialPageRoute(builder: (_) => const CustomersView());
+      case Routes.contactFormRoute:
+        final contact =
+            settings.arguments is Contact ? settings.arguments as Contact : null;
+        return MaterialPageRoute(
+            builder: (_) => ContactFormView(contact: contact));
+      case Routes.contactProfileRoute:
+        final contactId =
+            settings.arguments is String ? settings.arguments as String : "";
+        return MaterialPageRoute(
+            builder: (_) => ContactProfileView(contactId: contactId));
       case Routes.transactionsRoute:
         return MaterialPageRoute(builder: (_) => const TransactionsView());
       case Routes.installmentsRoute:

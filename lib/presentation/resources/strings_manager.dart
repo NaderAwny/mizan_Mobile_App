@@ -129,4 +129,65 @@ class AppStrings {
   static const String cacheError = "خطأ في قراءة الذاكرة المؤقتة";
   static const String noInternetError = "يرجى التحقق من اتصالك بالإنترنت";
   static const String noRouteFound = "الصفحة غير موجودة";
+
+  // --- Contacts Feature ---
+  static const String addContact = "إضافة طرف";
+  static const String editContact = "تعديل بيانات الطرف";
+  static const String contactName = "اسم الطرف";
+  static const String notes = "ملاحظات";
+  static const String contactEmail = "البريد الإلكتروني";
+  static const String markAsVip = "عميل مميز";
+  static const String allContacts = "الكل";
+  static const String vipContacts = "العملاء المميزون";
+  static const String noContactsYet = "لا يوجد عملاء حتى الآن";
+  static const String searchContacts = "ابحث بالاسم أو رقم الهاتف";
+  static const String totalTransactions = "عدد العمليات";
+  static const String totalAmount = "إجمالي التعاملات";
+  static const String deleteContactConfirm = "هل أنت متأكد من حذف هذا الطرف؟";
+  static const String contactDeleted = "تم حذف الطرف بنجاح";
+  static const String nameLettersOnly = "اسم الطرف يجب أن يحتوي على أحرف فقط";
+
+  // --- Figma Specific UI Strings (Nodes: #3:206, #2025:647, #3:1402, #2175:14, #3:1234, #2175:84) ---
+  static const String contactsDirectory = "دليل الأطراف";
+  static const String contactsSubtitle = "العملاء والموردين المسجلين";
+  static const String searchContactsHint = "البحث عن عميل أو مورد...";
+  static const String vipClientBadge = "عميل VIP";
+  static const String vipSubtitle = "شركاء النجاح الأكثر نشاطاً";
+  static const String vipStatsTitle = "إحصائيات عملاء VIP";
+  static const String vipTopClients = "كبار العملاء";
+  static const String totalVipClients = "إجمالي العملاء المميزين";
+  static const String totalPagesTitle = "إجمالي الصفحات";
+  static const String pages = "صفحات";
+  static const String client = "عميل";
+  static const String latest = "الأحدث";
+  static const String oldest = "الأقدم";
+  static const String phoneCall = "اتصال هاتفي";
+  static const String sendReminder = "إرسال تذكير";
+  static const String addNewContactTitle = "إضافة طرف جديد";
+  static const String addContactSubtitle = "تسجيل عميل، مورد، أو شريك";
+  static const String clientOrBusinessName = "اسم العميل / المؤسسة *";
+  static const String personalPhoneNumber = "رقم الجوال الشخصي";
+  static const String optionalNotes = "ملاحظات (اختياري)";
+  static const String notesHint = "أضف ملاحظة عن العميل أو المورد...";
+  static const String saveContactToDirectory = "حفظ الطرف في الدليل";
+  static const String editContactSubtitle = "تحديث معلومات العميل أو المورد";
+  static const String optionalEmail = "البريد الإلكتروني (اختياري)";
+  static const String markAsVipToggle = "تحديد كعميل مميز (VIP)";
+  static const String saveChanges = "حفظ التعديلات";
+  static const String clientDetails = "تفاصيل العميل";
+  static const String financialProfile = "الملف المالي الشخصي";
+  static const String totalAccountBalance = "إجمالي الحساب";
+  static const String transactionUnit = "عملية";
+  static const String whatsapp = "واتساب";
+  static const String call = "اتصال";
+  static const String recentTransactions = "سجل آخر المعاملات";
+  static const String clientCollection = "تحصيل عملاء";
+  static const String accountPayment = "دفعة من الحساب";
+  static const String purchaseSupplier = "مشتريات";
+  static const String cash = "كاش";
+  static const String credit = "آجل";
+  static const String deleteContactQuestion = "حذف الطرف؟";
+  static const String finalDelete = "حذف نهائي";
+  static const String deleteContactWarning =
+      "سيتم حذف بيانات هذا الطرف وجميع بيانات المعاملات والأقساط الخاصة به نهائياً. لا يمكن التراجع عن هذا الإجراء بعد إتمامه.";
 }
