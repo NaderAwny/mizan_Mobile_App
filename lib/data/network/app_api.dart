@@ -40,10 +40,7 @@ abstract class AppServiceClient {
     @Field('name') String name,
     @Field('phoneNumber') String phoneNumber,
     @Field('notes') String? notes,
-    @Field('isVip') bool? isVip,
-    @Field('contactEmail') String? contactEmail,
   );
-
   @GET("/api/contacts")
   Future<ContactsPageResponse> getContacts(
     @Query("page") int page,

@@ -35,9 +35,7 @@ class ContactRemoteDataSourceImpl implements ContactRemoteDataSource {
     return _appServiceClient.createContact(
       createContactRequest.name,
       createContactRequest.phoneNumber,
-      createContactRequest.notes ?? " ",
-      createContactRequest.isVip,
-      createContactRequest.contactEmail,
+      createContactRequest.notes,
     );
   }
 
