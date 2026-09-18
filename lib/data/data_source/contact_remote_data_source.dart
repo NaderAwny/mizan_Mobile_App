@@ -4,13 +4,21 @@ import 'package:mizan/data/request/contact_request.dart';
 import 'package:mizan/data/response/contact_responses/contact_responses.dart';
 
 abstract class ContactRemoteDataSource {
-  Future<ContactResponse> createContact(CreateContactRequest createContactRequest);
-  Future<ContactsPageResponse> getContacts(GetContactsRequest getContactsRequest);
-  Future<ContactsPageResponse> getVipContacts(GetVipContactsRequest getVipContactsRequest);
+  Future<ContactResponse> createContact(
+    CreateContactRequest createContactRequest,
+  );
+  Future<ContactsPageResponse> getContacts(
+    GetContactsRequest getContactsRequest,
+  );
+  Future<ContactsPageResponse> getVipContacts(
+    GetVipContactsRequest getVipContactsRequest,
+  );
   Future<ContactResponse> getContactById(String id);
   Future<ContactResponse> toggleVip(String id);
   Future<ContactProfileResponse> getContactProfile(String id);
-  Future<ContactResponse> updateContact(UpdateContactRequest updateContactRequest);
+  Future<ContactResponse> updateContact(
+    UpdateContactRequest updateContactRequest,
+  );
   Future<void> deleteContact(String id);
 }
 
@@ -21,12 +29,22 @@ class ContactRemoteDataSourceImpl implements ContactRemoteDataSource {
   ContactRemoteDataSourceImpl(this._appServiceClient);
 
   @override
-  Future<ContactResponse> createContact(CreateContactRequest createContactRequest) {
-    return _appServiceClient.createContact(createContactRequest.toJson());
+  Future<ContactResponse> createContact(
+    CreateContactRequest createContactRequest,
+  ) {
+    return _appServiceClient.createContact(
+      createContactRequest.name,
+      createContactRequest.phoneNumber,
+      createContactRequest.notes ?? " ",
+      createContactRequest.isVip,
+      createContactRequest.contactEmail,
+    );
   }
 
   @override
-  Future<ContactsPageResponse> getContacts(GetContactsRequest getContactsRequest) {
+  Future<ContactsPageResponse> getContacts(
+    GetContactsRequest getContactsRequest,
+  ) {
     return _appServiceClient.getContacts(
       getContactsRequest.page,
       getContactsRequest.pageSize,
@@ -35,7 +53,9 @@ class ContactRemoteDataSourceImpl implements ContactRemoteDataSource {
   }
 
   @override
-  Future<ContactsPageResponse> getVipContacts(GetVipContactsRequest getVipContactsRequest) {
+  Future<ContactsPageResponse> getVipContacts(
+    GetVipContactsRequest getVipContactsRequest,
+  ) {
     return _appServiceClient.getVipContacts(
       getVipContactsRequest.page,
       getVipContactsRequest.pageSize,
@@ -58,10 +78,18 @@ class ContactRemoteDataSourceImpl implements ContactRemoteDataSource {
   }
 
   @override
-  Future<ContactResponse> updateContact(UpdateContactRequest updateContactRequest) {
+  Future<ContactResponse> updateContact(
+    UpdateContactRequest updateContactRequest,
+  ) {
     return _appServiceClient.updateContact(
       updateContactRequest.id,
-      updateContactRequest.toJson(),
+      updateContactRequest.name,
+      updateContactRequest.phoneNumber,
+      updateContactRequest.notes ?? " ",
+      updateContactRequest.isVip,
+      updateContactRequest.contactEmail.trim().isEmpty
+          ? null
+          : updateContactRequest.contactEmail.trim(),
     );
   }
 

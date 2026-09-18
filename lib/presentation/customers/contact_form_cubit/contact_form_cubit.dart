@@ -15,17 +15,14 @@ class ContactFormCubit extends Cubit<ContactFormState> {
 
   Contact? _initialContact;
 
-  ContactFormCubit(
-    this._createContactUseCase,
-    this._updateContactUseCase,
-  ) : super(const ContactFormState());
+  ContactFormCubit(this._createContactUseCase, this._updateContactUseCase)
+    : super(const ContactFormState());
 
   void init(Contact? contact) {
     _initialContact = contact;
-    emit(state.copyWith(
-      isEditMode: contact != null,
-      flowState: ContentState(),
-    ));
+    emit(
+      state.copyWith(isEditMode: contact != null, flowState: ContentState()),
+    );
   }
 
   bool _isLettersOnly(String str) {
@@ -45,107 +42,127 @@ class ContactFormCubit extends Cubit<ContactFormState> {
     final trimmedPhone = phoneNumber.trim();
 
     if (trimmedName.isEmpty) {
-      emit(state.copyWith(
-        flowState: ErrorState(
-          StateRendererType.popupErrorStatete,
-          "يرجى إدخال اسم الطرف",
-          title: "حقل مطلوب",
+      emit(
+        state.copyWith(
+          flowState: ErrorState(
+            StateRendererType.popupErrorStatete,
+            "يرجى إدخال اسم الطرف",
+            title: "حقل مطلوب",
+          ),
         ),
-      ));
+      );
       return;
     }
 
     if (!_isLettersOnly(trimmedName)) {
-      emit(state.copyWith(
-        flowState: ErrorState(
-          StateRendererType.popupErrorStatete,
-          AppStrings.nameLettersOnly,
-          title: "خطأ في الاسم",
+      emit(
+        state.copyWith(
+          flowState: ErrorState(
+            StateRendererType.popupErrorStatete,
+            AppStrings.nameLettersOnly,
+            title: "خطأ في الاسم",
+          ),
         ),
-      ));
+      );
       return;
     }
 
     if (trimmedPhone.isEmpty) {
-      emit(state.copyWith(
-        flowState: ErrorState(
-          StateRendererType.popupErrorStatete,
-          "يرجى إدخال رقم الهاتف",
-          title: "حقل مطلوب",
+      emit(
+        state.copyWith(
+          flowState: ErrorState(
+            StateRendererType.popupErrorStatete,
+            "يرجى إدخال رقم الهاتف",
+            title: "حقل مطلوب",
+          ),
         ),
-      ));
+      );
       return;
     }
 
-    emit(state.copyWith(
-      flowState: LoadingState(
-        stateRendererType: StateRendererType.popupLoadingState,
-        title: AppStrings.loading,
-        message: _initialContact == null ? "جاري إضافة الطرف..." : "جاري تعديل بيانات الطرف...",
+    emit(
+      state.copyWith(
+        flowState: LoadingState(
+          stateRendererType: StateRendererType.popupLoadingState,
+          title: AppStrings.loading,
+          message: _initialContact == null
+              ? "جاري إضافة الطرف..."
+              : "جاري تعديل بيانات الطرف...",
+        ),
       ),
-    ));
+    );
 
     if (_initialContact == null) {
       // Create Contact
       final result = await _createContactUseCase.execute(
         CreateContactInput(
-          name: trimmedName,
-          phoneNumber: trimmedPhone,
-          notes: notes?.trim(),
+          trimmedName,
+          trimmedPhone,
+          notes?.trim(),
+          isVip,
+          contactEmail.trim(),
         ),
       );
 
       result.fold(
         (failure) {
           if (isClosed) return;
-          emit(state.copyWith(
-            flowState: ErrorState(
-              StateRendererType.popupErrorStatete,
-              failure.message,
-              title: "تعذر إضافة الطرف",
+          emit(
+            state.copyWith(
+              flowState: ErrorState(
+                StateRendererType.popupErrorStatete,
+                failure.message,
+                title: "تعذر إضافة الطرف",
+              ),
             ),
-          ));
+          );
         },
         (contact) {
           if (isClosed) return;
-          emit(state.copyWith(
-            savedContact: contact,
-            isActionSuccess: true,
-            flowState: ContentState(),
-          ));
+          emit(
+            state.copyWith(
+              savedContact: contact,
+              isActionSuccess: true,
+              flowState: ContentState(),
+            ),
+          );
         },
       );
     } else {
       // Update Contact (Full body)
       final result = await _updateContactUseCase.execute(
         UpdateContactInput(
-          id: _initialContact!.id,
-          name: trimmedName,
-          phoneNumber: trimmedPhone,
-          notes: notes?.trim() ?? '',
-          isVip: isVip,
-          contactEmail: contactEmail.trim(),
+          _initialContact!.id,
+          trimmedName,
+          trimmedPhone,
+          notes?.trim(),
+          isVip,
+          contactEmail.trim(),
         ),
       );
 
       result.fold(
         (failure) {
           if (isClosed) return;
-          emit(state.copyWith(
-            flowState: ErrorState(
-              StateRendererType.popupErrorStatete,
-              failure.message,
-              title: "تعذر تعديل بيانات الطرف",
+          emit(
+            state.copyWith(
+              flowState: ErrorState(
+                StateRendererType.popupErrorStatete,
+                failure.message,
+                title: "تعذر تعديل بيانات الطرف",
+              ),
             ),
-          ));
+          );
         },
         (contact) {
           if (isClosed) return;
-          emit(state.copyWith(
-            savedContact: contact,
-            isActionSuccess: true,
-            flowState: ContentState(),
-          ));
+          emit(
+            state.copyWith(
+              savedContact: contact,
+              isActionSuccess: true,
+              flowState: ContentState(),
+            ),
+          );
         },
       );
     }

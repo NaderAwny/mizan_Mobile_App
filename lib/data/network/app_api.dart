@@ -36,7 +36,13 @@ abstract class AppServiceClient {
 
   // ======================== Contacts Endpoints ========================
   @POST("/api/contacts")
-  Future<ContactResponse> createContact(@Body() Map<String, dynamic> body);
+  Future<ContactResponse> createContact(
+    @Field('name') String name,
+    @Field('phoneNumber') String phoneNumber,
+    @Field('notes') String? notes,
+    @Field('isVip') bool? isVip,
+    @Field('contactEmail') String? contactEmail,
+  );
 
   @GET("/api/contacts")
   Future<ContactsPageResponse> getContacts(
@@ -64,7 +70,11 @@ abstract class AppServiceClient {
   @PUT("/api/contacts/{id}")
   Future<ContactResponse> updateContact(
     @Path("id") String id,
-    @Body() Map<String, dynamic> body,
+    @Field('name') String name,
+    @Field('phoneNumber') String phoneNumber,
+    @Field('notes') String notes,
+    @Field('isVip') bool isVip,
+    @Field('contactEmail') String? contactEmail,
   );
 
   @DELETE("/api/contacts/{id}")

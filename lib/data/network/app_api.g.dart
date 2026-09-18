@@ -168,12 +168,25 @@ class _AppServiceClient implements AppServiceClient {
   }
 
   @override
-  Future<ContactResponse> createContact(Map<String, dynamic> body) async {
+  Future<ContactResponse> createContact(
+    String name,
+    String phoneNumber,
+    String? notes,
+    bool? isVip,
+    String? contactEmail,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
-    final _data = <String, dynamic>{};
-    _data.addAll(body);
+    final _data = {
+      'name': name,
+      'phoneNumber': phoneNumber,
+      'notes': notes,
+      'isVip': isVip,
+      'contactEmail': contactEmail,
+    };
+    _data.removeWhere((k, v) => v == null);
     final _options = _setStreamType<ContactResponse>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
@@ -345,13 +358,24 @@ class _AppServiceClient implements AppServiceClient {
   @override
   Future<ContactResponse> updateContact(
     String id,
-    Map<String, dynamic> body,
+    String name,
+    String phoneNumber,
+    String notes,
+    bool isVip,
+    String? contactEmail,
   ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
-    final _data = <String, dynamic>{};
-    _data.addAll(body);
+    final _data = {
+      'name': name,
+      'phoneNumber': phoneNumber,
+      'notes': notes,
+      'isVip': isVip,
+      'contactEmail': contactEmail,
+    };
+    _data.removeWhere((k, v) => v == null);
     final _options = _setStreamType<ContactResponse>(
       Options(method: 'PUT', headers: _headers, extra: _extra)
           .compose(

@@ -5,47 +5,31 @@ class CreateContactRequest {
   final bool isVip;
   final String contactEmail;
 
-  CreateContactRequest({
-    required this.name,
-    required this.phoneNumber,
+  CreateContactRequest(
+    this.name,
+    this.phoneNumber,
     this.notes,
-    this.isVip = false,
-    this.contactEmail = '',
-  });
-
-  Map<String, dynamic> toJson() => {
-        'name': name,
-        'phoneNumber': phoneNumber,
-        'notes': notes ?? '',
-        'isVip': isVip,
-        'contactEmail': contactEmail,
-      };
+    this.isVip,
+    this.contactEmail,
+  );
 }
 
 class UpdateContactRequest {
   final String id;
   final String name;
   final String phoneNumber;
-  final String notes;
+  final String? notes;
   final bool isVip;
   final String contactEmail;
 
-  UpdateContactRequest({
-    required this.id,
-    required this.name,
-    required this.phoneNumber,
-    required this.notes,
-    required this.isVip,
-    required this.contactEmail,
-  });
-
-  Map<String, dynamic> toJson() => {
-        'name': name,
-        'phoneNumber': phoneNumber,
-        'notes': notes,
-        'isVip': isVip,
-        'contactEmail': contactEmail,
-      };
+  UpdateContactRequest(
+    this.id,
+    this.name,
+    this.phoneNumber,
+    this.notes,
+    this.isVip,
+    this.contactEmail,
+  );
 }
 
 class GetContactsRequest {
@@ -53,19 +37,12 @@ class GetContactsRequest {
   final int pageSize;
   final String? search;
 
-  GetContactsRequest({
-    required this.page,
-    required this.pageSize,
-    this.search,
-  });
+  GetContactsRequest({required this.page, required this.pageSize, this.search});
 }
 
 class GetVipContactsRequest {
   final int page;
   final int pageSize;
 
-  GetVipContactsRequest({
-    required this.page,
-    required this.pageSize,
-  });
+  GetVipContactsRequest({required this.page, required this.pageSize});
 }
