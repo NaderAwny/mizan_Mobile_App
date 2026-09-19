@@ -28,33 +28,36 @@ class HomeHeader extends StatelessWidget {
         Expanded(
           child: Row(
             children: [
-              // Store / Avatar Profile Box
-              Container(
-                width: 46.r,
-                height: 46.r,
-                decoration: BoxDecoration(
-                  color: ColorManager.lightPrimary,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: ColorManager.primary.withAlpha(40),
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: ColorManager.primary.withAlpha(18),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
+              // Store / Avatar Profile Box - Tapping opens Drawer
+              GestureDetector(
+                onTap: () => Scaffold.of(context).openDrawer(),
+                child: Container(
+                  width: 46.r,
+                  height: 46.r,
+                  decoration: BoxDecoration(
+                    color: ColorManager.lightPrimary,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: ColorManager.primary.withAlpha(40),
+                      width: 1.5,
                     ),
-                  ],
-                ),
-                child: Center(
-                  child: SvgPicture.asset(
-                    IconAssets.store,
-                    width: 22.r,
-                    height: 22.r,
-                    colorFilter: const ColorFilter.mode(
-                      ColorManager.primary,
-                      BlendMode.srcIn,
+                    boxShadow: [
+                      BoxShadow(
+                        color: ColorManager.primary.withAlpha(18),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: SvgPicture.asset(
+                      IconAssets.store,
+                      width: 22.r,
+                      height: 22.r,
+                      colorFilter: const ColorFilter.mode(
+                        ColorManager.primary,
+                        BlendMode.srcIn,
+                      ),
                     ),
                   ),
                 ),
@@ -105,10 +108,16 @@ class HomeHeader extends StatelessWidget {
           ),
         ),
 
-        // Action Icons: Search & Notifications Bell with Unread Badge
+        // Action Icons: Drawer Menu & Notifications Bell with Unread Badge
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Drawer Menu Button
+            _HeaderIconButton(
+              iconData: Icons.menu_rounded,
+              onTap: () => Scaffold.of(context).openDrawer(),
+            ),
+            SizedBox(width: 8.w),
             // Notifications Icon with Badge
             _HeaderIconButton(
               icon: IconAssets.bell,
@@ -125,12 +134,14 @@ class HomeHeader extends StatelessWidget {
 }
 
 class _HeaderIconButton extends StatelessWidget {
-  final String icon;
+  final String? icon;
+  final IconData? iconData;
   final bool hasBadge;
   final VoidCallback onTap;
 
   const _HeaderIconButton({
-    required this.icon,
+    this.icon,
+    this.iconData,
     this.hasBadge = false,
     required this.onTap,
   });
@@ -163,15 +174,22 @@ class _HeaderIconButton extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              SvgPicture.asset(
-                icon,
-                width: 20.r,
-                height: 20.r,
-                colorFilter: const ColorFilter.mode(
-                  ColorManager.textPrimary,
-                  BlendMode.srcIn,
+              if (icon != null)
+                SvgPicture.asset(
+                  icon!,
+                  width: 20.r,
+                  height: 20.r,
+                  colorFilter: const ColorFilter.mode(
+                    ColorManager.textPrimary,
+                    BlendMode.srcIn,
+                  ),
+                )
+              else if (iconData != null)
+                Icon(
+                  iconData,
+                  size: 22.r,
+                  color: ColorManager.textPrimary,
                 ),
-              ),
               if (hasBadge)
                 Positioned(
                   top: 9.r,

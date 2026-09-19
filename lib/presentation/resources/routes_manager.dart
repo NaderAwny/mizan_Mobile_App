@@ -18,6 +18,7 @@ import 'package:mizan/presentation/resources/strings_manager.dart';
 import 'package:mizan/presentation/select_user_type/select_user_type_view.dart';
 import 'package:mizan/presentation/send_otp/send_otp_view.dart';
 import 'package:mizan/presentation/splash/splash_view.dart';
+import 'package:mizan/presentation/get_profile/get_profile.dart';
 import 'package:mizan/presentation/transactions/transactions_view.dart';
 
 class Routes {
@@ -47,6 +48,7 @@ class Routes {
   static const String quickPurchaseRoute = "/quickPurchase";
   static const String quickCollectRoute = "/quickCollect";
   static const String quickPayRoute = "/quickPay";
+  static const String profileRoute = "/profile";
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -129,6 +131,8 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => const QuickCollectView());
       case Routes.quickPayRoute:
         return MaterialPageRoute(builder: (_) => const QuickPayView());
+      case Routes.profileRoute:
+        return MaterialPageRoute(builder: (_) => const GetProfileView());
       default:
         return unDefinedRoute();
     }

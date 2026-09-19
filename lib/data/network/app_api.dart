@@ -3,6 +3,7 @@ import 'package:mizan/app/constants.dart';
 import 'package:mizan/data/response/auth_session_responses/auth_session_responses.dart';
 import 'package:mizan/data/response/base_responses/base_responses.dart';
 import 'package:mizan/data/response/contact_responses/contact_responses.dart';
+import 'package:mizan/data/response/get_profile_responses/get_profile_responses.dart';
 import 'package:mizan/data/response/register_responses/register_responses.dart';
 import 'package:retrofit/error_logger.dart';
 import 'package:retrofit/http.dart';
@@ -76,4 +77,8 @@ abstract class AppServiceClient {
 
   @DELETE("/api/contacts/{id}")
   Future<void> deleteContact(@Path("id") String id);
+
+  // ======================== Profile Endpoints ========================
+  @GET("/api/users/profile")
+  Future<GetProfileDataResponse> getProfile();
 }

@@ -190,4 +190,19 @@ class AppStrings {
   static const String finalDelete = "حذف نهائي";
   static const String deleteContactWarning =
       "سيتم حذف بيانات هذا الطرف وجميع بيانات المعاملات والأقساط الخاصة به نهائياً. لا يمكن التراجع عن هذا الإجراء بعد إتمامه.";
+
+  // --- Profile Feature ---
+  static const String profileAccountInfo = "معلومات الحساب";
+  static const String profileFullName = "الاسم الكامل";
+  static const String profileEmail = "البريد الإلكتروني";
+  static const String profileAccountStatus = "حالة الحساب";
+  static const String profileUserType = "نوع المستخدم";
+  static const String profileShopInfo = "بيانات المحل / النشاط";
+  static const String profileNoName = "بدون اسم";
+  static const String profileActive = "نشط";
+  static const String profileInactive = "غير نشط";
+  static const String profileLogout = "تسجيل الخروج";
+  static const String profileLogoutConfirmTitle = "تسجيل الخروج";
+  static const String profileLogoutConfirmMsg =
+      "هل أنت متأكد من رغبتك في تسجيل الخروج من التطبيق؟";
 }

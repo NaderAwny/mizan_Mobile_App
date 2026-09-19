@@ -17,6 +17,7 @@ import 'package:mizan/presentation/resources/strings_manager.dart';
 import 'package:mizan/presentation/resources/styles_manager.dart';
 import 'package:mizan/presentation/resources/values_manager.dart';
 import 'package:mizan/presentation/transactions/transactions_view.dart';
+import 'package:mizan/presentation/home/widgets/mizan_drawer.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HomeView — Mizan Financial Dashboard (Figma Node 3:10)
@@ -72,6 +73,7 @@ class _HomeViewState extends State<HomeView> {
         },
         child: Scaffold(
           backgroundColor: ColorManager.background,
+          drawer: const MizanDrawer(),
           body: IndexedStack(
             index: _currentTabIndex,
             children: [
