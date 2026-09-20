@@ -14,6 +14,9 @@ import 'package:mizan/presentation/customers/widgets/contact_financial_summary_c
 import 'package:mizan/presentation/customers/widgets/contact_profile_header.dart';
 import 'package:mizan/presentation/customers/widgets/contact_transaction_tile.dart';
 import 'package:mizan/presentation/customers/widgets/delete_contact_bottom_sheet.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:mizan/presentation/operations/quick_transaction_args.dart';
+import 'package:mizan/presentation/resources/assets_manager.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
 import 'package:mizan/presentation/resources/font_manager.dart';
 import 'package:mizan/presentation/resources/routes_manager.dart';
@@ -68,6 +71,149 @@ class _ContactProfileScreen extends StatelessWidget {
       onConfirmDelete: () {
         context.read<ContactProfileCubit>().deleteContact();
       },
+    );
+  }
+
+  void _onAddTransaction(BuildContext context, ContactProfile profile) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: EdgeInsets.all(20.r),
+        decoration: BoxDecoration(
+          color: ColorManager.background,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(AppRadius.r24.r),
+            topRight: Radius.circular(AppRadius.r24.r),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: ColorManager.black.withAlpha(20),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 44.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: ColorManager.borderDark,
+                  borderRadius: BorderRadius.circular(AppRadius.r10.r),
+                ),
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              "إضافة معاملة جديدة",
+              style: getBoldStyle(
+                color: ColorManager.textPrimary,
+                fontSize: FontSize.s16,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              "مع ${profile.contactName}",
+              style: getRegularStyle(
+                color: ColorManager.textSecondary,
+                fontSize: FontSize.s12,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 20.h),
+            ListTile(
+              leading: Container(
+                padding: EdgeInsets.all(8.r),
+                decoration: BoxDecoration(
+                  color: ColorManager.lightPrimary,
+                  borderRadius: BorderRadius.circular(AppRadius.r10.r),
+                ),
+                child: SvgPicture.asset(
+                  IconAssets.shoppingBag,
+                  width: 20.r,
+                  height: 20.r,
+                  colorFilter: const ColorFilter.mode(
+                    ColorManager.primary,
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
+              title: Text("تسجيل عملية بيع",
+                  style: getBoldStyle(
+                      color: ColorManager.textPrimary, fontSize: FontSize.s14)),
+              subtitle: Text("فاتورة مبيعات للعميل",
+                  style: getRegularStyle(
+                      color: ColorManager.textSecondary, fontSize: FontSize.s12)),
+              trailing: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
+              onTap: () async {
+                Navigator.pop(ctx);
+                final res = await Navigator.pushNamed(
+                  context,
+                  Routes.quickSaleRoute,
+                  arguments: QuickTransactionArgs(
+                    contactId: profile.contactId,
+                    contactName: profile.contactName,
+                    isVip: profile.isVip,
+                    initialType: "Sale",
+                  ),
+                );
+                if (res == true && context.mounted) {
+                  context.read<ContactProfileCubit>().getProfile(contactId);
+                }
+              },
+            ),
+            SizedBox(height: 8.h),
+            ListTile(
+              leading: Container(
+                padding: EdgeInsets.all(8.r),
+                decoration: BoxDecoration(
+                  color: ColorManager.lightSecondary,
+                  borderRadius: BorderRadius.circular(AppRadius.r10.r),
+                ),
+                child: SvgPicture.asset(
+                  IconAssets.arrowUpRight,
+                  width: 20.r,
+                  height: 20.r,
+                  colorFilter: const ColorFilter.mode(
+                    ColorManager.secondary,
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
+              title: Text("تسجيل عملية شراء",
+                  style: getBoldStyle(
+                      color: ColorManager.textPrimary, fontSize: FontSize.s14)),
+              subtitle: Text("فاتورة مشتريات من المورد",
+                  style: getRegularStyle(
+                      color: ColorManager.textSecondary, fontSize: FontSize.s12)),
+              trailing: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
+              onTap: () async {
+                Navigator.pop(ctx);
+                final res = await Navigator.pushNamed(
+                  context,
+                  Routes.quickPurchaseRoute,
+                  arguments: QuickTransactionArgs(
+                    contactId: profile.contactId,
+                    contactName: profile.contactName,
+                    isVip: profile.isVip,
+                    initialType: "Purchase",
+                  ),
+                );
+                if (res == true && context.mounted) {
+                  context.read<ContactProfileCubit>().getProfile(contactId);
+                }
+              },
+            ),
+            SizedBox(height: 12.h),
+          ],
+        ),
+      ),
     );
   }
 
@@ -328,13 +474,29 @@ class _ContactProfileScreen extends StatelessWidget {
 
                 SizedBox(height: 24.h),
 
-                // Recent Transactions Title
-                Text(
-                  AppStrings.recentTransactions,
-                  style: getBoldStyle(
-                    color: ColorManager.textPrimary,
-                    fontSize: FontSize.s16,
-                  ),
+                // Recent Transactions Title & Add Action
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      AppStrings.recentTransactions,
+                      style: getBoldStyle(
+                        color: ColorManager.textPrimary,
+                        fontSize: FontSize.s16,
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => _onAddTransaction(context, profile),
+                      icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
+                      label: Text(
+                        "إضافة عملية",
+                        style: getBoldStyle(
+                          color: ColorManager.primary,
+                          fontSize: FontSize.s13,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
 
                 SizedBox(height: 12.h),

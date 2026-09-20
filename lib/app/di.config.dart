@@ -23,6 +23,7 @@ import '../data/data_source/contact_remote_data_source.dart' as _i1006;
 import '../data/data_source/get_profile_data_source.dart' as _i197;
 import '../data/data_source/register_remote_data_source.dart' as _i1006;
 import '../data/data_source/send_otp_remote_data_source.dart' as _i371;
+import '../data/data_source/transaction_remote_data_source.dart' as _i93;
 import '../data/local/onboarding_local_data_source.dart' as _i603;
 import '../data/local/secure_token_local_data_source.dart' as _i388;
 import '../data/local/shared_prefs_onboarding_data_source.dart' as _i398;
@@ -35,12 +36,15 @@ import '../data/repository_impl/contact_repository_impl.dart' as _i956;
 import '../data/repository_impl/get_profile_repository_impl.dart' as _i379;
 import '../data/repository_impl/register_repository_impl.dart' as _i432;
 import '../data/repository_impl/send_otp_repository_impl.dart' as _i1060;
+import '../data/repository_impl/transaction_repository_impl.dart' as _i905;
 import '../domain/repository/auth_repository.dart' as _i306;
 import '../domain/repository/contact_repository.dart' as _i621;
 import '../domain/repository/get_profile_repository.dart' as _i770;
 import '../domain/repository/register_repository.dart' as _i582;
 import '../domain/repository/send_otp_repository.dart' as _i943;
+import '../domain/repository/transaction_repository.dart' as _i132;
 import '../domain/use_case/create_contact_use_case.dart' as _i770;
+import '../domain/use_case/create_transaction_use_case.dart' as _i807;
 import '../domain/use_case/delete_contact_use_case.dart' as _i1053;
 import '../domain/use_case/get_contact_by_id_use_case.dart' as _i804;
 import '../domain/use_case/get_contact_profile_use_case.dart' as _i307;
@@ -69,6 +73,8 @@ import '../presentation/select_user_type/select_user_type_cubit/select_user_type
 import '../presentation/send_otp/cubit/send_otp_cubit/send_otp_cubit.dart'
     as _i531;
 import '../presentation/splash/splash_cubit/splash_cubit.dart' as _i822;
+import '../presentation/transactions/transaction_form_cubit/transaction_form_cubit.dart'
+    as _i472;
 import 'app_module.dart' as _i460;
 import 'session_manager.dart' as _i989;
 
@@ -131,6 +137,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i371.NetworkInfo>(),
       ),
     );
+    gh.lazySingleton<_i93.TransactionRemoteDataSource>(
+      () => _i93.TransactionRemoteDataSourceImpl(gh<_i563.AppServiceClient>()),
+    );
     gh.lazySingleton<_i371.SendOtpRemoteDataSource>(
       () => _i371.SendOtpRemoteDataSourceImpl(gh<_i563.AppServiceClient>()),
     );
@@ -179,6 +188,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i52.UpdateContactUseCase>(
       () => _i52.UpdateContactUseCase(gh<_i621.ContactRepository>()),
     );
+    gh.lazySingleton<_i132.TransactionRepository>(
+      () => _i905.TransactionRepositoryImpl(
+        gh<_i93.TransactionRemoteDataSource>(),
+        gh<_i371.NetworkInfo>(),
+      ),
+    );
     gh.factory<_i906.ContactProfileCubit>(
       () => _i906.ContactProfileCubit(
         gh<_i307.GetContactProfileUseCase>(),
@@ -219,6 +234,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i298.RegisterCubit>(
       () => _i298.RegisterCubit(gh<_i224.RegisterUseCase>()),
     );
+    gh.factory<_i807.CreateTransactionUseCase>(
+      () => _i807.CreateTransactionUseCase(gh<_i132.TransactionRepository>()),
+    );
     gh.factory<_i531.SendOtpCubit>(
       () => _i531.SendOtpCubit(gh<_i508.SendOtpUseCase>()),
     );
@@ -230,6 +248,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i484.VerifyOtpUseCase>(
       () => _i484.VerifyOtpUseCase(gh<_i306.AuthRepository>()),
+    );
+    gh.factory<_i472.TransactionFormCubit>(
+      () => _i472.TransactionFormCubit(gh<_i807.CreateTransactionUseCase>()),
     );
     gh.factory<_i705.VerifyOtpCubit>(
       () => _i705.VerifyOtpCubit(gh<_i484.VerifyOtpUseCase>()),

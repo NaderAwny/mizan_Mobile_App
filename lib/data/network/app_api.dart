@@ -5,6 +5,7 @@ import 'package:mizan/data/response/base_responses/base_responses.dart';
 import 'package:mizan/data/response/contact_responses/contact_responses.dart';
 import 'package:mizan/data/response/get_profile_responses/get_profile_responses.dart';
 import 'package:mizan/data/response/register_responses/register_responses.dart';
+import 'package:mizan/data/response/transaction_responses/transaction_responses.dart';
 import 'package:retrofit/error_logger.dart';
 import 'package:retrofit/http.dart';
 
@@ -81,4 +82,10 @@ abstract class AppServiceClient {
   // ======================== Profile Endpoints ========================
   @GET("/api/users/profile")
   Future<GetProfileDataResponse> getProfile();
+
+  // ======================== Transactions Endpoints ========================
+  @POST("/api/transactions")
+  Future<TransactionResponse> createTransaction(
+    @Body() Map<String, dynamic> body,
+  );
 }

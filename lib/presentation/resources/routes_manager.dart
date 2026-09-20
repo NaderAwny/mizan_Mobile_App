@@ -19,6 +19,7 @@ import 'package:mizan/presentation/select_user_type/select_user_type_view.dart';
 import 'package:mizan/presentation/send_otp/send_otp_view.dart';
 import 'package:mizan/presentation/splash/splash_view.dart';
 import 'package:mizan/presentation/get_profile/get_profile.dart';
+import 'package:mizan/presentation/operations/quick_transaction_args.dart';
 import 'package:mizan/presentation/transactions/transactions_view.dart';
 
 class Routes {
@@ -124,9 +125,15 @@ class RouteGenerator {
       case Routes.notificationsRoute:
         return MaterialPageRoute(builder: (_) => const NotificationsView());
       case Routes.quickSaleRoute:
-        return MaterialPageRoute(builder: (_) => const QuickSaleView());
+        final args = settings.arguments is QuickTransactionArgs
+            ? settings.arguments as QuickTransactionArgs
+            : null;
+        return MaterialPageRoute(builder: (_) => QuickSaleView(args: args));
       case Routes.quickPurchaseRoute:
-        return MaterialPageRoute(builder: (_) => const QuickPurchaseView());
+        final args = settings.arguments is QuickTransactionArgs
+            ? settings.arguments as QuickTransactionArgs
+            : null;
+        return MaterialPageRoute(builder: (_) => QuickPurchaseView(args: args));
       case Routes.quickCollectRoute:
         return MaterialPageRoute(builder: (_) => const QuickCollectView());
       case Routes.quickPayRoute:
