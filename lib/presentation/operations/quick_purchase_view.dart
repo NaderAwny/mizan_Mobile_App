@@ -239,7 +239,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
       type: "Purchase",
       amount: amount,
       paymentMethod: _isInstallment
-          ? "Installments"
+          ? "Deferred"
           : (_isCash ? "Cash" : "Credit"),
       transactionDate: _transactionDate.toIso8601String(),
       noteText: _noteController.text.trim().isEmpty
@@ -1242,6 +1242,10 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                     Expanded(
                       flex: 4,
                       child: TextField(
+                        style: getRegularStyle(
+                          color: ColorManager.black,
+                          fontSize: FontSize.s14,
+                        ),
                         controller: item.amountController,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
@@ -1415,7 +1419,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
     final isLoading = state.flowState is LoadingState;
 
     return SizedBox(
-      height: 70.h,
+      height: 75.h,
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: ColorManager.secondary,
@@ -1449,11 +1453,13 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      "حفظ عملية الشراء",
-                      style: getBoldStyle(
-                        color: ColorManager.white,
-                        fontSize: FontSize.s15,
+                    Center(
+                      child: Text(
+                        "حفظ عملية الشراء",
+                        style: getBoldStyle(
+                          color: ColorManager.white,
+                          fontSize: FontSize.s15,
+                        ),
                       ),
                     ),
                     SizedBox(width: 8.w),

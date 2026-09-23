@@ -12,7 +12,7 @@ part of 'app_api.dart';
 
 class _AppServiceClient implements AppServiceClient {
   _AppServiceClient(this._dio, {this.baseUrl, this.errorLogger}) {
-    baseUrl ??= 'https://mizanapi.duckdns.org';
+    baseUrl ??= 'https://mizanv2.runasp.net';
   }
 
   final Dio _dio;

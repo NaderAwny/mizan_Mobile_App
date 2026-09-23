@@ -24,7 +24,8 @@ class QuickSaleView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveArgs = args ??
+    final effectiveArgs =
+        args ??
         (ModalRoute.of(context)?.settings.arguments is QuickTransactionArgs
             ? ModalRoute.of(context)!.settings.arguments as QuickTransactionArgs
             : null);
@@ -49,12 +50,10 @@ class _CustomInstallmentEntry {
   final TextEditingController amountController;
   DateTime dueDate;
 
-  _CustomInstallmentEntry({
-    required double amount,
-    required this.dueDate,
-  }) : amountController = TextEditingController(
-          text: amount > 0 ? amount.toStringAsFixed(0) : '',
-        );
+  _CustomInstallmentEntry({required double amount, required this.dueDate})
+    : amountController = TextEditingController(
+        text: amount > 0 ? amount.toStringAsFixed(0) : '',
+      );
 
   void dispose() {
     amountController.dispose();
@@ -82,8 +81,7 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
   String _installmentPlanMode = "Automatic"; // "Automatic" | "Custom"
   int _installmentCount = 3;
   String _frequency = "Monthly"; // "Weekly" | "Monthly" | "Yearly"
-  DateTime _firstInstallmentDate =
-      DateTime.now().add(const Duration(days: 30));
+  DateTime _firstInstallmentDate = DateTime.now().add(const Duration(days: 30));
 
   // Custom Installments list
   final List<_CustomInstallmentEntry> _customInstallmentEntries = [];
@@ -143,8 +141,8 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
     final count = _customInstallmentEntries.length;
     final split = (totalAmount / count).roundToDouble();
     for (int i = 0; i < count; i++) {
-      _customInstallmentEntries[i].amountController.text =
-          split.toStringAsFixed(0);
+      _customInstallmentEntries[i].amountController.text = split
+          .toStringAsFixed(0);
     }
   }
 
@@ -241,7 +239,7 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
       type: "Sale",
       amount: amount,
       paymentMethod: _isInstallment
-          ? "Installments"
+          ? "Deferred"
           : (_isCash ? "Cash" : "Credit"),
       transactionDate: _transactionDate.toIso8601String(),
       noteText: _noteController.text.trim().isEmpty
@@ -249,17 +247,16 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
           : _noteController.text.trim(),
       isInstallment: _isInstallment,
       installmentPlanMode: _isInstallment ? _installmentPlanMode : null,
-      installmentCount:
-          _isInstallment && _installmentPlanMode == "Automatic"
-              ? _installmentCount
-              : null,
+      installmentCount: _isInstallment && _installmentPlanMode == "Automatic"
+          ? _installmentCount
+          : null,
       frequency: _isInstallment && _installmentPlanMode == "Automatic"
           ? _frequency
           : null,
       firstInstallmentDate:
           _isInstallment && _installmentPlanMode == "Automatic"
-              ? _firstInstallmentDate.toIso8601String()
-              : null,
+          ? _firstInstallmentDate.toIso8601String()
+          : null,
       customInstallments: customItems,
     );
 
@@ -273,8 +270,10 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
       listener: (context, state) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           // Dismiss any popup/dialogs
-          Navigator.of(context, rootNavigator: true)
-              .popUntil((route) => route is! PopupRoute);
+          Navigator.of(
+            context,
+            rootNavigator: true,
+          ).popUntil((route) => route is! PopupRoute);
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -285,8 +284,11 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
               ),
               content: Row(
                 children: [
-                  Icon(Icons.check_circle_rounded,
-                      color: ColorManager.white, size: 20.r),
+                  Icon(
+                    Icons.check_circle_rounded,
+                    color: ColorManager.white,
+                    size: 20.r,
+                  ),
                   SizedBox(width: 8.w),
                   const Text("تم تسجيل عملية البيع بنجاح"),
                 ],
@@ -302,11 +304,7 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
 
         final flowState = state.flowState;
         if (flowState is LoadingState || flowState is ErrorState) {
-          final overlay = flowState!.getScreenWidget(
-            context,
-            content,
-            _submit,
-          );
+          final overlay = flowState!.getScreenWidget(context, content, _submit);
           if (overlay != null) return _scaffold(overlay);
         }
 
@@ -472,8 +470,9 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
               IntrinsicWidth(
                 child: TextField(
                   controller: _amountController,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   textAlign: TextAlign.center,
                   style: getExtraBoldStyle(
                     color: ColorManager.textPrimary,
@@ -485,14 +484,22 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
                       color: ColorManager.textTertiary.withAlpha(120),
                       fontSize: FontSize.s36,
                     ),
+                    filled: true,
+                    fillColor: ColorManager.surface,
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.zero,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    disabledBorder: InputBorder.none,
+                    errorBorder: InputBorder.none,
+                    focusedErrorBorder: InputBorder.none,
                   ),
                   onChanged: (val) {
                     setState(() {});
                     if (_isInstallment && _installmentPlanMode == "Custom") {
                       _recalculateCustomInstallments(
-                          double.tryParse(val) ?? 0.0);
+                        double.tryParse(val) ?? 0.0,
+                      );
                     }
                   },
                 ),
@@ -549,8 +556,8 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
 
   // ── Customer Field ─────────────────────────────────────────────────────────
   Widget _buildCustomerField() {
-    final hasSelection = (_selectedContactId != null &&
-            _selectedContactId!.isNotEmpty) ||
+    final hasSelection =
+        (_selectedContactId != null && _selectedContactId!.isNotEmpty) ||
         (_selectedPartyName != null && _selectedPartyName!.isNotEmpty);
 
     return Column(
@@ -573,7 +580,9 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
               color: ColorManager.surface,
               borderRadius: BorderRadius.circular(AppRadius.r14.r),
               border: Border.all(
-                color: hasSelection ? ColorManager.primary : ColorManager.border,
+                color: hasSelection
+                    ? ColorManager.primary
+                    : ColorManager.border,
                 width: hasSelection ? 1.5 : 1.0,
               ),
             ),
@@ -624,8 +633,9 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: ColorManager.lightSecondary,
-                                  borderRadius:
-                                      BorderRadius.circular(AppRadius.r4.r),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.r4.r,
+                                  ),
                                 ),
                                 child: Text(
                                   "عميل VIP",
@@ -781,8 +791,9 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
                             color: _isCash
                                 ? ColorManager.primary
                                 : Colors.transparent,
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.r10.r),
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.r10.r,
+                            ),
                           ),
                           alignment: Alignment.center,
                           child: Text(
@@ -807,8 +818,9 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
                             color: !_isCash
                                 ? ColorManager.primary
                                 : Colors.transparent,
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.r10.r),
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.r10.r,
+                            ),
                           ),
                           alignment: Alignment.center,
                           child: Text(
@@ -995,30 +1007,34 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
               ),
             ),
             SizedBox(height: 6.h),
-            Row(
-              children: [2, 3, 4, 6, 12].map((cnt) {
-                final isSel = _installmentCount == cnt;
-                return Padding(
-                  padding: EdgeInsets.only(left: 6.w),
-                  child: ChoiceChip(
-                    label: Text(
-                      "$cnt أقساط",
-                      style: getBoldStyle(
-                        color: isSel
-                            ? ColorManager.white
-                            : ColorManager.textSecondary,
-                        fontSize: FontSize.s11,
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: [2, 3, 4, 6, 12].map((cnt) {
+                  final isSel = _installmentCount == cnt;
+                  return Padding(
+                    padding: EdgeInsets.only(left: 6.w),
+                    child: ChoiceChip(
+                      label: Text(
+                        "$cnt أقساط",
+                        style: getBoldStyle(
+                          color: isSel
+                              ? ColorManager.white
+                              : ColorManager.textSecondary,
+                          fontSize: FontSize.s11,
+                        ),
                       ),
+                      selected: isSel,
+                      selectedColor: ColorManager.secondary,
+                      backgroundColor: ColorManager.surfaceVariant,
+                      showCheckmark: false,
+                      onSelected: (_) =>
+                          setState(() => _installmentCount = cnt),
                     ),
-                    selected: isSel,
-                    selectedColor: ColorManager.secondary,
-                    backgroundColor: ColorManager.surfaceVariant,
-                    showCheckmark: false,
-                    onSelected: (_) =>
-                        setState(() => _installmentCount = cnt),
-                  ),
-                );
-              }).toList(),
+                  );
+                }).toList(),
+              ),
             ),
 
             SizedBox(height: 12.h),
@@ -1026,7 +1042,6 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
             // Frequency & First Date Row
             Row(
               children: [
-                // Frequency
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1040,6 +1055,7 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
                       ),
                       SizedBox(height: 6.h),
                       DropdownButtonFormField<String>(
+                        dropdownColor: ColorManager.white,
                         initialValue: _frequency,
                         decoration: InputDecoration(
                           filled: true,
@@ -1049,18 +1065,34 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
                             vertical: 8.h,
                           ),
                           border: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.r10.r),
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.r10.r,
+                            ),
                             borderSide: BorderSide.none,
                           ),
                         ),
                         items: const [
                           DropdownMenuItem(
-                              value: "Weekly", child: Text("أسبوعي")),
+                            value: "Weekly",
+                            child: Text(
+                              "أسبوعي",
+                              style: TextStyle(color: Colors.black),
+                            ),
+                          ),
                           DropdownMenuItem(
-                              value: "Monthly", child: Text("شهري")),
+                            value: "Monthly",
+                            child: Text(
+                              "شهري",
+                              style: TextStyle(color: Colors.black),
+                            ),
+                          ),
                           DropdownMenuItem(
-                              value: "Yearly", child: Text("سنوي")),
+                            value: "Yearly",
+                            child: Text(
+                              "سنوي",
+                              style: TextStyle(color: Colors.black),
+                            ),
+                          ),
                         ],
                         onChanged: (val) {
                           if (val != null) setState(() => _frequency = val);
@@ -1092,13 +1124,17 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
                           padding: EdgeInsets.symmetric(horizontal: 8.w),
                           decoration: BoxDecoration(
                             color: ColorManager.surfaceVariant,
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.r10.r),
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.r10.r,
+                            ),
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.calendar_today_rounded,
-                                  size: 14.r, color: ColorManager.secondary),
+                              Icon(
+                                Icons.calendar_today_rounded,
+                                size: 14.r,
+                                color: ColorManager.secondary,
+                              ),
                               SizedBox(width: 6.w),
                               Expanded(
                                 child: Text(
@@ -1129,8 +1165,11 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline_rounded,
-                        color: ColorManager.darkSecondary, size: 16.r),
+                    Icon(
+                      Icons.info_outline_rounded,
+                      color: ColorManager.darkSecondary,
+                      size: 16.r,
+                    ),
                     SizedBox(width: 8.w),
                     Expanded(
                       child: Text(
@@ -1164,8 +1203,9 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
                       _customInstallmentEntries.add(
                         _CustomInstallmentEntry(
                           amount: 0,
-                          dueDate: DateTime.now()
-                              .add(Duration(days: 30 * count)),
+                          dueDate: DateTime.now().add(
+                            Duration(days: 30 * count),
+                          ),
                         ),
                       );
                     });
@@ -1220,8 +1260,7 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
                           filled: true,
                           fillColor: ColorManager.surface,
                           border: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.r8.r),
+                            borderRadius: BorderRadius.circular(AppRadius.r8.r),
                             borderSide: BorderSide.none,
                           ),
                         ),
@@ -1250,8 +1289,7 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: ColorManager.surface,
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.r8.r),
+                            borderRadius: BorderRadius.circular(AppRadius.r8.r),
                           ),
                           child: Text(
                             formatNumericDate(item.dueDate),
@@ -1265,8 +1303,11 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
                     ),
                     if (_customInstallmentEntries.length > 1)
                       IconButton(
-                        icon: Icon(Icons.delete_outline_rounded,
-                            size: 18.r, color: ColorManager.error),
+                        icon: Icon(
+                          Icons.delete_outline_rounded,
+                          size: 18.r,
+                          color: ColorManager.error,
+                        ),
                         onPressed: () {
                           setState(() {
                             _customInstallmentEntries.removeAt(idx);
@@ -1280,39 +1321,46 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
 
             // Sum Check
             SizedBox(height: 6.h),
-            Builder(builder: (_) {
-              final sum = _totalCustomSum;
-              final matches = (sum - totalAmount).abs() < 0.01;
-              return Container(
-                padding: EdgeInsets.all(8.r),
-                decoration: BoxDecoration(
-                  color: matches
-                      ? ColorManager.successContainer
-                      : ColorManager.errorContainer,
-                  borderRadius: BorderRadius.circular(AppRadius.r8.r),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      matches ? Icons.check_circle_rounded : Icons.warning_rounded,
-                      color: matches ? ColorManager.success : ColorManager.error,
-                      size: 16.r,
-                    ),
-                    SizedBox(width: 6.w),
-                    Expanded(
-                      child: Text(
-                        "مجموع الأقساط: $sum / إجمالي الفاتورة: $totalAmount",
-                        style: getBoldStyle(
-                          color:
-                              matches ? ColorManager.success : ColorManager.error,
-                          fontSize: FontSize.s11,
+            Builder(
+              builder: (_) {
+                final sum = _totalCustomSum;
+                final matches = (sum - totalAmount).abs() < 0.01;
+                return Container(
+                  padding: EdgeInsets.all(8.r),
+                  decoration: BoxDecoration(
+                    color: matches
+                        ? ColorManager.successContainer
+                        : ColorManager.errorContainer,
+                    borderRadius: BorderRadius.circular(AppRadius.r8.r),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        matches
+                            ? Icons.check_circle_rounded
+                            : Icons.warning_rounded,
+                        color: matches
+                            ? ColorManager.success
+                            : ColorManager.error,
+                        size: 16.r,
+                      ),
+                      SizedBox(width: 6.w),
+                      Expanded(
+                        child: Text(
+                          "مجموع الأقساط: $sum / إجمالي الفاتورة: $totalAmount",
+                          style: getBoldStyle(
+                            color: matches
+                                ? ColorManager.success
+                                : ColorManager.error,
+                            fontSize: FontSize.s11,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            }),
+                    ],
+                  ),
+                );
+              },
+            ),
           ],
         ],
       ),
@@ -1333,6 +1381,10 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
         ),
         SizedBox(height: 6.h),
         TextField(
+          style: getRegularStyle(
+            color: ColorManager.black,
+            fontSize: FontSize.s14,
+          ),
           controller: _noteController,
           maxLines: 2,
           decoration: InputDecoration(
@@ -1343,8 +1395,10 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
             ),
             filled: true,
             fillColor: ColorManager.surface,
-            contentPadding:
-                EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 14.w,
+              vertical: 12.h,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.r14.r),
               borderSide: const BorderSide(color: ColorManager.border),
@@ -1368,7 +1422,7 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
     final isLoading = state.flowState is LoadingState;
 
     return SizedBox(
-      height: 52.h,
+      height: 75.h,
       child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: ColorManager.primaryGradient,
@@ -1396,11 +1450,13 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      "حفظ عملية البيع",
-                      style: getBoldStyle(
-                        color: ColorManager.white,
-                        fontSize: FontSize.s15,
+                    Center(
+                      child: Text(
+                        "حفظ عملية البيع",
+                        style: getBoldStyle(
+                          color: ColorManager.white,
+                          fontSize: FontSize.s15,
+                        ),
                       ),
                     ),
                     SizedBox(width: 8.w),

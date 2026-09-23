@@ -144,12 +144,20 @@ class _ContactProfileScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              title: Text("تسجيل عملية بيع",
-                  style: getBoldStyle(
-                      color: ColorManager.textPrimary, fontSize: FontSize.s14)),
-              subtitle: Text("فاتورة مبيعات للعميل",
-                  style: getRegularStyle(
-                      color: ColorManager.textSecondary, fontSize: FontSize.s12)),
+              title: Text(
+                "تسجيل عملية بيع",
+                style: getBoldStyle(
+                  color: ColorManager.textPrimary,
+                  fontSize: FontSize.s14,
+                ),
+              ),
+              subtitle: Text(
+                "فاتورة مبيعات للعميل",
+                style: getRegularStyle(
+                  color: ColorManager.textSecondary,
+                  fontSize: FontSize.s12,
+                ),
+              ),
               trailing: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
               onTap: () async {
                 Navigator.pop(ctx);
@@ -186,12 +194,20 @@ class _ContactProfileScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              title: Text("تسجيل عملية شراء",
-                  style: getBoldStyle(
-                      color: ColorManager.textPrimary, fontSize: FontSize.s14)),
-              subtitle: Text("فاتورة مشتريات من المورد",
-                  style: getRegularStyle(
-                      color: ColorManager.textSecondary, fontSize: FontSize.s12)),
+              title: Text(
+                "تسجيل عملية شراء",
+                style: getBoldStyle(
+                  color: ColorManager.textPrimary,
+                  fontSize: FontSize.s14,
+                ),
+              ),
+              subtitle: Text(
+                "فاتورة مشتريات من المورد",
+                style: getRegularStyle(
+                  color: ColorManager.textSecondary,
+                  fontSize: FontSize.s12,
+                ),
+              ),
               trailing: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
               onTap: () async {
                 Navigator.pop(ctx);
@@ -294,7 +310,8 @@ class _ContactProfileScreen extends StatelessWidget {
               SizedBox(width: 6.w),
             ],
           ),
-          body: state.flowState?.getScreenWidget(
+          body:
+              state.flowState?.getScreenWidget(
                 context,
                 profile == null
                     ? const SizedBox.shrink()
@@ -348,7 +365,9 @@ class _ContactProfileScreen extends StatelessWidget {
                           color: Colors.transparent,
                           child: InkWell(
                             onTap: () {},
-                            borderRadius: BorderRadius.circular(AppRadius.r14.r),
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.r14.r,
+                            ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -381,13 +400,18 @@ class _ContactProfileScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: ColorManager.surfaceVariant,
                           borderRadius: BorderRadius.circular(AppRadius.r14.r),
-                          border: Border.all(color: ColorManager.border, width: 1),
+                          border: Border.all(
+                            color: ColorManager.border,
+                            width: 1,
+                          ),
                         ),
                         child: Material(
                           color: Colors.transparent,
                           child: InkWell(
                             onTap: () {},
-                            borderRadius: BorderRadius.circular(AppRadius.r14.r),
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.r14.r,
+                            ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -418,11 +442,17 @@ class _ContactProfileScreen extends StatelessWidget {
                   SizedBox(height: 16.h),
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 14.h,
+                    ),
                     decoration: BoxDecoration(
                       color: ColorManager.surface,
                       borderRadius: BorderRadius.circular(AppRadius.r16.r),
-                      border: Border.all(color: ColorManager.border, width: 1.2),
+                      border: Border.all(
+                        color: ColorManager.border,
+                        width: 1.2,
+                      ),
                       boxShadow: const [
                         BoxShadow(
                           color: Color(0x061C1816),
@@ -440,7 +470,9 @@ class _ContactProfileScreen extends StatelessWidget {
                               padding: EdgeInsets.all(6.r),
                               decoration: BoxDecoration(
                                 color: ColorManager.lightPrimary,
-                                borderRadius: BorderRadius.circular(AppRadius.r8.r),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.r8.r,
+                                ),
                               ),
                               child: Icon(
                                 Icons.sticky_note_2_outlined,
@@ -475,28 +507,34 @@ class _ContactProfileScreen extends StatelessWidget {
                 SizedBox(height: 24.h),
 
                 // Recent Transactions Title & Add Action
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      AppStrings.recentTransactions,
-                      style: getBoldStyle(
-                        color: ColorManager.textPrimary,
-                        fontSize: FontSize.s16,
-                      ),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => _onAddTransaction(context, profile),
-                      icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
-                      label: Text(
-                        "إضافة عملية",
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        AppStrings.recentTransactions,
                         style: getBoldStyle(
-                          color: ColorManager.primary,
-                          fontSize: FontSize.s13,
+                          color: ColorManager.textPrimary,
+                          fontSize: FontSize.s16,
                         ),
                       ),
-                    ),
-                  ],
+                      TextButton.icon(
+                        onPressed: () => _onAddTransaction(context, profile),
+                        icon: const Icon(
+                          Icons.add_circle_outline_rounded,
+                          size: 18,
+                        ),
+                        label: Text(
+                          "إضافة عملية",
+                          style: getBoldStyle(
+                            color: ColorManager.primary,
+                            fontSize: FontSize.s13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
 
                 SizedBox(height: 12.h),
@@ -523,10 +561,8 @@ class _ContactProfileScreen extends StatelessWidget {
                   )
                 else
                   ...profile.transactions.map(
-                    (tx) => ContactTransactionTile(
-                      transaction: tx,
-                      onTap: () {},
-                    ),
+                    (tx) =>
+                        ContactTransactionTile(transaction: tx, onTap: () {}),
                   ),
 
                 SizedBox(height: 40.h),
