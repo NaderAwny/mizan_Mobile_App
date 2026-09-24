@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/data/request/transaction_request.dart';
+import 'package:mizan/domain/model/transaction_by_id_mode/transaction_by_id_mode.dart';
 import 'package:mizan/domain/model/transaction_model.dart';
 import 'package:mizan/domain/repository/transaction_repository.dart';
 import 'package:mizan/domain/use_case/create_transaction_use_case.dart';
@@ -36,6 +37,12 @@ class FakeTransactionRepository implements TransactionRepository {
       return Left(Failure(400, 'Server error'));
     }
   }
+
+  @override
+  Future<Either<Failure, TransactionbyidModel>> getTransactionById(String id) {
+    // TODO: implement getTransactionById
+    throw UnimplementedError();
+  }
 }
 
 void main() {
@@ -54,23 +61,26 @@ void main() {
   });
 
   group('TransactionFormCubit Tests (4.1 to 4.6)', () {
-    test('Fails validation if both contactId and partyName are missing', () async {
-      final request = CreateTransactionRequest(
-        type: 'Sale',
-        amount: 500,
-        paymentMethod: 'Cash',
-        transactionDate: DateTime.now().toIso8601String(),
-      );
+    test(
+      'Fails validation if both contactId and partyName are missing',
+      () async {
+        final request = CreateTransactionRequest(
+          type: 'Sale',
+          amount: 500,
+          paymentMethod: 'Cash',
+          transactionDate: DateTime.now().toIso8601String(),
+        );
 
-      await cubit.submit(request);
+        await cubit.submit(request);
 
-      expect(cubit.state.flowState, isA<ErrorState>());
-      expect(
-        (cubit.state.flowState as ErrorState).message,
-        'يجب تحديد عميل/مورد أو كتابة اسم الطرف',
-      );
-      expect(cubit.state.isActionSuccess, false);
-    });
+        expect(cubit.state.flowState, isA<ErrorState>());
+        expect(
+          (cubit.state.flowState as ErrorState).message,
+          'يجب تحديد عميل/مورد أو كتابة اسم الطرف',
+        );
+        expect(cubit.state.isActionSuccess, false);
+      },
+    );
 
     test('Fails validation if amount <= 0', () async {
       final request = CreateTransactionRequest(

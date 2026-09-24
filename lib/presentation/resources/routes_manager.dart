@@ -20,6 +20,7 @@ import 'package:mizan/presentation/send_otp/send_otp_view.dart';
 import 'package:mizan/presentation/splash/splash_view.dart';
 import 'package:mizan/presentation/get_profile/get_profile.dart';
 import 'package:mizan/presentation/operations/quick_transaction_args.dart';
+import 'package:mizan/presentation/transactions/get_transaction_by_id/transaction_by_id_view.dart';
 import 'package:mizan/presentation/transactions/transactions_view.dart';
 
 class Routes {
@@ -50,6 +51,9 @@ class Routes {
   static const String quickCollectRoute = "/quickCollect";
   static const String quickPayRoute = "/quickPay";
   static const String profileRoute = "/profile";
+
+  // Transaction Details
+  static const String transactionDetailsRoute = "/transactionDetails";
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -107,15 +111,19 @@ class RouteGenerator {
       case Routes.customersRoute:
         return MaterialPageRoute(builder: (_) => const CustomersView());
       case Routes.contactFormRoute:
-        final contact =
-            settings.arguments is Contact ? settings.arguments as Contact : null;
+        final contact = settings.arguments is Contact
+            ? settings.arguments as Contact
+            : null;
         return MaterialPageRoute(
-            builder: (_) => ContactFormView(contact: contact));
+          builder: (_) => ContactFormView(contact: contact),
+        );
       case Routes.contactProfileRoute:
-        final contactId =
-            settings.arguments is String ? settings.arguments as String : "";
+        final contactId = settings.arguments is String
+            ? settings.arguments as String
+            : "";
         return MaterialPageRoute(
-            builder: (_) => ContactProfileView(contactId: contactId));
+          builder: (_) => ContactProfileView(contactId: contactId),
+        );
       case Routes.transactionsRoute:
         return MaterialPageRoute(builder: (_) => const TransactionsView());
       case Routes.installmentsRoute:
@@ -140,6 +148,13 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => const QuickPayView());
       case Routes.profileRoute:
         return MaterialPageRoute(builder: (_) => const GetProfileView());
+      case Routes.transactionDetailsRoute:
+        final transactionId = settings.arguments is String
+            ? settings.arguments as String
+            : "";
+        return MaterialPageRoute(
+          builder: (_) => TransactionDetailsView(transactionId: transactionId),
+        );
       default:
         return unDefinedRoute();
     }

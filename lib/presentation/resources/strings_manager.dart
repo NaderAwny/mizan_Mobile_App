@@ -211,4 +211,30 @@ class AppStrings {
   static const String profileLogoutConfirmTitle = "تسجيل الخروج";
   static const String profileLogoutConfirmMsg =
       "هل أنت متأكد من رغبتك في تسجيل الخروج من التطبيق؟";
+
+  // --- Transaction Details (Figma Node #3:1126) ---
+  static const String txDetailsTitle = "تفاصيل العملية";
+  static const String txDetailsSubtitle = "بيانات العملية المالية";
+  static const String txDetailsLoading = "جاري جلب تفاصيل العملية...";
+  static const String txDetailsErrorTitle = "تعذر تحميل تفاصيل العملية";
+  static const String txDetailsTransactionInfo = "بيانات العملية";
+  static const String txDetailsContactLabel = "الطرف الثاني";
+  static const String txDetailsTypeLabel = "نوع العملية";
+  static const String txDetailsAmountLabel = "المبلغ الإجمالي";
+  static const String txDetailsPaymentMethodLabel = "طريقة الدفع";
+  static const String txDetailsDateLabel = "تاريخ العملية";
+  static const String txDetailsInstallmentsTitle = "جدول الأقساط";
+  static const String txDetailsInstallmentNo = "القسط";
+  static const String txDetailsInstallmentDueDate = "تاريخ الاستحقاق";
+  static const String txDetailsInstallmentAmount = "المبلغ";
+  static const String txDetailsInstallmentStatus = "الحالة";
+  static const String txDetailsStatusPaid = "مدفوع";
+  static const String txDetailsStatusPending = "معلق";
+  static const String txDetailsCashPayment = "كاش";
+  static const String txDetailsInstallmentPayment = "تقسيط";
+  static const String txDetailsSaleType = "بيع";
+  static const String txDetailsPurchaseType = "شراء";
+  static const String txDetailsCollectType = "تحصيل";
+  static const String txDetailsPayType = "دفع";
 }
+

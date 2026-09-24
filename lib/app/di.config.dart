@@ -56,6 +56,7 @@ import '../domain/use_case/get_contact_profile_use_case.dart' as _i307;
 import '../domain/use_case/get_contacts_use_case.dart' as _i646;
 import '../domain/use_case/get_list_transaction_use_case.dart' as _i463;
 import '../domain/use_case/get_profile_use_case.dart' as _i673;
+import '../domain/use_case/get_transaction_by_id_use_case.dart' as _i1060;
 import '../domain/use_case/get_vip_contacts_use_case.dart' as _i1063;
 import '../domain/use_case/logout_use_case.dart' as _i235;
 import '../domain/use_case/register_use_case.dart' as _i224;
@@ -81,6 +82,8 @@ import '../presentation/send_otp/cubit/send_otp_cubit/send_otp_cubit.dart'
 import '../presentation/splash/splash_cubit/splash_cubit.dart' as _i822;
 import '../presentation/transactions/get_list_transaction/get_list_transaction_cubit.dart'
     as _i877;
+import '../presentation/transactions/get_transaction_by_id/get_transaction_by_id_cubit.dart'
+    as _i212;
 import '../presentation/transactions/transaction_form_cubit/transaction_form_cubit.dart'
     as _i472;
 import 'app_module.dart' as _i460;
@@ -256,6 +259,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i807.CreateTransactionUseCase>(
       () => _i807.CreateTransactionUseCase(gh<_i132.TransactionRepository>()),
     );
+    gh.factory<_i1060.GetTransactionByIdUseCase>(
+      () => _i1060.GetTransactionByIdUseCase(gh<_i132.TransactionRepository>()),
+    );
     gh.factory<_i531.SendOtpCubit>(
       () => _i531.SendOtpCubit(gh<_i508.SendOtpUseCase>()),
     );
@@ -278,6 +284,10 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i463.GetListTransactionsUseCase(
         gh<_i92.GetListTransactionsRepository>(),
       ),
+    );
+    gh.factory<_i212.GetTransactionByIdCubit>(
+      () =>
+          _i212.GetTransactionByIdCubit(gh<_i1060.GetTransactionByIdUseCase>()),
     );
     gh.factory<_i995.LogoutCubit>(
       () => _i995.LogoutCubit(gh<_i235.LogoutUseCase>()),

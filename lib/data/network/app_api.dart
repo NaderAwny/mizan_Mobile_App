@@ -6,6 +6,7 @@ import 'package:mizan/data/response/contact_responses/contact_responses.dart';
 import 'package:mizan/data/response/get_list_transaction_responses/get_list_transaction_responses.dart';
 import 'package:mizan/data/response/get_profile_responses/get_profile_responses.dart';
 import 'package:mizan/data/response/register_responses/register_responses.dart';
+import 'package:mizan/data/response/transaction_by_id_responses/transaction_by_id_responses.dart';
 import 'package:mizan/data/response/transaction_responses/transaction_responses.dart';
 import 'package:retrofit/error_logger.dart';
 import 'package:retrofit/http.dart';
@@ -99,4 +100,8 @@ abstract class AppServiceClient {
     @Query("dateFrom") String? dateFrom,
     @Query("dateTo") String? dateTo,
   );
+
+  // ======================== get Transaction By Id Endpoint ========================
+  @GET("/api/transactions/{id}")
+  Future<TransactionResponseById> getTransactionById(@Path("id") String id);
 }
