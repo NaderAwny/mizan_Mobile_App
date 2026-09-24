@@ -29,6 +29,12 @@ class AppStrings {
   // --- Navigation Tabs ---
   static const String home = "الرئيسية";
   static const String transactions = "المعاملات";
+  static const String financialTransactions = "المعاملات المالية";
+  static const String transactionsSubtitle = "أضف وتتبع الدفاتر";
+  static const String searchTransactionsHint = "ابحث برقم المعاملة أو الطرف الثاني...";
+  static const String allTransactions = "الكل";
+  static const String today = "اليوم";
+  static const String yesterday = "أمس";
   static const String contacts = "العملاء";
   static const String installments = "الأقساط";
   static const String analytics = "التقارير";

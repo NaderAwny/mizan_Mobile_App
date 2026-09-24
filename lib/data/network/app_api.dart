@@ -3,6 +3,7 @@ import 'package:mizan/app/constants.dart';
 import 'package:mizan/data/response/auth_session_responses/auth_session_responses.dart';
 import 'package:mizan/data/response/base_responses/base_responses.dart';
 import 'package:mizan/data/response/contact_responses/contact_responses.dart';
+import 'package:mizan/data/response/get_list_transaction_responses/get_list_transaction_responses.dart';
 import 'package:mizan/data/response/get_profile_responses/get_profile_responses.dart';
 import 'package:mizan/data/response/register_responses/register_responses.dart';
 import 'package:mizan/data/response/transaction_responses/transaction_responses.dart';
@@ -87,5 +88,15 @@ abstract class AppServiceClient {
   @POST("/api/transactions")
   Future<TransactionResponse> createTransaction(
     @Body() Map<String, dynamic> body,
+  );
+  // ======================== get Transactions Endpoints ========================
+  @GET("/api/transactions")
+  Future<GetListTransactionsResponse> getTransactions(
+    @Query("page") int page,
+    @Query("pageSize") int pageSize,
+    @Query("contactId") String? contactId,
+    @Query("type") String? type,
+    @Query("dateFrom") String? dateFrom,
+    @Query("dateTo") String? dateTo,
   );
 }

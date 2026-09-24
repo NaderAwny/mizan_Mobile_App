@@ -20,6 +20,8 @@ import 'package:shared_preferences/shared_preferences.dart' as _i460;
 
 import '../data/data_source/auth_remote_data_source.dart' as _i1010;
 import '../data/data_source/contact_remote_data_source.dart' as _i1006;
+import '../data/data_source/get_list_transaction_remote_data_source.dart'
+    as _i696;
 import '../data/data_source/get_profile_data_source.dart' as _i197;
 import '../data/data_source/register_remote_data_source.dart' as _i1006;
 import '../data/data_source/send_otp_remote_data_source.dart' as _i371;
@@ -33,12 +35,15 @@ import '../data/network/dio_client.dart' as _i765;
 import '../data/network/network_info.dart' as _i371;
 import '../data/repository_impl/auth_repository_impl.dart' as _i970;
 import '../data/repository_impl/contact_repository_impl.dart' as _i956;
+import '../data/repository_impl/get_list_transaction_repository_impl.dart'
+    as _i543;
 import '../data/repository_impl/get_profile_repository_impl.dart' as _i379;
 import '../data/repository_impl/register_repository_impl.dart' as _i432;
 import '../data/repository_impl/send_otp_repository_impl.dart' as _i1060;
 import '../data/repository_impl/transaction_repository_impl.dart' as _i905;
 import '../domain/repository/auth_repository.dart' as _i306;
 import '../domain/repository/contact_repository.dart' as _i621;
+import '../domain/repository/get_list_%20transaction_repository.dart' as _i92;
 import '../domain/repository/get_profile_repository.dart' as _i770;
 import '../domain/repository/register_repository.dart' as _i582;
 import '../domain/repository/send_otp_repository.dart' as _i943;
@@ -49,6 +54,7 @@ import '../domain/use_case/delete_contact_use_case.dart' as _i1053;
 import '../domain/use_case/get_contact_by_id_use_case.dart' as _i804;
 import '../domain/use_case/get_contact_profile_use_case.dart' as _i307;
 import '../domain/use_case/get_contacts_use_case.dart' as _i646;
+import '../domain/use_case/get_list_transaction_use_case.dart' as _i463;
 import '../domain/use_case/get_profile_use_case.dart' as _i673;
 import '../domain/use_case/get_vip_contacts_use_case.dart' as _i1063;
 import '../domain/use_case/logout_use_case.dart' as _i235;
@@ -73,6 +79,8 @@ import '../presentation/select_user_type/select_user_type_cubit/select_user_type
 import '../presentation/send_otp/cubit/send_otp_cubit/send_otp_cubit.dart'
     as _i531;
 import '../presentation/splash/splash_cubit/splash_cubit.dart' as _i822;
+import '../presentation/transactions/get_list_transaction/get_list_transaction_cubit.dart'
+    as _i877;
 import '../presentation/transactions/transaction_form_cubit/transaction_form_cubit.dart'
     as _i472;
 import 'app_module.dart' as _i460;
@@ -152,6 +160,11 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i371.NetworkInfo>(),
       ),
     );
+    gh.lazySingleton<_i696.GetListTransactionsRemoteDataSource>(
+      () => _i696.GetListTransactionsRemoteDataSourceImpl(
+        gh<_i563.AppServiceClient>(),
+      ),
+    );
     gh.lazySingleton<_i1006.ContactRemoteDataSource>(
       () => _i1006.ContactRemoteDataSourceImpl(gh<_i563.AppServiceClient>()),
     );
@@ -212,6 +225,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i224.RegisterUseCase>(
       () => _i224.RegisterUseCase(gh<_i582.RegisterRepository>()),
     );
+    gh.lazySingleton<_i92.GetListTransactionsRepository>(
+      () => _i543.GetListTransactionsRepositoryImpl(
+        gh<_i696.GetListTransactionsRemoteDataSource>(),
+        gh<_i371.NetworkInfo>(),
+      ),
+    );
     gh.factory<_i508.SendOtpUseCase>(
       () => _i508.SendOtpUseCase(gh<_i943.SendOtpRepository>()),
     );
@@ -255,11 +274,20 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i705.VerifyOtpCubit>(
       () => _i705.VerifyOtpCubit(gh<_i484.VerifyOtpUseCase>()),
     );
+    gh.lazySingleton<_i463.GetListTransactionsUseCase>(
+      () => _i463.GetListTransactionsUseCase(
+        gh<_i92.GetListTransactionsRepository>(),
+      ),
+    );
     gh.factory<_i995.LogoutCubit>(
       () => _i995.LogoutCubit(gh<_i235.LogoutUseCase>()),
     );
     gh.factory<_i710.SelectUserTypeCubit>(
       () => _i710.SelectUserTypeCubit(gh<_i684.SelectUserTypeUseCase>()),
+    );
+    gh.factory<_i877.GetListTransactionCubit>(
+      () =>
+          _i877.GetListTransactionCubit(gh<_i463.GetListTransactionsUseCase>()),
     );
     return this;
   }
