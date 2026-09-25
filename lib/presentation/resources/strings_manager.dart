@@ -236,5 +236,23 @@ class AppStrings {
   static const String txDetailsPurchaseType = "شراء";
   static const String txDetailsCollectType = "تحصيل";
   static const String txDetailsPayType = "دفع";
+
+  static const String txDetailsNumberPrefix = "عملية رقم #";
+  static const String txDetailsPaymentPlan = "نظام السداد";
+  static const String txDetailsPaid = "المدفوع";
+  static const String txDetailsRemaining = "المتبقي";
+  static const String txDetailsOverdue = "متأخر";
+  static const String txDetailsUpcoming = "قادم";
+  static const String txDetailsNotes = "ملاحظات المعاملة";
+  static const String txDetailsDelete = "حذف المعاملة";
+  static const String txDetailsEdit = "تعديل البيانات";
+  static const String txDetailsPurchaseSupplier = "شراء من مورد";
+  static const String txDetailsSaleCustomer = "بيع لعميل";
+  static const String txDetailsInstallmentPurchase = "معاملة شراء بالتقسيط";
+  static const String txDetailsInstallmentSale = "معاملة بيع بالتقسيط";
+  static const String txDetailsCashTransaction = "معاملة كاش";
+  static const String txDetailsAutomaticInstallment = "تقسيط تلقائي";
+  static const String txDetailsCustomInstallment = "تقسيط مخصص";
+  static const String txDetailsFullPayment = "دفع كامل (كاش)";
 }
 

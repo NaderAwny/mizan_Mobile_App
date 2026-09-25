@@ -152,8 +152,12 @@ class RouteGenerator {
         final transactionId = settings.arguments is String
             ? settings.arguments as String
             : "";
+        final id = settings.arguments is String
+            ? settings.arguments as String
+            : "";
         return MaterialPageRoute(
-          builder: (_) => TransactionDetailsView(transactionId: transactionId),
+          builder: (_) =>
+              TransactionDetailsView(transactionId: transactionId, id: id),
         );
       default:
         return unDefinedRoute();

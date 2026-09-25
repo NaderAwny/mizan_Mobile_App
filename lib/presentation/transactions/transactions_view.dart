@@ -20,6 +20,7 @@ import 'package:mizan/presentation/resources/styles_manager.dart';
 import 'package:mizan/presentation/resources/values_manager.dart';
 import 'package:mizan/presentation/transactions/get_list_transaction/get_list_transaction_cubit.dart';
 import 'package:mizan/presentation/transactions/get_list_transaction/get_list_transaction_state.dart';
+import 'package:mizan/presentation/transactions/get_transaction_by_id/transaction_by_id_view.dart';
 
 class TransactionsView extends StatelessWidget {
   const TransactionsView({super.key});
@@ -662,7 +663,17 @@ class _TransactionCardItem extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TransactionDetailsView(
+                  transactionId: transaction.id,
+                  id: transaction.id,
+                ),
+              ),
+            );
+          },
           borderRadius: BorderRadius.circular(AppRadius.r14.r),
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),

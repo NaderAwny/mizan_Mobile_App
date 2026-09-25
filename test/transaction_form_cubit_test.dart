@@ -40,7 +40,6 @@ class FakeTransactionRepository implements TransactionRepository {
 
   @override
   Future<Either<Failure, TransactionbyidModel>> getTransactionById(String id) {
-    // TODO: implement getTransactionById
     throw UnimplementedError();
   }
 }

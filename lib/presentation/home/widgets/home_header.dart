@@ -30,7 +30,6 @@ class HomeHeader extends StatelessWidget {
             children: [
               // Store / Avatar Profile Box - Tapping opens Drawer
               GestureDetector(
-                onTap: () => Scaffold.of(context).openDrawer(),
                 child: Container(
                   width: 46.r,
                   height: 46.r,
@@ -159,10 +158,7 @@ class _HeaderIconButton extends StatelessWidget {
           decoration: BoxDecoration(
             color: ColorManager.surface,
             borderRadius: BorderRadius.circular(AppRadius.r12.r),
-            border: Border.all(
-              color: ColorManager.border,
-              width: 1.0,
-            ),
+            border: Border.all(color: ColorManager.border, width: 1.0),
             boxShadow: [
               BoxShadow(
                 color: ColorManager.black.withAlpha(8),
@@ -185,11 +181,7 @@ class _HeaderIconButton extends StatelessWidget {
                   ),
                 )
               else if (iconData != null)
-                Icon(
-                  iconData,
-                  size: 22.r,
-                  color: ColorManager.textPrimary,
-                ),
+                Icon(iconData, size: 22.r, color: ColorManager.textPrimary),
               if (hasBadge)
                 Positioned(
                   top: 9.r,

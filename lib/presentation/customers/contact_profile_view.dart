@@ -23,6 +23,7 @@ import 'package:mizan/presentation/resources/routes_manager.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 import 'package:mizan/presentation/resources/styles_manager.dart';
 import 'package:mizan/presentation/resources/values_manager.dart';
+import 'package:mizan/presentation/transactions/get_transaction_by_id/transaction_by_id_view.dart';
 
 class ContactProfileView extends StatelessWidget {
   final String contactId;
@@ -561,8 +562,19 @@ class _ContactProfileScreen extends StatelessWidget {
                   )
                 else
                   ...profile.transactions.map(
-                    (tx) =>
-                        ContactTransactionTile(transaction: tx, onTap: () {}),
+                    (tx) => ContactTransactionTile(
+                      transaction: tx,
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => TransactionDetailsView(
+                              id: tx.id,
+                              transactionId: tx.id,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
 
                 SizedBox(height: 40.h),
