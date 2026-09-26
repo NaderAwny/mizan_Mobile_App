@@ -6,6 +6,7 @@ import 'package:mizan/data/response/contact_responses/contact_responses.dart';
 import 'package:mizan/data/response/get_list_transaction_responses/get_list_transaction_responses.dart';
 import 'package:mizan/data/response/get_profile_responses/get_profile_responses.dart';
 import 'package:mizan/data/response/register_responses/register_responses.dart';
+import 'package:mizan/data/response/pay_installment_responses/pay_installment_responses.dart';
 import 'package:mizan/data/response/transaction_by_id_responses/transaction_by_id_responses.dart';
 import 'package:mizan/data/response/transaction_responses/transaction_responses.dart';
 import 'package:retrofit/error_logger.dart';
@@ -104,4 +105,9 @@ abstract class AppServiceClient {
   // ======================== get Transaction By Id Endpoint ========================
   @GET("/api/transactions/{id}")
   Future<TransactionResponseById> getTransactionById(@Path("id") String id);
+
+  // ======================== Installments Endpoints ========================
+  /// POST /api/installments/{id}/pay — تسجيل سداد قسط
+  @POST("/api/installments/{id}/pay")
+  Future<PayInstallmentResponse> payInstallment(@Path("id") String id);
 }

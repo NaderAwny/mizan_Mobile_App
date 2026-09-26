@@ -191,7 +191,10 @@ class _CustomersScreenState extends State<_CustomersScreen> {
                       ),
                       SizedBox(height: 8.h),
                       VipFilterTabs(
-                        tabs: const [AppStrings.allContacts, AppStrings.vipContacts],
+                        tabs: const [
+                          AppStrings.allContacts,
+                          AppStrings.vipContacts,
+                        ],
                         selectedIndex: _selectedTabIndex,
                         onTabSelected: _onTabChanged,
                       ),
@@ -201,7 +204,8 @@ class _CustomersScreenState extends State<_CustomersScreen> {
 
                 // Dynamic Contacts List with Loading / Error / Content states
                 Expanded(
-                  child: state.flowState?.getScreenWidget(
+                  child:
+                      state.flowState?.getScreenWidget(
                         context,
                         _buildBody(context, state),
                         () => context.read<ContactsCubit>().getContacts(),
@@ -215,16 +219,17 @@ class _CustomersScreenState extends State<_CustomersScreen> {
               elevation: 4,
               shape: const CircleBorder(),
               onPressed: () async {
-                await Navigator.pushNamed(
-                  context,
-                  Routes.contactFormRoute,
-                );
+                await Navigator.pushNamed(context, Routes.contactFormRoute);
                 if (context.mounted) {
                   _searchController.clear();
                   context.read<ContactsCubit>().getContacts(search: '');
                 }
               },
-              child: const Icon(Icons.add_rounded, color: ColorManager.white, size: 28),
+              child: const Icon(
+                Icons.add_rounded,
+                color: ColorManager.white,
+                size: 28,
+              ),
             ),
           ),
         );
@@ -278,7 +283,9 @@ class _CustomersScreenState extends State<_CustomersScreen> {
                         ),
                         child: Center(
                           child: Icon(
-                            isVipMode ? Icons.star_border_rounded : Icons.people_outline_rounded,
+                            isVipMode
+                                ? Icons.star_border_rounded
+                                : Icons.people_outline_rounded,
                             color: ColorManager.textTertiary,
                             size: 36.r,
                           ),
@@ -308,9 +315,7 @@ class _CustomersScreenState extends State<_CustomersScreen> {
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 20.0),
                 child: Center(
-                  child: CircularProgressIndicator(
-                    color: ColorManager.primary,
-                  ),
+                  child: CircularProgressIndicator(color: ColorManager.primary),
                 ),
               ),
             ),
@@ -331,19 +336,16 @@ class _CustomersScreenState extends State<_CustomersScreen> {
       return SliverPadding(
         padding: EdgeInsets.symmetric(horizontal: 16.w),
         sliver: SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final contact = contacts[index];
-              return VipContactCard(
-                contact: contact,
-                onTap: () => _navigateToProfile(context, contact.id),
-                onCall: () {},
-                onSendReminder: () {},
-                onDelete: () => _confirmDelete(context, contact),
-              );
-            },
-            childCount: contacts.length,
-          ),
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final contact = contacts[index];
+            return VipContactCard(
+              contact: contact,
+              onTap: () => _navigateToProfile(context, contact.id),
+              onCall: () {},
+              onSendReminder: () {},
+              onDelete: () => _confirmDelete(context, contact),
+            );
+          }, childCount: contacts.length),
         ),
       );
     }
@@ -355,30 +357,27 @@ class _CustomersScreenState extends State<_CustomersScreen> {
     return SliverPadding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final letter = sortedLetters[index];
-            final items = grouped[letter]!;
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final letter = sortedLetters[index];
+          final items = grouped[letter]!;
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AlphabetSectionHeader(letter: letter),
-                ...items.map(
-                  (c) => ContactCard(
-                    contact: c,
-                    onTap: () => _navigateToProfile(context, c.id),
-                    onToggleVip: () {
-                      context.read<ContactsCubit>().toggleVip(c.id);
-                    },
-                    onDelete: () => _confirmDelete(context, c),
-                  ),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AlphabetSectionHeader(letter: letter),
+              ...items.map(
+                (c) => ContactCard(
+                  contact: c,
+                  onTap: () => _navigateToProfile(context, c.id),
+                  onToggleVip: () {
+                    context.read<ContactsCubit>().toggleVip(c.id);
+                  },
+                  onDelete: () => _confirmDelete(context, c),
                 ),
-              ],
-            );
-          },
-          childCount: sortedLetters.length,
-        ),
+              ),
+            ],
+          );
+        }, childCount: sortedLetters.length),
       ),
     );
   }
@@ -393,7 +392,10 @@ class _CustomersScreenState extends State<_CustomersScreen> {
     return map;
   }
 
-  Future<void> _navigateToProfile(BuildContext context, String contactId) async {
+  Future<void> _navigateToProfile(
+    BuildContext context,
+    String contactId,
+  ) async {
     await Navigator.pushNamed(
       context,
       Routes.contactProfileRoute,

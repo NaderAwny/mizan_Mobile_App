@@ -1,26 +1,24 @@
 // ─────────────────────────────────────────────────────────────
 // TransactionDetailsView
-// Responsive Production Layout
-// Mizan Design System
+// Responsive Production Layout & Figma Mizan Design System Compliant
 // ─────────────────────────────────────────────────────────────
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart' as intl;
 
 import 'package:mizan/app/di.dart';
 import 'package:mizan/domain/model/transaction_by_id_mode/transaction_by_id_mode.dart';
-
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
-import 'package:mizan/presentation/resources/assets_manager.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
 import 'package:mizan/presentation/resources/font_manager.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 import 'package:mizan/presentation/resources/styles_manager.dart';
 import 'package:mizan/presentation/resources/values_manager.dart';
-
 import 'package:mizan/presentation/transactions/get_transaction_by_id/get_transaction_by_id_cubit.dart';
 import 'package:mizan/presentation/transactions/get_transaction_by_id/get_transaction_by_id_state.dart';
+import 'package:mizan/presentation/transactions/pay_installment/pay_installment_sheet.dart';
 
 class TransactionDetailsView extends StatelessWidget {
   final String transactionId;
@@ -85,37 +83,38 @@ class _TransactionDetailsScreen extends StatelessWidget {
 
         Expanded(
           child: SingleChildScrollView(
-            physics: const ClampingScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 20.h),
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 24.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Amount
+                // Amount Card
                 _buildAmountCard(data),
 
                 SizedBox(height: 12.h),
 
-                // Transaction details
+                // Details Table
                 _buildDetailsTable(data),
 
-                // Installments
+                // Installments Tracking Section
                 if (data.isInstallment == true ||
                     (data.installments != null &&
                         data.installments!.isNotEmpty)) ...[
-                  SizedBox(height: 12.h),
-                  _buildInstallmentTrackingSection(data),
+                  SizedBox(height: 14.h),
+                  _buildInstallmentTrackingSection(context, data),
                 ],
 
-                // Notes
-                if (data.noteText != null &&
-                    data.noteText!.trim().isNotEmpty) ...[
-                  SizedBox(height: 12.h),
-                  _buildNotesCard(data.noteText!),
+                // Notes & Voice Note
+                if ((data.noteText != null &&
+                        data.noteText!.trim().isNotEmpty) ||
+                    data.hasVoiceNote == true) ...[
+                  SizedBox(height: 14.h),
+                  _buildNotesCard(data),
                 ],
 
-                SizedBox(height: 14.h),
+                SizedBox(height: 16.h),
 
-                // Delete
+                // Delete Action
                 _buildActionsRow(context, data),
               ],
             ),
@@ -131,28 +130,28 @@ class _TransactionDetailsScreen extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context, TransactionbyidModel data) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 6.h),
+      padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 6.h),
       child: SizedBox(
-        height: 64.h,
+        height: 56.h,
         child: Row(
           children: [
             // Back Button
             SizedBox(
-              width: 44.w,
-              height: 44.w,
+              width: 42.w,
+              height: 42.w,
               child: InkWell(
                 onTap: () => Navigator.of(context).pop(),
-                borderRadius: BorderRadius.circular(22.r),
+                borderRadius: BorderRadius.circular(21.r),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: ColorManager.surfaceVariant,
+                    color: ColorManager.surface,
                     shape: BoxShape.circle,
                     border: Border.all(color: ColorManager.border, width: 1),
                   ),
                   alignment: Alignment.center,
-                  child: IconAssets.arrowLeft.svg(
-                    width: 20.w,
-                    height: 20.h,
+                  child: Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 18.r,
                     color: ColorManager.textPrimary,
                   ),
                 ),
@@ -170,7 +169,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: getExtraBoldStyle(
                   color: ColorManager.textPrimary,
-                  fontSize: FontSize.s22.sp,
+                  fontSize: FontSize.s20.sp,
                 ),
               ),
             ),
@@ -187,16 +186,23 @@ class _TransactionDetailsScreen extends StatelessWidget {
   Widget _buildAmountCard(TransactionbyidModel data) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 14.h),
+      padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
       decoration: BoxDecoration(
         color: ColorManager.surface,
-        borderRadius: BorderRadius.circular(20.r),
+        borderRadius: BorderRadius.circular(AppRadius.r20.r),
         border: Border.all(color: ColorManager.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: ColorManager.black.withAlpha(5),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Amount
+          // Amount & Subtitle
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,13 +212,11 @@ class _TransactionDetailsScreen extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: getMediumStyle(
-                    color: ColorManager.textTertiary,
-                    fontSize: FontSize.s11.sp,
+                    color: ColorManager.textSecondary,
+                    fontSize: FontSize.s12.sp,
                   ),
                 ),
-
                 SizedBox(height: 4.h),
-
                 Text(
                   "${_formatAmount(data.amount)} ${AppStrings.egp}",
                   maxLines: 1,
@@ -229,22 +233,18 @@ class _TransactionDetailsScreen extends StatelessWidget {
           SizedBox(width: 12.w),
 
           // Type badge
-          Flexible(
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
-              decoration: BoxDecoration(
-                color: _getBadgeBackgroundColor(data.type),
-                borderRadius: BorderRadius.circular(100.r),
-              ),
-              child: Text(
-                _getBadgeText(data.type),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: getBoldStyle(
-                  color: _getBadgeTextColor(data.type),
-                  fontSize: FontSize.s12.sp,
-                ),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+            decoration: BoxDecoration(
+              color: _getBadgeBackgroundColor(data.type),
+              borderRadius: BorderRadius.circular(AppRadius.r100.r),
+            ),
+            child: Text(
+              _getBadgeText(data.type),
+              textAlign: TextAlign.center,
+              style: getBoldStyle(
+                color: _getBadgeTextColor(data.type),
+                fontSize: FontSize.s12.sp,
               ),
             ),
           ),
@@ -258,42 +258,49 @@ class _TransactionDetailsScreen extends StatelessWidget {
   // ─────────────────────────────────────────────────────────────
 
   Widget _buildDetailsTable(TransactionbyidModel data) {
+    final partyLabel = _getPartyLabel(data.type);
+    final partyValue = data.contactName?.isNotEmpty == true
+        ? data.contactName!
+        : (data.partyName?.isNotEmpty == true ? data.partyName! : "—");
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
       decoration: BoxDecoration(
         color: ColorManager.surface,
-        borderRadius: BorderRadius.circular(20.r),
+        borderRadius: BorderRadius.circular(AppRadius.r20.r),
         border: Border.all(color: ColorManager.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: ColorManager.black.withAlpha(5),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
           _buildMetaRow(
-            label: AppStrings.txDetailsContactLabel,
-            value: data.contactName ?? data.partyName ?? "—",
+            label: partyLabel,
+            value: partyValue,
             valueColor: ColorManager.primary,
           ),
-
           _buildMetaRow(
             label: AppStrings.txDetailsTypeLabel,
             value: _getTransactionTypeLabel(data.type),
           ),
-
           _buildMetaRow(
             label: AppStrings.txDetailsDateLabel,
             value: _formatDateTime(data.transactionDate ?? data.createdAt),
           ),
-
           _buildMetaRow(
             label: AppStrings.txDetailsPaymentMethodLabel,
             value: _getPaymentMethodLabel(data.paymentMethod),
           ),
-
           _buildMetaRow(
             label: AppStrings.txDetailsPaymentPlan,
             value: data.isInstallment == true
-                ? "${_getInstallmentPlanModeLabel(data.installmentPlanMode)} - "
-                      "${data.installments?.length ?? 0} أشهر"
+                ? "${_getInstallmentPlanModeLabel(data.installmentPlanMode)} (${data.installments?.length ?? 0} أقساط)"
                 : AppStrings.txDetailsFullPayment,
             isLast: true,
           ),
@@ -303,7 +310,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Responsive Meta Row
+  // Meta Row
   // ─────────────────────────────────────────────────────────────
 
   Widget _buildMetaRow({
@@ -317,15 +324,17 @@ class _TransactionDetailsScreen extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: 12.h),
       decoration: isLast
           ? null
-          : const BoxDecoration(
+          : BoxDecoration(
               border: Border(
-                bottom: BorderSide(color: ColorManager.border, width: 1),
+                bottom: BorderSide(
+                  color: ColorManager.border.withAlpha(150),
+                  width: 1,
+                ),
               ),
             ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Label
           Expanded(
             flex: 4,
             child: Text(
@@ -339,10 +348,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
               ),
             ),
           ),
-
           SizedBox(width: 14.w),
-
-          // Value
           Expanded(
             flex: 6,
             child: Text(
@@ -365,31 +371,38 @@ class _TransactionDetailsScreen extends StatelessWidget {
   // Installments Section
   // ─────────────────────────────────────────────────────────────
 
-  Widget _buildInstallmentTrackingSection(TransactionbyidModel data) {
+  Widget _buildInstallmentTrackingSection(
+    BuildContext context,
+    TransactionbyidModel data,
+  ) {
     final totalPaid = data.totalPaid ?? 0;
-
     final totalAmount = data.amount ?? 0;
-
-    final totalRemaining = data.totalRemaining ?? (totalAmount - totalPaid);
-
+    final totalRemaining =
+        data.totalRemaining ?? (totalAmount - totalPaid);
     final double progressRatio = totalAmount > 0
         ? (totalPaid / totalAmount).clamp(0.0, 1.0)
         : 0.0;
-
     final installments = data.installments ?? [];
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(14.w),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: ColorManager.surface,
-        borderRadius: BorderRadius.circular(20.r),
+        borderRadius: BorderRadius.circular(AppRadius.r20.r),
         border: Border.all(color: ColorManager.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: ColorManager.black.withAlpha(5),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header
+          // Section Title
           Row(
             children: [
               Expanded(
@@ -402,38 +415,36 @@ class _TransactionDetailsScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
               SizedBox(width: 10.w),
-
               Container(
-                width: 28.w,
-                height: 28.w,
-                decoration: BoxDecoration(
-                  color: ColorManager.surfaceVariant,
+                width: 32.r,
+                height: 32.r,
+                decoration: const BoxDecoration(
+                  color: ColorManager.lightPrimary,
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
-                child: IconAssets.receiptText.svg(
-                  width: 15.w,
-                  height: 15.h,
-                  color: ColorManager.textSecondary,
+                child: Icon(
+                  Icons.receipt_long_rounded,
+                  size: 18.r,
+                  color: ColorManager.primary,
                 ),
               ),
             ],
           ),
 
-          SizedBox(height: 12.h),
+          SizedBox(height: 14.h),
 
-          // Summary
+          // Summary & Progress Bar
           _buildInstallmentsSummary(
             totalPaid: totalPaid,
             totalRemaining: totalRemaining,
             progressRatio: progressRatio,
           ),
 
-          SizedBox(height: 12.h),
+          SizedBox(height: 14.h),
 
-          // List
+          // List of Installment Cards
           if (installments.isEmpty)
             _buildEmptyInstallments()
           else
@@ -441,9 +452,14 @@ class _TransactionDetailsScreen extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: installments.length,
-              separatorBuilder: (_, __) => SizedBox(height: 8.h),
-              itemBuilder: (context, index) {
-                return _buildInstallmentItem(installments[index], index);
+              separatorBuilder: (_, _) => SizedBox(height: 10.h),
+              itemBuilder: (ctx, index) {
+                return _buildInstallmentItem(
+                  context,
+                  installments[index],
+                  index,
+                  data,
+                );
               },
             ),
         ],
@@ -460,53 +476,75 @@ class _TransactionDetailsScreen extends StatelessWidget {
     required num totalRemaining,
     required double progressRatio,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildSummaryValue(
-                label: AppStrings.txDetailsRemaining,
-                value: totalRemaining,
-                alignment: CrossAxisAlignment.start,
+    final percent = (progressRatio * 100).toInt();
+
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: ColorManager.background,
+        borderRadius: BorderRadius.circular(AppRadius.r14.r),
+        border: Border.all(color: ColorManager.border, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildSummaryValue(
+                  label: AppStrings.txDetailsRemaining,
+                  value: totalRemaining,
+                  valueColor: ColorManager.error,
+                  alignment: CrossAxisAlignment.start,
+                ),
               ),
-            ),
-
-            SizedBox(width: 12.w),
-
-            Expanded(
-              child: _buildSummaryValue(
-                label: AppStrings.txDetailsPaid,
-                value: totalPaid,
-                alignment: CrossAxisAlignment.end,
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: ColorManager.lightPrimary,
+                  borderRadius: BorderRadius.circular(AppRadius.r100.r),
+                ),
+                child: Text(
+                  '$percent%',
+                  style: getBoldStyle(
+                    color: ColorManager.primary,
+                    fontSize: FontSize.s11.sp,
+                  ),
+                ),
               ),
-            ),
-          ],
-        ),
-
-        SizedBox(height: 9.h),
-
-        ClipRRect(
-          borderRadius: BorderRadius.circular(999.r),
-          child: LinearProgressIndicator(
-            value: progressRatio,
-            minHeight: 6.h,
-            backgroundColor: ColorManager.surfaceVariant,
-            color: ColorManager.primary,
+              Expanded(
+                child: _buildSummaryValue(
+                  label: AppStrings.txDetailsPaid,
+                  value: totalPaid,
+                  valueColor: ColorManager.success,
+                  alignment: CrossAxisAlignment.end,
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
+
+          SizedBox(height: 10.h),
+
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999.r),
+            child: LinearProgressIndicator(
+              value: progressRatio,
+              minHeight: 7.h,
+              backgroundColor: ColorManager.border,
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                ColorManager.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
-
-  // ─────────────────────────────────────────────────────────────
-  // Summary Value
-  // ─────────────────────────────────────────────────────────────
 
   Widget _buildSummaryValue({
     required String label,
     required num value,
+    Color? valueColor,
     required CrossAxisAlignment alignment,
   }) {
     return Column(
@@ -517,13 +555,11 @@ class _TransactionDetailsScreen extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: getMediumStyle(
-            color: ColorManager.textTertiary,
+            color: ColorManager.textSecondary,
             fontSize: FontSize.s11.sp,
           ),
         ),
-
         SizedBox(height: 2.h),
-
         Text(
           "${_formatAmount(value)} ${AppStrings.egp}",
           maxLines: 1,
@@ -532,7 +568,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
               ? TextAlign.right
               : TextAlign.left,
           style: getBoldStyle(
-            color: ColorManager.textPrimary,
+            color: valueColor ?? ColorManager.textPrimary,
             fontSize: FontSize.s13.sp,
           ),
         ),
@@ -544,81 +580,191 @@ class _TransactionDetailsScreen extends StatelessWidget {
   // Installment Item
   // ─────────────────────────────────────────────────────────────
 
-  Widget _buildInstallmentItem(InstallmentbyidModel inst, int index) {
+  Widget _buildInstallmentItem(
+    BuildContext context,
+    InstallmentbyidModel inst,
+    int index,
+    TransactionbyidModel txData,
+  ) {
     final installmentNumber = inst.installmentNumber ?? (index + 1);
+    final statusStr = inst.status?.toLowerCase() ?? '';
+    final isPaid =
+        inst.isPaid == true || statusStr == 'paid' || statusStr == 'مدفوع';
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-      decoration: BoxDecoration(
-        color: ColorManager.surfaceVariant,
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // First Row
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Text(
-                  "قسط $installmentNumber",
-                  textAlign: TextAlign.right,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: getBoldStyle(
-                    color: ColorManager.textPrimary,
-                    fontSize: FontSize.s14.sp,
+    final partyName = txData.contactName?.isNotEmpty == true
+        ? txData.contactName!
+        : (txData.partyName?.isNotEmpty == true ? txData.partyName! : '—');
+
+    return GestureDetector(
+      onTap: isPaid
+          ? null
+          : () => showPayInstallmentSheet(
+                context: context,
+                installment: inst,
+                contactName: partyName,
+                transactionType: txData.type,
+                totalInstallments: txData.installments?.length,
+                onSuccess: () {
+                  // Reload transaction to update full UI
+                  context
+                      .read<GetTransactionByIdCubit>()
+                      .getTransactionById(transactionId);
+                },
+              ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+        decoration: BoxDecoration(
+          color: isPaid
+              ? ColorManager.background
+              : ColorManager.surface,
+          borderRadius: BorderRadius.circular(AppRadius.r16.r),
+          border: Border.all(
+            color: isPaid
+                ? ColorManager.border
+                : ColorManager.primary.withAlpha(60),
+            width: isPaid ? 1 : 1.2,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // First Row: Header + Status
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    'قسط $installmentNumber',
+                    textAlign: TextAlign.right,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: getBoldStyle(
+                      color: ColorManager.textPrimary,
+                      fontSize: FontSize.s14.sp,
+                    ),
                   ),
                 ),
-              ),
+                SizedBox(width: 8.w),
+                _buildInstallmentStatusBadge(inst),
+                if (!isPaid) ...[
+                  SizedBox(width: 6.w),
+                  Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    size: 13.r,
+                    color: ColorManager.primary,
+                  ),
+                ],
+              ],
+            ),
 
-              SizedBox(width: 8.w),
+            SizedBox(height: 10.h),
 
-              _buildInstallmentStatusBadge(inst),
-            ],
-          ),
+            // Divider
+            Container(
+              height: 1,
+              color: ColorManager.border.withAlpha(120),
+            ),
 
-          SizedBox(height: 10.h),
+            SizedBox(height: 10.h),
 
-          // Divider
-          Container(height: 1, color: ColorManager.border.withOpacity(0.65)),
+            // Details Row: Due Date & Amount
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _buildInstallmentInfo(
+                    icon: Icons.calendar_today_outlined,
+                    label: 'تاريخ الاستحقاق',
+                    value: _formatDate(inst.dueDate),
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: _buildInstallmentInfo(
+                    icon: Icons.payments_outlined,
+                    label: 'قيمة القسط',
+                    value:
+                        '${_formatAmount(inst.amount)} ${AppStrings.egp}',
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+              ],
+            ),
 
-          SizedBox(height: 10.h),
-
-          // Details
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _buildInstallmentInfo(
-                  icon: Icons.calendar_today_outlined,
-                  label: "تاريخ الاستحقاق",
-                  value: _formatDate(inst.dueDate),
-                  textAlign: TextAlign.right,
+            // Paid Date if paid
+            if (isPaid && inst.paidAt != null && inst.paidAt!.isNotEmpty) ...[
+              SizedBox(height: 8.h),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: ColorManager.successContainer,
+                  borderRadius: BorderRadius.circular(AppRadius.r8.r),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check_circle_rounded,
+                      size: 14.r,
+                      color: ColorManager.success,
+                    ),
+                    SizedBox(width: 6.w),
+                    Expanded(
+                      child: Text(
+                        'تم السداد في: ${_formatDateTime(inst.paidAt)}',
+                        style: getSemiBoldStyle(
+                          color: ColorManager.success,
+                          fontSize: FontSize.s11.sp,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+            ],
 
-              SizedBox(width: 12.w),
-
-              Expanded(
-                child: _buildInstallmentInfo(
-                  icon: Icons.payments_outlined,
-                  label: "قيمة القسط",
-                  value: "${_formatAmount(inst.amount)} ${AppStrings.egp}",
-                  textAlign: TextAlign.right,
+            // Action hint for unpaid
+            if (!isPaid) ...[
+              SizedBox(height: 10.h),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 10.w,
+                  vertical: 6.h,
+                ),
+                decoration: BoxDecoration(
+                  color: ColorManager.lightPrimary,
+                  borderRadius: BorderRadius.circular(AppRadius.r8.r),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.touch_app_outlined,
+                      size: 14.r,
+                      color: ColorManager.primary,
+                    ),
+                    SizedBox(width: 6.w),
+                    Text(
+                      'اضغط لتسجيل السداد',
+                      style: getBoldStyle(
+                        color: ColorManager.primary,
+                        fontSize: FontSize.s11.sp,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Installment Information
+  // Installment Info Column
   // ─────────────────────────────────────────────────────────────
 
   Widget _buildInstallmentInfo({
@@ -632,26 +778,22 @@ class _TransactionDetailsScreen extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icon, size: 14.sp, color: ColorManager.textTertiary),
-
-            SizedBox(width: 5.w),
-
+            Icon(icon, size: 14.r, color: ColorManager.textSecondary),
+            SizedBox(width: 4.w),
             Expanded(
               child: Text(
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: getMediumStyle(
-                  color: ColorManager.textTertiary,
-                  fontSize: FontSize.s10.sp,
+                  color: ColorManager.textSecondary,
+                  fontSize: FontSize.s11.sp,
                 ),
               ),
             ),
           ],
         ),
-
         SizedBox(height: 3.h),
-
         Text(
           value,
           textAlign: textAlign,
@@ -667,21 +809,19 @@ class _TransactionDetailsScreen extends StatelessWidget {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Installment Status
+  // Installment Status Badge
   // ─────────────────────────────────────────────────────────────
 
   Widget _buildInstallmentStatusBadge(InstallmentbyidModel inst) {
     final statusStr = inst.status?.toLowerCase() ?? "";
-
     final isPaid =
         inst.isPaid == true || statusStr == "paid" || statusStr == "مدفوع";
 
     bool isOverdue = statusStr == "overdue" || statusStr == "متأخر";
 
-    if (!isPaid && !isOverdue && inst.dueDate != null) {
+    if (!isPaid && !isOverdue && inst.dueDate != null && inst.dueDate!.isNotEmpty) {
       try {
         final due = DateTime.parse(inst.dueDate!);
-
         if (due.isBefore(DateTime.now())) {
           isOverdue = true;
         }
@@ -701,17 +841,17 @@ class _TransactionDetailsScreen extends StatelessWidget {
       textColor = ColorManager.error;
       label = AppStrings.txDetailsOverdue;
     } else {
-      bgColor = ColorManager.surface;
-      textColor = ColorManager.textTertiary;
+      bgColor = ColorManager.lightPrimary;
+      textColor = ColorManager.primary;
       label = AppStrings.txDetailsUpcoming;
     }
 
     return Container(
-      constraints: BoxConstraints(minWidth: 48.w),
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+      constraints: BoxConstraints(minWidth: 52.w),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(100.r),
+        borderRadius: BorderRadius.circular(AppRadius.r100.r),
       ),
       child: Text(
         label,
@@ -723,10 +863,6 @@ class _TransactionDetailsScreen extends StatelessWidget {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // Empty Installments
-  // ─────────────────────────────────────────────────────────────
-
   Widget _buildEmptyInstallments() {
     return Container(
       width: double.infinity,
@@ -735,7 +871,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
       child: Text(
         "لا توجد أقساط مسجلة",
         style: getMediumStyle(
-          color: ColorManager.textTertiary,
+          color: ColorManager.textSecondary,
           fontSize: FontSize.s12.sp,
         ),
       ),
@@ -743,39 +879,87 @@ class _TransactionDetailsScreen extends StatelessWidget {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Notes
+  // Notes Card
   // ─────────────────────────────────────────────────────────────
 
-  Widget _buildNotesCard(String notes) {
+  Widget _buildNotesCard(TransactionbyidModel data) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(14.w),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: ColorManager.surfaceVariant,
-        borderRadius: BorderRadius.circular(16.r),
+        color: ColorManager.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r20.r),
+        border: Border.all(color: ColorManager.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: ColorManager.black.withAlpha(5),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            AppStrings.txDetailsNotes,
-            textAlign: TextAlign.right,
-            style: getBoldStyle(
-              color: ColorManager.textPrimary,
-              fontSize: FontSize.s14.sp,
-            ),
+          Row(
+            children: [
+              Icon(
+                Icons.sticky_note_2_outlined,
+                size: 18.r,
+                color: ColorManager.primary,
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                AppStrings.txDetailsNotes,
+                textAlign: TextAlign.right,
+                style: getBoldStyle(
+                  color: ColorManager.textPrimary,
+                  fontSize: FontSize.s14.sp,
+                ),
+              ),
+            ],
           ),
 
-          SizedBox(height: 7.h),
-
-          Text(
-            notes,
-            textAlign: TextAlign.right,
-            style: getMediumStyle(
-              color: ColorManager.textSecondary,
-              fontSize: FontSize.s12.sp,
+          if (data.noteText != null && data.noteText!.trim().isNotEmpty) ...[
+            SizedBox(height: 8.h),
+            Text(
+              data.noteText!,
+              textAlign: TextAlign.right,
+              style: getMediumStyle(
+                color: ColorManager.textSecondary,
+                fontSize: FontSize.s13.sp,
+                height: 1.4,
+              ),
             ),
-          ),
+          ],
+
+          if (data.hasVoiceNote == true) ...[
+            SizedBox(height: 10.h),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: ColorManager.lightPrimary,
+                borderRadius: BorderRadius.circular(AppRadius.r10.r),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.mic_rounded,
+                    size: 18.r,
+                    color: ColorManager.primary,
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    'ملاحظة صوتية مسجلة',
+                    style: getSemiBoldStyle(
+                      color: ColorManager.primary,
+                      fontSize: FontSize.s12.sp,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -788,18 +972,24 @@ class _TransactionDetailsScreen extends StatelessWidget {
   Widget _buildActionsRow(BuildContext context, TransactionbyidModel data) {
     return SizedBox(
       width: double.infinity,
-      height: 50.h,
+      height: 48.h,
       child: InkWell(
         onTap: () => _showDeleteConfirmDialog(context, data),
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(AppRadius.r14.r),
         child: Container(
           decoration: BoxDecoration(
             color: ColorManager.errorContainer,
-            borderRadius: BorderRadius.circular(16.r),
+            borderRadius: BorderRadius.circular(AppRadius.r14.r),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Icon(
+                Icons.delete_outline_rounded,
+                size: 18.r,
+                color: ColorManager.error,
+              ),
+              SizedBox(width: 8.w),
               Text(
                 AppStrings.txDetailsDelete,
                 style: getSemiBoldStyle(
@@ -807,24 +997,12 @@ class _TransactionDetailsScreen extends StatelessWidget {
                   fontSize: FontSize.s14.sp,
                 ),
               ),
-
-              SizedBox(width: 8.w),
-
-              IconAssets.trash2.svg(
-                width: 17.w,
-                height: 17.h,
-                color: ColorManager.error,
-              ),
             ],
           ),
         ),
       ),
     );
   }
-
-  // ─────────────────────────────────────────────────────────────
-  // Delete Dialog
-  // ─────────────────────────────────────────────────────────────
 
   void _showDeleteConfirmDialog(
     BuildContext context,
@@ -836,7 +1014,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
         return AlertDialog(
           backgroundColor: ColorManager.surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.r),
+            borderRadius: BorderRadius.circular(AppRadius.r20.r),
           ),
           title: Text(
             AppStrings.delete,
@@ -865,13 +1043,9 @@ class _TransactionDetailsScreen extends StatelessWidget {
                 ),
               ),
             ),
-
             TextButton(
               onPressed: () {
                 Navigator.of(dialogContext).pop();
-
-                // TODO:
-                // Perform deletion logic here.
               },
               child: Text(
                 AppStrings.delete,
@@ -892,248 +1066,145 @@ class _TransactionDetailsScreen extends StatelessWidget {
   // ─────────────────────────────────────────────────────────────
 
   Color _getBadgeBackgroundColor(String? type) {
-    if (type == null) {
-      return const Color(0xFFEEF2FF);
-    }
-
+    if (type == null) return const Color(0xFFEEF2FF);
     final lower = type.toLowerCase();
-
-    if (lower == "collect" || lower == "تحصيل") {
+    if (lower == "collect" || lower == "تحصيل" || lower == "sale" || lower == "بيع") {
       return ColorManager.successContainer;
     }
-
-    if (lower == "pay" || lower == "دفع") {
+    if (lower == "pay" || lower == "دفع" || lower == "purchase" || lower == "شراء") {
       return ColorManager.errorContainer;
     }
-
     return const Color(0xFFEEF2FF);
   }
 
   Color _getBadgeTextColor(String? type) {
-    if (type == null) {
-      return const Color(0xFF4F46E5);
-    }
-
+    if (type == null) return const Color(0xFF4F46E5);
     final lower = type.toLowerCase();
-
-    if (lower == "collect" || lower == "تحصيل") {
+    if (lower == "collect" || lower == "تحصيل" || lower == "sale" || lower == "بيع") {
       return ColorManager.success;
     }
-
-    if (lower == "pay" || lower == "دفع") {
+    if (lower == "pay" || lower == "دفع" || lower == "purchase" || lower == "شراء") {
       return ColorManager.error;
     }
-
     return const Color(0xFF4F46E5);
   }
 
   String _getBadgeText(String? type) {
-    if (type == null) return "";
-
+    if (type == null || type.isEmpty) return "معاملة";
     final lower = type.toLowerCase();
-
-    if (lower == "purchase" || lower == "شراء") {
-      return AppStrings.txDetailsPurchaseSupplier;
-    }
-
-    if (lower == "sale" || lower == "بيع") {
-      return AppStrings.txDetailsSaleCustomer;
-    }
-
-    if (lower == "collect" || lower == "تحصيل") {
-      return AppStrings.quickCollect;
-    }
-
-    if (lower == "pay" || lower == "دفع") {
-      return AppStrings.quickPay;
-    }
-
+    if (lower == "sale" || lower == "بيع") return "مبيعات";
+    if (lower == "purchase" || lower == "شراء") return "مشتريات";
+    if (lower == "collect" || lower == "تحصيل") return "تحصيل";
+    if (lower == "pay" || lower == "دفع") return "دفع";
     return type;
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // Transaction Helpers
-  // ─────────────────────────────────────────────────────────────
-
   String _getAmountSubtitle(TransactionbyidModel data) {
-    if (data.isInstallment == true) {
-      final typeLower = data.type?.toLowerCase() ?? "";
+    final lower = data.type?.toLowerCase() ?? "";
+    if (lower == "sale" || lower == "بيع") return "إجمالي قيمة المبيعات";
+    if (lower == "purchase" || lower == "شراء") return "إجمالي قيمة المشتريات";
+    if (lower == "collect" || lower == "تحصيل") return "المبلغ المحصل";
+    if (lower == "pay" || lower == "دفع") return "المبلغ المدفوع";
+    return "إجمالي قيمة المعاملة";
+  }
 
-      if (typeLower == "purchase" || typeLower == "شراء") {
-        return AppStrings.txDetailsInstallmentPurchase;
-      }
-
-      return AppStrings.txDetailsInstallmentSale;
-    }
-
-    return AppStrings.txDetailsCashTransaction;
+  String _getPartyLabel(String? type) {
+    final lower = type?.toLowerCase() ?? "";
+    if (lower == "purchase" || lower == "شراء") return "اسم المورد";
+    return "اسم العميل";
   }
 
   String _getTransactionTypeLabel(String? type) {
-    if (type == null) return "—";
-
+    if (type == null || type.isEmpty) return "—";
     final lower = type.toLowerCase();
-
-    if (lower == "purchase" || lower == "شراء") {
-      return AppStrings.txDetailsPurchaseType;
-    }
-
-    if (lower == "sale" || lower == "بيع") {
-      return AppStrings.txDetailsSaleType;
-    }
-
-    if (lower == "collect" || lower == "تحصيل") {
-      return AppStrings.quickCollect;
-    }
-
-    if (lower == "pay" || lower == "دفع") {
-      return AppStrings.quickPay;
-    }
-
+    if (lower == "sale") return "بيع";
+    if (lower == "purchase") return "شراء";
+    if (lower == "collect") return "تحصيل";
+    if (lower == "pay") return "دفع";
     return type;
   }
 
   String _getPaymentMethodLabel(String? method) {
-    if (method == null || method.trim().isEmpty) {
-      return AppStrings.txDetailsCashPayment;
-    }
-
+    if (method == null || method.isEmpty) return "—";
     final lower = method.toLowerCase();
-
-    if (lower == "cash" || lower == "نقدي" || lower == "كاش") {
-      return "نقدي";
-    }
-
-    if (lower == "credit" || lower == "آجل") {
-      return "آجل";
-    }
-
-    if (lower == "bank" || lower == "تحويل بنكي") {
-      return "تحويل بنكي";
-    }
-
+    if (lower == "cash") return "نقدي";
+    if (lower == "bank") return "تحويل بنكي";
+    if (lower == "wallet") return "محفظة إلكترونية";
+    if (lower == "card") return "بطاقة بنكية";
     return method;
   }
 
   String _getInstallmentPlanModeLabel(String? mode) {
-    if (mode == null || mode.trim().isEmpty) {
-      return AppStrings.txDetailsAutomaticInstallment;
-    }
-
+    if (mode == null || mode.isEmpty) return "أقساط";
     final lower = mode.toLowerCase();
-
-    if (lower == "automatic" || lower == "تلقائي") {
-      return AppStrings.txDetailsAutomaticInstallment;
-    }
-
-    if (lower == "custom" || lower == "مخصص") {
-      return AppStrings.txDetailsCustomInstallment;
-    }
-
+    if (lower == "automatic") return "تقسيط تلقائي";
+    if (lower == "custom") return "تقسيط مخصص";
     return mode;
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // Amount Formatting
-  // ─────────────────────────────────────────────────────────────
-
-  String _formatAmount(num? amount) {
-    if (amount == null) {
-      return "0.00";
-    }
-
-    final parts = amount.toStringAsFixed(2).split('.');
-
-    final integerPart = parts[0].replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    );
-
-    return '$integerPart.${parts[1]}';
+  String _formatAmount(num? value) {
+    if (value == null) return '0.00';
+    final formatter = intl.NumberFormat('#,##0.##', 'en');
+    return formatter.format(value);
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // Date + Time
-  // ─────────────────────────────────────────────────────────────
+  static const List<String> _arabicMonths = [
+    'يناير',
+    'فبراير',
+    'مارس',
+    'أبريل',
+    'مايو',
+    'يونيو',
+    'يوليو',
+    'أغسطس',
+    'سبتمبر',
+    'أكتوبر',
+    'نوفمبر',
+    'ديسمبر',
+  ];
 
-  String _formatDateTime(String? dateStr) {
-    if (dateStr == null || dateStr.trim().isEmpty) {
-      return "—";
-    }
-
+  DateTime _parseToLocal(String raw) {
+    final trimmed = raw.trim();
     try {
-      final dateTime = DateTime.parse(dateStr).toLocal();
-
-      const months = [
-        "يناير",
-        "فبراير",
-        "مارس",
-        "أبريل",
-        "مايو",
-        "يونيو",
-        "يوليو",
-        "أغسطس",
-        "سبتمبر",
-        "أكتوبر",
-        "نوفمبر",
-        "ديسمبر",
-      ];
-
-      final monthName = months[dateTime.month - 1];
-
-      final hour12 = dateTime.hour == 0
-          ? 12
-          : dateTime.hour > 12
-          ? dateTime.hour - 12
-          : dateTime.hour;
-
-      final period = dateTime.hour >= 12 ? "م" : "ص";
-
-      final minuteStr = dateTime.minute.toString().padLeft(2, '0');
-
-      return "${dateTime.day} "
-          "$monthName "
-          "${dateTime.year}\n"
-          "$hour12:$minuteStr $period";
+      if (trimmed.endsWith('Z')) {
+        return DateTime.parse(trimmed).toLocal();
+      }
+      if (trimmed.contains('+') ||
+          (trimmed.length > 19 && trimmed.substring(19).contains('-'))) {
+        return DateTime.parse(trimmed).toLocal();
+      }
+      return DateTime.parse('${trimmed}Z').toLocal();
     } catch (_) {
-      return dateStr;
+      try {
+        return DateTime.parse(trimmed).toLocal();
+      } catch (_) {
+        return DateTime.now();
+      }
     }
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // Date Only
-  // ─────────────────────────────────────────────────────────────
-
-  String _formatDate(String? dateStr) {
-    if (dateStr == null || dateStr.trim().isEmpty) {
-      return "—";
-    }
-
+  String _formatDate(String? raw) {
+    if (raw == null || raw.isEmpty) return "—";
     try {
-      final dateTime = DateTime.parse(dateStr).toLocal();
-
-      const months = [
-        "يناير",
-        "فبراير",
-        "مارس",
-        "أبريل",
-        "مايو",
-        "يونيو",
-        "يوليو",
-        "أغسطس",
-        "سبتمبر",
-        "أكتوبر",
-        "نوفمبر",
-        "ديسمبر",
-      ];
-
-      final monthName = months[dateTime.month - 1];
-
-      return "${dateTime.day} "
-          "$monthName "
-          "${dateTime.year}";
+      final dt = DateTime.parse(raw);
+      final month = _arabicMonths[(dt.month - 1).clamp(0, 11)];
+      return '${dt.day} $month ${dt.year}';
     } catch (_) {
-      return dateStr;
+      return raw;
+    }
+  }
+
+  String _formatDateTime(String? raw) {
+    if (raw == null || raw.isEmpty) return "—";
+    try {
+      final dt = _parseToLocal(raw);
+      final month = _arabicMonths[(dt.month - 1).clamp(0, 11)];
+      final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+      final minute = dt.minute.toString().padLeft(2, '0');
+      final period = dt.hour >= 12 ? 'م' : 'ص';
+      return '${dt.day} $month ${dt.year} - $hour:$minute $period';
+    } catch (_) {
+      return raw;
     }
   }
 }
