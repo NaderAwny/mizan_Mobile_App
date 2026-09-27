@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:intl/intl.dart';
+import 'package:mizan/domain/model/get_list_transactions_model.dart';
 import 'package:mizan/presentation/resources/assets_manager.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
 import 'package:mizan/presentation/resources/font_manager.dart';
@@ -8,14 +10,22 @@ import 'package:mizan/presentation/resources/routes_manager.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 import 'package:mizan/presentation/resources/styles_manager.dart';
 import 'package:mizan/presentation/resources/values_manager.dart';
+import 'package:mizan/presentation/transactions/get_transaction_by_id/transaction_by_id_view.dart';
 
 class RecentTransactionsSection extends StatelessWidget {
-  final bool isEmpty;
+  final List<GetListTransactionsModel>? transactions;
+  final bool isLoading;
 
-  const RecentTransactionsSection({super.key, this.isEmpty = false});
+  const RecentTransactionsSection({
+    super.key,
+    this.transactions,
+    this.isLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final list = transactions ?? [];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -63,44 +73,30 @@ class RecentTransactionsSection extends StatelessWidget {
 
         SizedBox(height: 10.h),
 
-        if (isEmpty)
+        if (isLoading && list.isEmpty)
+          _buildLoadingState()
+        else if (list.isEmpty)
           _buildEmptyState(context)
         else
           Column(
-            children: const [
-              _TransactionItemTile(
-                title: "مؤسسة الأمل التجارية",
-                subtitle: "فاتورة مبيعات #1042",
-                date: "اليوم، 02:30 م",
-                amount: "+ 4,500 ج.م",
-                isPositive: true,
-                icon: IconAssets.arrowDownLeft,
-                iconColor: ColorManager.success,
-                iconBgColor: ColorManager.successContainer,
-              ),
-              _TransactionItemTile(
-                title: "شركة التوريدات الحديثة",
-                subtitle: "شراء بضاعة #883",
-                date: "أمس، 11:15 ص",
-                amount: "- 2,100 ج.م",
-                isPositive: false,
-                icon: IconAssets.arrowUpRight,
-                iconColor: ColorManager.error,
-                iconBgColor: ColorManager.errorContainer,
-              ),
-              _TransactionItemTile(
-                title: "محمود حسن علي",
-                subtitle: "قسط مستحق #3",
-                date: "12 سبتمبر، 04:00 م",
-                amount: "1,250 ج.م",
-                isPositive: null,
-                icon: IconAssets.walletCards,
-                iconColor: ColorManager.secondary,
-                iconBgColor: ColorManager.lightSecondary,
-              ),
-            ],
+            children: list
+                .take(5)
+                .map((tx) => _TransactionItemTile(transaction: tx))
+                .toList(),
           ),
       ],
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(vertical: 24.h),
+      alignment: Alignment.center,
+      child: const CircularProgressIndicator(
+        color: ColorManager.primary,
+        strokeWidth: 2.5,
+      ),
     );
   }
 
@@ -146,33 +142,102 @@ class RecentTransactionsSection extends StatelessWidget {
 }
 
 class _TransactionItemTile extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final String date;
-  final String amount;
-  final bool? isPositive;
-  final String icon;
-  final Color iconColor;
-  final Color iconBgColor;
+  final GetListTransactionsModel transaction;
 
-  const _TransactionItemTile({
-    required this.title,
-    required this.subtitle,
-    required this.date,
-    required this.amount,
-    required this.isPositive,
-    required this.icon,
-    required this.iconColor,
-    required this.iconBgColor,
-  });
+  const _TransactionItemTile({required this.transaction});
+
+  bool get _isIncome {
+    final t = transaction.type.toLowerCase();
+    return t == 'sale' ||
+        t == 'بيع' ||
+        t == 'collect' ||
+        t == 'تحصيل' ||
+        t == 'income';
+  }
+
+  String _getSubtitle() {
+    final t = transaction.type.toLowerCase();
+    final isCash =
+        transaction.paymentMethod.toLowerCase() == 'cash' ||
+        transaction.paymentMethod == 'كاش';
+
+    if (t == 'sale' || t == 'بيع') {
+      return isCash ? "فاتورة مبيعات نقدية" : "فاتورة مبيعات آجل";
+    } else if (t == 'purchase' || t == 'شراء') {
+      return isCash ? "شراء بضاعة (نقدي)" : "شراء بضاعة (آجل)";
+    } else if (t == 'collect' || t == 'تحصيل') {
+      return "تحصيل دفعة مالية";
+    } else if (t == 'pay' || t == 'دفع') {
+      return "سداد دفعة للمورد";
+    }
+    return transaction.type;
+  }
+
+  String _formatDate(String rawDate) {
+    if (rawDate.isEmpty) return "";
+    try {
+      final dt = DateTime.parse(rawDate).toLocal();
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final txDay = DateTime(dt.year, dt.month, dt.day);
+
+      final hour = dt.hour > 12
+          ? dt.hour - 12
+          : dt.hour == 0
+          ? 12
+          : dt.hour;
+      final minute = dt.minute.toString().padLeft(2, '0');
+      final period = dt.hour >= 12 ? "م" : "ص";
+      final timeStr = "$hour:$minute $period";
+
+      if (txDay == today) {
+        return "اليوم، $timeStr";
+      } else if (txDay == today.subtract(const Duration(days: 1))) {
+        return "أمس، $timeStr";
+      } else {
+        const monthsArabic = [
+          "يناير",
+          "فبراير",
+          "مارس",
+          "أبريل",
+          "مايو",
+          "يونيو",
+          "يوليو",
+          "أغسطس",
+          "سبتمبر",
+          "أكتوبر",
+          "نوفمبر",
+          "ديسمبر",
+        ];
+        return "${dt.day} ${monthsArabic[dt.month - 1]}، $timeStr";
+      }
+    } catch (_) {
+      return rawDate;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final amountColor = isPositive == true
-        ? ColorManager.success
-        : isPositive == false
-        ? ColorManager.error
-        : ColorManager.textPrimary;
+    final isIncome = _isIncome;
+    final amountColor = isIncome ? ColorManager.success : ColorManager.error;
+    final iconColor = isIncome ? ColorManager.success : ColorManager.error;
+    final iconBgColor = isIncome
+        ? ColorManager.successContainer
+        : ColorManager.errorContainer;
+    final icon = isIncome ? IconAssets.arrowDownLeft : IconAssets.arrowUpRight;
+    final amountPrefix = isIncome ? "+ " : "- ";
+    final formattedAmount =
+        "$amountPrefix${NumberFormat('#,##0.##').format(transaction.amount)} ج.م";
+
+    final title = transaction.contactName.trim().isNotEmpty
+        ? transaction.contactName.trim()
+        : "معاملة بدون اسم";
+
+    final dateStr = _formatDate(
+      transaction.transactionDate.isNotEmpty
+          ? transaction.transactionDate
+          : transaction.createdAt,
+    );
 
     return Container(
       margin: EdgeInsets.only(bottom: 8.h),
@@ -192,16 +257,22 @@ class _TransactionItemTile extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            Navigator.pushNamed(context, Routes.transactionsRoute);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TransactionDetailsView(
+                  transactionId: transaction.id,
+                  id: transaction.id,
+                ),
+              ),
+            );
           },
           borderRadius: BorderRadius.circular(AppRadius.r14.r),
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
             child: Row(
               children: [
-                // ==========================================
-                // ICON - ثابت لا يتحرك
-                // ==========================================
+                // Icon
                 Container(
                   width: 38.r,
                   height: 38.r,
@@ -221,25 +292,21 @@ class _TransactionItemTile extends StatelessWidget {
 
                 SizedBox(width: 10.w),
 
-                // ==========================================
-                // CONTENT - Horizontal Scroll
-                // ==========================================
+                // Content
                 Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // ==================================
-                        // TITLE + SUBTITLE
-                        // ==================================
-                        Column(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Title & Subtitle
+                      Expanded(
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: getBoldStyle(
                                 color: ColorManager.textPrimary,
                                 fontSize: FontSize.s12,
@@ -247,7 +314,9 @@ class _TransactionItemTile extends StatelessWidget {
                             ),
                             SizedBox(height: 2.h),
                             Text(
-                              subtitle,
+                              _getSubtitle(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: getRegularStyle(
                                 color: ColorManager.textSecondary,
                                 fontSize: FontSize.s10,
@@ -255,35 +324,33 @@ class _TransactionItemTile extends StatelessWidget {
                             ),
                           ],
                         ),
+                      ),
 
-                        SizedBox(width: 30.w),
+                      SizedBox(width: 12.w),
 
-                        // ==================================
-                        // AMOUNT + DATE
-                        // ==================================
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              amount,
-                              style: getBoldStyle(
-                                color: amountColor,
-                                fontSize: FontSize.s12,
-                              ),
+                      // Amount & Date
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            formattedAmount,
+                            style: getBoldStyle(
+                              color: amountColor,
+                              fontSize: FontSize.s12,
                             ),
-                            SizedBox(height: 2.h),
-                            Text(
-                              date,
-                              style: getRegularStyle(
-                                color: ColorManager.textTertiary,
-                                fontSize: FontSize.s9,
-                              ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            dateStr,
+                            style: getRegularStyle(
+                              color: ColorManager.textTertiary,
+                              fontSize: FontSize.s9,
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -294,3 +361,4 @@ class _TransactionItemTile extends StatelessWidget {
     );
   }
 }
+

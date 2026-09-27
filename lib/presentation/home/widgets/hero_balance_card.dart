@@ -37,7 +37,9 @@ class _HeroBalanceCardState extends State<HeroBalanceCard> {
 
   // Format amount with pure English digits (0-9) and comma separator
   String _formatAmount(double value) {
-    final parts = value.toStringAsFixed(2).split('.');
+    final isNegative = value < 0;
+    final absVal = value.abs();
+    final parts = absVal.toStringAsFixed(2).split('.');
     final integerPart = parts[0];
     final decimalPart = parts[1];
 
@@ -48,8 +50,10 @@ class _HeroBalanceCardState extends State<HeroBalanceCard> {
       }
       buffer.write(integerPart[i]);
     }
-    return "${buffer.toString()}.$decimalPart";
+    final formatted = "${buffer.toString()}.$decimalPart";
+    return isNegative ? "- $formatted" : formatted;
   }
+
 
   @override
   Widget build(BuildContext context) {

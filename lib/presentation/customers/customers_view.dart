@@ -115,14 +115,7 @@ class _CustomersScreenState extends State<_CustomersScreen> {
     return BlocConsumer<ContactsCubit, ContactsState>(
       listener: (context, state) {},
       builder: (context, state) {
-        return PopScope(
-          canPop: false,
-          onPopInvokedWithResult: (didPop, result) {
-            if (!didPop) {
-              _handleBack();
-            }
-          },
-          child: Scaffold(
+        return Scaffold(
             backgroundColor: ColorManager.background,
             appBar: AppBar(
               backgroundColor: ColorManager.surface,
@@ -231,8 +224,7 @@ class _CustomersScreenState extends State<_CustomersScreen> {
                 size: 28,
               ),
             ),
-          ),
-        );
+          );
       },
     );
   }

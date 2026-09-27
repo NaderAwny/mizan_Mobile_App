@@ -211,14 +211,7 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
     return BlocConsumer<GetListTransactionCubit, GetListTransactionState>(
       listener: (context, state) {},
       builder: (context, state) {
-        return PopScope(
-          canPop: false,
-          onPopInvokedWithResult: (didPop, result) {
-            if (!didPop) {
-              _handleBack();
-            }
-          },
-          child: Scaffold(
+        return Scaffold(
             backgroundColor: ColorManager.background,
             appBar: AppBar(
               backgroundColor: ColorManager.surface,
@@ -348,8 +341,7 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
                 size: 28,
               ),
             ),
-          ),
-        );
+          );
       },
     );
   }

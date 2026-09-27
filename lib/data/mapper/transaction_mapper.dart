@@ -26,8 +26,8 @@ extension TransactionResponseMapper on TransactionData? {
       paymentMethod: this?.paymentMethod.orEmpty() ?? '',
       transactionDate: this?.transactionDate.orEmpty() ?? '',
       isInstallment: this?.isInstallment.orFalse() ?? false,
-      installments:
-          (this?.installments?.map((i) => i.toDomain()) ?? const []).toList(),
+      installments: (this?.installments?.map((i) => i.toDomain()) ?? const [])
+          .toList(),
       createdAt: this?.createdAt.orEmpty() ?? '',
     );
   }

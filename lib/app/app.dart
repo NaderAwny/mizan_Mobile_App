@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mizan/presentation/resources/constants_manager.dart';
 import 'package:mizan/presentation/resources/routes_manager.dart';
@@ -33,8 +34,19 @@ class _MyAppState extends State<MyApp> {
           initialRoute: Routes.splashRoute,
           onGenerateRoute: RouteGenerator.getRoute,
           navigatorKey: Routes.navigatorKey,
+          locale: const Locale('ar'),
+          supportedLocales: const [
+            Locale('ar'),
+            Locale('en'),
+          ],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
         );
       },
     );
   }
 }
+

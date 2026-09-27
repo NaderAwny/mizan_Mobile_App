@@ -1,16 +1,17 @@
 import 'package:mizan/app/extensions.dart';
 import 'package:mizan/data/response/transaction_by_id_responses/transaction_by_id_responses.dart';
 import 'package:mizan/domain/model/transaction_by_id_mode/transaction_by_id_mode.dart';
+import 'package:mizan/app/constants.dart';
 
 extension InstallmentResponseMapper on InstallmentDataById? {
   InstallmentbyidModel toDomain() {
-    final status = this?.status.orEmpty() ?? '';
-    final paidAt = this?.paidAt.orEmpty() ?? '';
+    final status = this?.status.orEmpty() ?? Constants.empty;
+    final paidAt = this?.paidAt.orEmpty() ?? Constants.empty;
     return InstallmentbyidModel(
-      id: this?.id.orEmpty() ?? '',
+      id: this?.id.orEmpty() ?? Constants.empty,
       installmentNumber: this?.installmentNumber.orZero() ?? 0,
       amount: this?.amount.orZeroNum() ?? 0,
-      dueDate: this?.dueDate.orEmpty() ?? '',
+      dueDate: this?.dueDate.orEmpty() ?? Constants.empty,
       // The API returns `status` + `paidAt` (no `isPaid` on GET by id).
       isPaid: this?.isPaid ?? (status == 'Paid' || paidAt.isNotEmpty),
       status: status,

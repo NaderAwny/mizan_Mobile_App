@@ -26,6 +26,7 @@ import '../data/data_source/get_profile_data_source.dart' as _i197;
 import '../data/data_source/installment_remote_data_source.dart' as _i367;
 import '../data/data_source/register_remote_data_source.dart' as _i1006;
 import '../data/data_source/send_otp_remote_data_source.dart' as _i371;
+import '../data/data_source/statistics_remote_data_source.dart' as _i775;
 import '../data/data_source/transaction_remote_data_source.dart' as _i93;
 import '../data/local/onboarding_local_data_source.dart' as _i603;
 import '../data/local/secure_token_local_data_source.dart' as _i388;
@@ -42,6 +43,7 @@ import '../data/repository_impl/get_profile_repository_impl.dart' as _i379;
 import '../data/repository_impl/installment_repository_impl.dart' as _i351;
 import '../data/repository_impl/register_repository_impl.dart' as _i432;
 import '../data/repository_impl/send_otp_repository_impl.dart' as _i1060;
+import '../data/repository_impl/statistics_repository_impl.dart' as _i1006;
 import '../data/repository_impl/transaction_repository_impl.dart' as _i905;
 import '../domain/repository/auth_repository.dart' as _i306;
 import '../domain/repository/contact_repository.dart' as _i621;
@@ -50,6 +52,7 @@ import '../domain/repository/get_profile_repository.dart' as _i770;
 import '../domain/repository/installment_repository.dart' as _i182;
 import '../domain/repository/register_repository.dart' as _i582;
 import '../domain/repository/send_otp_repository.dart' as _i943;
+import '../domain/repository/statistics_repository.dart' as _i413;
 import '../domain/repository/transaction_repository.dart' as _i132;
 import '../domain/use_case/create_contact_use_case.dart' as _i770;
 import '../domain/use_case/create_transaction_use_case.dart' as _i807;
@@ -66,6 +69,7 @@ import '../domain/use_case/pay_installment_use_case.dart' as _i529;
 import '../domain/use_case/register_use_case.dart' as _i224;
 import '../domain/use_case/select_user_type_use_case.dart' as _i684;
 import '../domain/use_case/send_otp_use_case.dart' as _i508;
+import '../domain/use_case/statistics_use_case.dart' as _i385;
 import '../domain/use_case/toggle_vip_contact_use_case.dart' as _i493;
 import '../domain/use_case/update_contact_use_case.dart' as _i52;
 import '../domain/use_case/verify_otp_use_case.dart' as _i484;
@@ -84,6 +88,7 @@ import '../presentation/select_user_type/select_user_type_cubit/select_user_type
 import '../presentation/send_otp/cubit/send_otp_cubit/send_otp_cubit.dart'
     as _i531;
 import '../presentation/splash/splash_cubit/splash_cubit.dart' as _i822;
+import '../presentation/statistics/cubit/statistics_cubit.dart' as _i1000;
 import '../presentation/transactions/get_list_transaction/get_list_transaction_cubit.dart'
     as _i877;
 import '../presentation/transactions/get_transaction_by_id/get_transaction_by_id_cubit.dart'
@@ -177,6 +182,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1006.ContactRemoteDataSource>(
       () => _i1006.ContactRemoteDataSourceImpl(gh<_i563.AppServiceClient>()),
     );
+    gh.lazySingleton<_i775.StatisticsRemoteDataSource>(
+      () => _i775.StatisticsRemoteDataSourceImpl(gh<_i563.AppServiceClient>()),
+    );
     gh.lazySingleton<_i367.InstallmentRemoteDataSource>(
       () => _i367.InstallmentRemoteDataSourceImpl(gh<_i563.AppServiceClient>()),
     );
@@ -243,6 +251,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i224.RegisterUseCase>(
       () => _i224.RegisterUseCase(gh<_i582.RegisterRepository>()),
     );
+    gh.lazySingleton<_i413.StatisticsRepository>(
+      () => _i1006.StatisticsRepositoryImpl(
+        gh<_i775.StatisticsRemoteDataSource>(),
+        gh<_i371.NetworkInfo>(),
+      ),
+    );
     gh.lazySingleton<_i92.GetListTransactionsRepository>(
       () => _i543.GetListTransactionsRepositoryImpl(
         gh<_i696.GetListTransactionsRemoteDataSource>(),
@@ -295,6 +309,15 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i472.TransactionFormCubit>(
       () => _i472.TransactionFormCubit(gh<_i807.CreateTransactionUseCase>()),
     );
+    gh.factory<_i385.StatisticsUseCase>(
+      () => _i385.StatisticsUseCase(gh<_i413.StatisticsRepository>()),
+    );
+    gh.factory<_i385.DailyStatisticsUseCase>(
+      () => _i385.DailyStatisticsUseCase(gh<_i413.StatisticsRepository>()),
+    );
+    gh.factory<_i385.MonthlyStatisticsUseCase>(
+      () => _i385.MonthlyStatisticsUseCase(gh<_i413.StatisticsRepository>()),
+    );
     gh.factory<_i876.PayInstallmentCubit>(
       () => _i876.PayInstallmentCubit(gh<_i529.PayInstallmentUseCase>()),
     );
@@ -312,6 +335,13 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i995.LogoutCubit>(
       () => _i995.LogoutCubit(gh<_i235.LogoutUseCase>()),
+    );
+    gh.factory<_i1000.StatisticsCubit>(
+      () => _i1000.StatisticsCubit(
+        gh<_i385.StatisticsUseCase>(),
+        gh<_i385.DailyStatisticsUseCase>(),
+        gh<_i385.MonthlyStatisticsUseCase>(),
+      ),
     );
     gh.factory<_i710.SelectUserTypeCubit>(
       () => _i710.SelectUserTypeCubit(gh<_i684.SelectUserTypeUseCase>()),
