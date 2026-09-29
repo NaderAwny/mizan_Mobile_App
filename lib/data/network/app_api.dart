@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:mizan/app/constants.dart';
 import 'package:mizan/data/response/auth_session_responses/auth_session_responses.dart';
@@ -10,6 +12,7 @@ import 'package:mizan/data/response/pay_installment_responses/pay_installment_re
 import 'package:mizan/data/response/statistics_response/statistic_response.dart';
 import 'package:mizan/data/response/transaction_by_id_responses/transaction_by_id_responses.dart';
 import 'package:mizan/data/response/transaction_responses/transaction_responses.dart';
+import 'package:mizan/data/response/voice_notes_response/voice_notes_response.dart';
 import 'package:retrofit/error_logger.dart';
 import 'package:retrofit/http.dart';
 
@@ -124,4 +127,25 @@ abstract class AppServiceClient {
     @Query("year") String year,
     @Query("month") String month,
   );
+  // ======================== Voice Notes Endpoints ========================
+  @POST("/api/voice-notes")
+  @MultiPart()
+  Future<VoiceNoteResponse> createVoiceNote(
+    @Part(name: 'audioFile') File audioFile,
+    @Part(name: 'operationType') String operationType,
+    @Part(name: 'amount') String amount,
+    @Part(name: 'operationDate') String operationDate,
+    @Part(name: 'contactId') String? contactId,
+    @Part(name: 'partyName') String? partyName,
+    @Part(name: 'notes') String? notes,
+  );
+
+  @GET("/api/voice-notes")
+  Future<VoiceNotesPageResponse> getVoiceNotes(
+    @Query("page") int page,
+    @Query("pageSize") int pageSize,
+  );
+
+  @GET("/api/voice-notes/{id}")
+  Future<VoiceNoteResponse> getVoiceNoteById(@Path("id") String id);
 }

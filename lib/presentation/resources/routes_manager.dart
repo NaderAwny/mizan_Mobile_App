@@ -23,6 +23,10 @@ import 'package:mizan/presentation/operations/quick_transaction_args.dart';
 import 'package:mizan/presentation/transactions/get_transaction_by_id/transaction_by_id_view.dart';
 import 'package:mizan/presentation/transactions/transactions_view.dart';
 
+import 'package:mizan/presentation/voice_note/create_voice_note_cubit/create_voice_note_view.dart';
+import 'package:mizan/presentation/voice_note/get_voice_note_by_id_cubit/get_voice_note_by_id_view.dart';
+import 'package:mizan/presentation/voice_note/get_voice_note_cubit/get_voice_note_view.dart';
+
 class Routes {
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
@@ -54,6 +58,11 @@ class Routes {
 
   // Transaction Details
   static const String transactionDetailsRoute = "/transactionDetails";
+
+  // Voice Notes
+  static const String voiceNotesListRoute = "/voiceNotes";
+  static const String createVoiceNoteRoute = "/createVoiceNote";
+  static const String voiceNoteDetailsRoute = "/voiceNoteDetails";
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -158,6 +167,17 @@ class RouteGenerator {
         return MaterialPageRoute(
           builder: (_) =>
               TransactionDetailsView(transactionId: transactionId, id: id),
+        );
+      case Routes.voiceNotesListRoute:
+        return MaterialPageRoute(builder: (_) => const GetVoiceNoteView());
+      case Routes.createVoiceNoteRoute:
+        return MaterialPageRoute(builder: (_) => const CreateVoiceNoteView());
+      case Routes.voiceNoteDetailsRoute:
+        final id = settings.arguments is String
+            ? settings.arguments as String
+            : "";
+        return MaterialPageRoute(
+          builder: (_) => GetVoiceNoteByIdView(id: id),
         );
       default:
         return unDefinedRoute();

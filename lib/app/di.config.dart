@@ -28,6 +28,7 @@ import '../data/data_source/register_remote_data_source.dart' as _i1006;
 import '../data/data_source/send_otp_remote_data_source.dart' as _i371;
 import '../data/data_source/statistics_remote_data_source.dart' as _i775;
 import '../data/data_source/transaction_remote_data_source.dart' as _i93;
+import '../data/data_source/voice_note_remote_data_source.dart' as _i318;
 import '../data/local/onboarding_local_data_source.dart' as _i603;
 import '../data/local/secure_token_local_data_source.dart' as _i388;
 import '../data/local/shared_prefs_onboarding_data_source.dart' as _i398;
@@ -45,6 +46,7 @@ import '../data/repository_impl/register_repository_impl.dart' as _i432;
 import '../data/repository_impl/send_otp_repository_impl.dart' as _i1060;
 import '../data/repository_impl/statistics_repository_impl.dart' as _i1006;
 import '../data/repository_impl/transaction_repository_impl.dart' as _i905;
+import '../data/repository_impl/voice_note_repository_impl.dart' as _i856;
 import '../domain/repository/auth_repository.dart' as _i306;
 import '../domain/repository/contact_repository.dart' as _i621;
 import '../domain/repository/get_list_%20transaction_repository.dart' as _i92;
@@ -54,22 +56,28 @@ import '../domain/repository/register_repository.dart' as _i582;
 import '../domain/repository/send_otp_repository.dart' as _i943;
 import '../domain/repository/statistics_repository.dart' as _i413;
 import '../domain/repository/transaction_repository.dart' as _i132;
+import '../domain/repository/voice_note_repository.dart' as _i402;
 import '../domain/use_case/create_contact_use_case.dart' as _i770;
 import '../domain/use_case/create_transaction_use_case.dart' as _i807;
+import '../domain/use_case/create_voice_note_use_case.dart' as _i618;
 import '../domain/use_case/delete_contact_use_case.dart' as _i1053;
 import '../domain/use_case/get_contact_by_id_use_case.dart' as _i804;
 import '../domain/use_case/get_contact_profile_use_case.dart' as _i307;
 import '../domain/use_case/get_contacts_use_case.dart' as _i646;
+import '../domain/use_case/get_daily_statistics.dart' as _i273;
 import '../domain/use_case/get_list_transaction_use_case.dart' as _i463;
+import '../domain/use_case/get_list_voice_notes_use_case.dart' as _i474;
 import '../domain/use_case/get_profile_use_case.dart' as _i673;
+import '../domain/use_case/get_statistics_use_case.dart' as _i242;
 import '../domain/use_case/get_transaction_by_id_use_case.dart' as _i1060;
 import '../domain/use_case/get_vip_contacts_use_case.dart' as _i1063;
+import '../domain/use_case/get_voice_note_by_id_use_case.dart' as _i131;
 import '../domain/use_case/logout_use_case.dart' as _i235;
+import '../domain/use_case/monthly_statistics_use_case.dart' as _i588;
 import '../domain/use_case/pay_installment_use_case.dart' as _i529;
 import '../domain/use_case/register_use_case.dart' as _i224;
 import '../domain/use_case/select_user_type_use_case.dart' as _i684;
 import '../domain/use_case/send_otp_use_case.dart' as _i508;
-import '../domain/use_case/statistics_use_case.dart' as _i385;
 import '../domain/use_case/toggle_vip_contact_use_case.dart' as _i493;
 import '../domain/use_case/update_contact_use_case.dart' as _i52;
 import '../domain/use_case/verify_otp_use_case.dart' as _i484;
@@ -97,6 +105,12 @@ import '../presentation/transactions/pay_installment/pay_installment_cubit.dart'
     as _i876;
 import '../presentation/transactions/transaction_form_cubit/transaction_form_cubit.dart'
     as _i472;
+import '../presentation/voice_note/create_voice_note_cubit/create_voice_note_cubit.dart'
+    as _i437;
+import '../presentation/voice_note/get_voice_note_by_id_cubit/get_voice_note_by_id_cubit.dart'
+    as _i1040;
+import '../presentation/voice_note/get_voice_note_cubit/get_voice_note_cubit.dart'
+    as _i955;
 import 'app_module.dart' as _i460;
 import 'session_manager.dart' as _i989;
 
@@ -165,6 +179,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i371.SendOtpRemoteDataSource>(
       () => _i371.SendOtpRemoteDataSourceImpl(gh<_i563.AppServiceClient>()),
     );
+    gh.lazySingleton<_i318.VoiceNoteRemoteDataSource>(
+      () => _i318.VoiceNoteRemoteDataSourceImpl(gh<_i563.AppServiceClient>()),
+    );
     gh.lazySingleton<_i1010.AuthRemoteDataSource>(
       () => _i1010.AuthRemoteDataSourceImpl(gh<_i563.AppServiceClient>()),
     );
@@ -224,6 +241,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i132.TransactionRepository>(
       () => _i905.TransactionRepositoryImpl(
         gh<_i93.TransactionRemoteDataSource>(),
+        gh<_i371.NetworkInfo>(),
+      ),
+    );
+    gh.lazySingleton<_i402.VoiceNoteRepository>(
+      () => _i856.VoiceNoteRepositoryImpl(
+        gh<_i318.VoiceNoteRemoteDataSource>(),
         gh<_i371.NetworkInfo>(),
       ),
     );
@@ -294,6 +317,15 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i1060.GetTransactionByIdUseCase>(
       () => _i1060.GetTransactionByIdUseCase(gh<_i132.TransactionRepository>()),
     );
+    gh.lazySingleton<_i474.GetListVoiceNotesUseCase>(
+      () => _i474.GetListVoiceNotesUseCase(gh<_i402.VoiceNoteRepository>()),
+    );
+    gh.factory<_i618.CreateVoiceNoteUseCase>(
+      () => _i618.CreateVoiceNoteUseCase(gh<_i402.VoiceNoteRepository>()),
+    );
+    gh.factory<_i131.GetVoiceNoteByIdUseCase>(
+      () => _i131.GetVoiceNoteByIdUseCase(gh<_i402.VoiceNoteRepository>()),
+    );
     gh.factory<_i531.SendOtpCubit>(
       () => _i531.SendOtpCubit(gh<_i508.SendOtpUseCase>()),
     );
@@ -309,14 +341,20 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i472.TransactionFormCubit>(
       () => _i472.TransactionFormCubit(gh<_i807.CreateTransactionUseCase>()),
     );
-    gh.factory<_i385.StatisticsUseCase>(
-      () => _i385.StatisticsUseCase(gh<_i413.StatisticsRepository>()),
+    gh.factory<_i273.DailyStatisticsUseCase>(
+      () => _i273.DailyStatisticsUseCase(gh<_i413.StatisticsRepository>()),
     );
-    gh.factory<_i385.DailyStatisticsUseCase>(
-      () => _i385.DailyStatisticsUseCase(gh<_i413.StatisticsRepository>()),
+    gh.factory<_i242.StatisticsUseCase>(
+      () => _i242.StatisticsUseCase(gh<_i413.StatisticsRepository>()),
     );
-    gh.factory<_i385.MonthlyStatisticsUseCase>(
-      () => _i385.MonthlyStatisticsUseCase(gh<_i413.StatisticsRepository>()),
+    gh.factory<_i242.DailyStatisticsUseCase>(
+      () => _i242.DailyStatisticsUseCase(gh<_i413.StatisticsRepository>()),
+    );
+    gh.factory<_i242.MonthlyStatisticsUseCase>(
+      () => _i242.MonthlyStatisticsUseCase(gh<_i413.StatisticsRepository>()),
+    );
+    gh.factory<_i588.MonthlyStatisticsUseCase>(
+      () => _i588.MonthlyStatisticsUseCase(gh<_i413.StatisticsRepository>()),
     );
     gh.factory<_i876.PayInstallmentCubit>(
       () => _i876.PayInstallmentCubit(gh<_i529.PayInstallmentUseCase>()),
@@ -329,19 +367,28 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i92.GetListTransactionsRepository>(),
       ),
     );
+    gh.factory<_i437.VoiceNoteFormCubit>(
+      () => _i437.VoiceNoteFormCubit(gh<_i618.CreateVoiceNoteUseCase>()),
+    );
     gh.factory<_i212.GetTransactionByIdCubit>(
       () =>
           _i212.GetTransactionByIdCubit(gh<_i1060.GetTransactionByIdUseCase>()),
     );
-    gh.factory<_i995.LogoutCubit>(
-      () => _i995.LogoutCubit(gh<_i235.LogoutUseCase>()),
-    );
     gh.factory<_i1000.StatisticsCubit>(
       () => _i1000.StatisticsCubit(
-        gh<_i385.StatisticsUseCase>(),
-        gh<_i385.DailyStatisticsUseCase>(),
-        gh<_i385.MonthlyStatisticsUseCase>(),
+        gh<_i242.StatisticsUseCase>(),
+        gh<_i242.DailyStatisticsUseCase>(),
+        gh<_i242.MonthlyStatisticsUseCase>(),
       ),
+    );
+    gh.factory<_i955.GetListVoiceNotesCubit>(
+      () => _i955.GetListVoiceNotesCubit(gh<_i474.GetListVoiceNotesUseCase>()),
+    );
+    gh.factory<_i1040.GetVoiceNoteByIdCubit>(
+      () => _i1040.GetVoiceNoteByIdCubit(gh<_i131.GetVoiceNoteByIdUseCase>()),
+    );
+    gh.factory<_i995.LogoutCubit>(
+      () => _i995.LogoutCubit(gh<_i235.LogoutUseCase>()),
     );
     gh.factory<_i710.SelectUserTypeCubit>(
       () => _i710.SelectUserTypeCubit(gh<_i684.SelectUserTypeUseCase>()),

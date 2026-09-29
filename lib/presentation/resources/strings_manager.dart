@@ -254,5 +254,34 @@ class AppStrings {
   static const String txDetailsAutomaticInstallment = "تقسيط تلقائي";
   static const String txDetailsCustomInstallment = "تقسيط مخصص";
   static const String txDetailsFullPayment = "دفع كامل (كاش)";
+
+  // --- Voice Notes Feature ---
+  static const String voiceNotesTitle = "الملاحظات الصوتية";
+  static const String voiceNotesSubtitle = "سجل المذكرات والمعاملات الصوتية الذكية";
+  static const String newVoiceNote = "ملاحظة صوتية جديدة";
+  static const String voiceNoteDetails = "تفاصيل الملاحظة الصوتية";
+  static const String recordVoiceNote = "تسجيل الملاحظة";
+  static const String tapToRecord = "اضغط لبدء التسجيل الصوتي";
+  static const String recordingInProgress = "جاري التسجيل الصوتي...";
+  static const String stopRecording = "إيقاف التسجيل";
+  static const String rerecord = "إعادة التسجيل";
+  static const String audioPreview = "معاينة التسجيل الصوتي";
+  static const String saveVoiceNote = "حفظ الملاحظة الصوتية";
+  static const String convertToTransaction = "تحويل إلى معاملة مسجلة";
+  static const String deleteVoiceNote = "حذف الملاحظة";
+  static const String operationTypeLabel = "نوع العملية";
+  static const String amountLabel = "المبلغ";
+  static const String amountRequired = "المبلغ يجب أن يكون أكبر من صفر";
+  static const String partyNameLabel = "الطرف الثاني";
+  static const String partyNameHint = "اسم العميل أو المورد...";
+  static const String operationDateLabel = "تاريخ العملية";
+  static const String voiceNoteNotesLabel = "ملاحظات وتفريغ صوتي";
+  static const String voiceNoteNotesHint = "اكتب تفريغ التسجيل أو أي ملاحظات إضافية...";
+  static const String noVoiceNotesTitle = "لا توجد ملاحظات صوتية مسجلة";
+  static const String noVoiceNotesSubtitle =
+      "سجل معاملاتك اليومية بصوتك وسيقوم النظام بحفظها لمساعدتك في تحويلها لمعاملات مالية.";
+  static const String recordFirstVoiceNote = "تسجيل أول ملاحظة الآن";
+  static const String voiceNoteSavedSuccess = "تم حفظ الملاحظة الصوتية بنجاح";
+  static const String featureComingSoon = "هذه الميزة ستتوفر قريباً مع تحديث النظام";
 }
 

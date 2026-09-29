@@ -208,6 +208,7 @@ class _CustomersScreenState extends State<_CustomersScreen> {
               ],
             ),
             floatingActionButton: FloatingActionButton(
+              heroTag: 'customers_fab',
               backgroundColor: ColorManager.primary,
               elevation: 4,
               shape: const CircleBorder(),

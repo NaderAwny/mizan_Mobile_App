@@ -426,6 +426,9 @@ class EmptyState extends FlowState {
       StateRendererType.fullScreenEmptyState;
 }
 
+BuildContext? _activeStateRendererPopupContext;
+bool _isStateRendererPopupOpen = false;
+
 extension FlowStateExtension on FlowState {
   // ignore: body_might_complete_normally_nullable
   Widget? getScreenWidget(
@@ -546,15 +549,18 @@ extension FlowStateExtension on FlowState {
 
   // ignore: strict_top_level_inference
   bool _isCurrentDialogShowing(BuildContext context) =>
-      ModalRoute.of(context)?.isCurrent != true;
+      _isStateRendererPopupOpen && _activeStateRendererPopupContext != null;
 
   // ignore: strict_top_level_inference
   void dismissDialog(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_isCurrentDialogShowing(context) &&
-          Navigator.of(context, rootNavigator: true).canPop()) {
-        Navigator.of(context, rootNavigator: true).pop(true);
-        developer.log("dialog dismissed");
+      if (_isStateRendererPopupOpen && _activeStateRendererPopupContext != null) {
+        if (Navigator.of(_activeStateRendererPopupContext!).canPop()) {
+          Navigator.of(_activeStateRendererPopupContext!).pop(true);
+          developer.log("dialog dismissed");
+        }
+        _isStateRendererPopupOpen = false;
+        _activeStateRendererPopupContext = null;
       }
     });
   }
@@ -567,16 +573,28 @@ extension FlowStateExtension on FlowState {
     String title = AppConstants.empty,
   }) {
     WidgetsBinding.instance.addPostFrameCallback(
-      (_) => showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => StateRandrer(
-          message: message,
-          title: title,
-          retryAction: () {},
-          stateRendererType: stateRandererType,
-        ),
-      ),
+      (_) {
+        if (_isStateRendererPopupOpen && _activeStateRendererPopupContext != null) {
+          return;
+        }
+        _isStateRendererPopupOpen = true;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogCtx) {
+            _activeStateRendererPopupContext = dialogCtx;
+            return StateRandrer(
+              message: message,
+              title: title,
+              retryAction: () {},
+              stateRendererType: stateRandererType,
+            );
+          },
+        ).then((_) {
+          _isStateRendererPopupOpen = false;
+          _activeStateRendererPopupContext = null;
+        });
+      },
     );
   }
 }

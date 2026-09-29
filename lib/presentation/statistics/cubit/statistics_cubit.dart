@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
-import 'package:mizan/domain/use_case/statistics_use_case.dart';
+import 'package:mizan/domain/use_case/get_statistics_use_case.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
@@ -168,4 +168,3 @@ class StatisticsCubit extends Cubit<StatisticsState> {
     }
   }
 }
-

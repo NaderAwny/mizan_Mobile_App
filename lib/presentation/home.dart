@@ -18,6 +18,7 @@ import 'package:mizan/presentation/installments/installments_view.dart';
 import 'package:mizan/presentation/resources/assets_manager.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
 import 'package:mizan/presentation/resources/font_manager.dart';
+import 'package:mizan/presentation/resources/routes_manager.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 import 'package:mizan/presentation/resources/styles_manager.dart';
 import 'package:mizan/presentation/resources/values_manager.dart';
@@ -50,13 +51,11 @@ class HomeView extends StatelessWidget {
         ),
         BlocProvider<StatisticsCubit>(
           create: (_) => getIt<StatisticsCubit>()
-            ..getMonthlyStatistics(
-              now.year.toString(),
-              now.month.toString(),
-            ),
+            ..getMonthlyStatistics(now.year.toString(), now.month.toString()),
         ),
         BlocProvider<GetListTransactionCubit>(
-          create: (_) => getIt<GetListTransactionCubit>()..getListTransactions(),
+          create: (_) =>
+              getIt<GetListTransactionCubit>()..getListTransactions(),
         ),
       ],
       child: const _HomeScreen(),
@@ -81,12 +80,7 @@ class _HomeScreenState extends State<_HomeScreen> {
   }
 
   void _openVoiceRecordDialog() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) => const _VoiceRecordSheet(),
-    );
+    Navigator.of(context).pushNamed(Routes.createVoiceNoteRoute);
   }
 
   @override
@@ -163,16 +157,14 @@ class _HomeScreenState extends State<_HomeScreen> {
               BlocBuilder<GetProfileCubit, GetProfileState>(
                 builder: (context, profileState) {
                   final profile = profileState.data;
-                  final userName = (profile != null && profile.firstName.isNotEmpty)
+                  final userName =
+                      (profile != null && profile.firstName.isNotEmpty)
                       ? "${profile.firstName} ${profile.lastName}".trim()
                       : "مرحباً بك";
                   final shopName = profile?.shop?.shopName?.isNotEmpty == true
                       ? profile!.shop!.shopName!
                       : "محل ميزان التجاري";
-                  return HomeHeader(
-                    userName: userName,
-                    shopName: shopName,
-                  );
+                  return HomeHeader(userName: userName, shopName: shopName);
                 },
               ),
 
@@ -183,10 +175,13 @@ class _HomeScreenState extends State<_HomeScreen> {
                 builder: (context, statsState) {
                   final stats = statsState.data;
                   final totalSales = (stats?.totalSales ?? 0).toDouble();
-                  final totalPurchases = (stats?.totalPurchases ?? 0).toDouble();
+                  final totalPurchases = (stats?.totalPurchases ?? 0)
+                      .toDouble();
                   final totalBalance = totalSales - totalPurchases;
                   final totalTurnover = totalSales + totalPurchases;
-                  final targetAmount = totalTurnover > 0 ? totalTurnover : 50000.0;
+                  final targetAmount = totalTurnover > 0
+                      ? totalTurnover
+                      : 50000.0;
                   final percentage = targetAmount > 0
                       ? (totalSales / targetAmount)
                       : 0.0;
@@ -239,7 +234,6 @@ class _HomeScreenState extends State<_HomeScreen> {
     );
   }
 
-
   Widget _buildSmartVoiceFAB() {
     return Container(
       height: 44.h,
@@ -284,129 +278,6 @@ class _HomeScreenState extends State<_HomeScreen> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Voice Record Sheet (Responsive & Zero Overflow)
-// ─────────────────────────────────────────────────────────────────────────────
-class _VoiceRecordSheet extends StatelessWidget {
-  const _VoiceRecordSheet();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-      decoration: BoxDecoration(
-        color: ColorManager.surface,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(AppRadius.r24.r),
-          topRight: Radius.circular(AppRadius.r24.r),
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1F000000),
-            blurRadius: 20,
-            offset: Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40.w,
-              height: 4.h,
-              decoration: BoxDecoration(
-                color: ColorManager.borderDark,
-                borderRadius: BorderRadius.circular(2.r),
-              ),
-            ),
-            SizedBox(height: 20.h),
-            Container(
-              width: 68.r,
-              height: 68.r,
-              decoration: BoxDecoration(
-                color: ColorManager.lightPrimary,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: ColorManager.primary.withAlpha(45),
-                  width: 2,
-                ),
-              ),
-              child: Center(
-                child: SvgPicture.asset(
-                  IconAssets.mic,
-                  width: 32.r,
-                  height: 32.r,
-                  colorFilter: const ColorFilter.mode(
-                    ColorManager.primary,
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              AppStrings.voiceRecording,
-              style: getBoldStyle(
-                color: ColorManager.textPrimary,
-                fontSize: FontSize.s17,
-              ),
-            ),
-            SizedBox(height: 6.h),
-            Text(
-              "تحدث وسيقوم ميزان الذكي بتحليل وتسجيل المعاملة تلقائياً",
-              textAlign: TextAlign.center,
-              style: getRegularStyle(
-                color: ColorManager.textSecondary,
-                fontSize: FontSize.s12,
-                height: 1.4,
-              ),
-            ),
-            SizedBox(height: 20.h),
-            // Prompt Box with Expanded Text to avoid overflow
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-              decoration: BoxDecoration(
-                color: ColorManager.surfaceVariant,
-                borderRadius: BorderRadius.circular(AppRadius.r12.r),
-                border: Border.all(color: ColorManager.border),
-              ),
-              child: Row(
-                children: [
-                  SvgPicture.asset(
-                    IconAssets.waveform,
-                    width: 20.r,
-                    height: 20.r,
-                    colorFilter: const ColorFilter.mode(
-                      ColorManager.primary,
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: Text(
-                      "اضغط وتحدث: \"بيع بضاعة لأحمد بمبلغ 500 جنيه\"",
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: getMediumStyle(
-                        color: ColorManager.textSecondary,
-                        fontSize: FontSize.s11,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 14.h),
-          ],
         ),
       ),
     );

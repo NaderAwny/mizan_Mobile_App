@@ -331,6 +331,7 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
               ],
             ),
             floatingActionButton: FloatingActionButton(
+              heroTag: 'transactions_fab',
               backgroundColor: ColorManager.primary,
               elevation: 4,
               shape: const CircleBorder(),

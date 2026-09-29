@@ -1,4 +1,4 @@
-﻿// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // MizanDrawer — App navigation drawer (Figma Node 2218-9)
 // Simple, fast, no cubit — pure navigation widget
 // ─────────────────────────────────────────────────────────────────────────────
@@ -76,6 +76,14 @@ class MizanDrawer extends StatelessWidget {
                     onTap: () {
                       Navigator.of(context).pop();
                       Navigator.of(context).pushNamed(Routes.analyticsRoute);
+                    },
+                  ),
+                  _DrawerItem(
+                    icon: IconAssets.mic,
+                    label: AppStrings.voiceNotesTitle,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushNamed(Routes.voiceNotesListRoute);
                     },
                   ),
 

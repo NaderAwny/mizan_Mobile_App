@@ -89,9 +89,10 @@ class AuthInterceptor extends Interceptor {
       headers['Authorization'] = 'Bearer $newAccessToken';
     }
     final options = Options(method: o.method, headers: headers);
+    final data = o.data is FormData ? (o.data as FormData).clone() : o.data;
     return authDio.request(
       o.path,
-      data: o.data,
+      data: data,
       queryParameters: o.queryParameters,
       options: options,
     );
