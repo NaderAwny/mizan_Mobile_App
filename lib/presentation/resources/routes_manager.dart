@@ -6,6 +6,7 @@ import 'package:mizan/presentation/customers/contact_form_view.dart';
 import 'package:mizan/presentation/customers/contact_profile_view.dart';
 import 'package:mizan/presentation/customers/customers_view.dart';
 import 'package:mizan/presentation/home.dart';
+import 'package:mizan/presentation/installments/installments_history/installments_history_view.dart';
 import 'package:mizan/presentation/installments/installments_view.dart';
 import 'package:mizan/presentation/notifications/notifications_view.dart';
 import 'package:mizan/presentation/onboarding/onboarding_view.dart';
@@ -46,6 +47,7 @@ class Routes {
   static const String contactProfileRoute = "/contactProfile";
   static const String transactionsRoute = "/transactions";
   static const String installmentsRoute = "/installments";
+  static const String installmentsHistoryRoute = "/installmentsHistory";
   static const String analyticsRoute = "/analytics";
   static const String notificationsRoute = "/notifications";
 
@@ -137,6 +139,10 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => const TransactionsView());
       case Routes.installmentsRoute:
         return MaterialPageRoute(builder: (_) => const InstallmentsView());
+      case Routes.installmentsHistoryRoute:
+        return MaterialPageRoute(
+          builder: (_) => const InstallmentsHistoryView(),
+        );
       case Routes.analyticsRoute:
         return MaterialPageRoute(builder: (_) => const AnalyticsView());
       case Routes.notificationsRoute:

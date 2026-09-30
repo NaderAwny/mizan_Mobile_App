@@ -7,6 +7,8 @@ import 'package:mizan/data/response/base_responses/base_responses.dart';
 import 'package:mizan/data/response/contact_responses/contact_responses.dart';
 import 'package:mizan/data/response/get_list_transaction_responses/get_list_transaction_responses.dart';
 import 'package:mizan/data/response/get_profile_responses/get_profile_responses.dart';
+import 'package:mizan/data/response/installments_dashboard_responses/installments_dashboard_responses.dart';
+import 'package:mizan/data/response/installments_history_responses/installments_history_responses.dart';
 import 'package:mizan/data/response/register_responses/register_responses.dart';
 import 'package:mizan/data/response/pay_installment_responses/pay_installment_responses.dart';
 import 'package:mizan/data/response/statistics_response/statistic_response.dart';
@@ -148,4 +150,16 @@ abstract class AppServiceClient {
 
   @GET("/api/voice-notes/{id}")
   Future<VoiceNoteResponse> getVoiceNoteById(@Path("id") String id);
+
+  /// GET /api/installments/dashboard — لوحة متابعة الأقساط والديون
+  @GET("/api/installments/dashboard")
+  Future<InstallmentsDashboardResponse> getInstallmentsDashboard();
+
+  /// GET /api/installments/history — سجل الأقساط (تايم لاين + فلترة)
+  @GET("/api/installments/history")
+  Future<InstallmentsHistoryResponse> getInstallmentsHistory(
+    @Query("status") String status,
+    @Query("page") int page,
+    @Query("pageSize") int pageSize,
+  );
 }

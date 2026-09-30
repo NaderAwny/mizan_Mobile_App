@@ -426,10 +426,15 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
                               ),
                             ),
                             Text(
-                              widget.totalInstallments != null &&
-                                      widget.totalInstallments! > 0
-                                  ? 'قسط ${widget.installment.installmentNumber ?? 1} من ${widget.totalInstallments}'
-                                  : 'قسط ${widget.installment.installmentNumber ?? 1}',
+                              widget.installment.installmentNumber != null
+                                  ? (widget.totalInstallments != null &&
+                                          widget.totalInstallments! > 0
+                                      ? 'قسط ${widget.installment.installmentNumber} من ${widget.totalInstallments}'
+                                      : 'قسط ${widget.installment.installmentNumber}')
+                                  : (widget.totalInstallments != null &&
+                                          widget.totalInstallments! > 0
+                                      ? 'قسط من ${widget.totalInstallments}'
+                                      : 'قسط مستحق'),
                               style: getSemiBoldStyle(
                                 color: ColorManager.textPrimary,
                                 fontSize: FontSize.s13,

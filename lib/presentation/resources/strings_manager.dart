@@ -283,5 +283,52 @@ class AppStrings {
   static const String recordFirstVoiceNote = "تسجيل أول ملاحظة الآن";
   static const String voiceNoteSavedSuccess = "تم حفظ الملاحظة الصوتية بنجاح";
   static const String featureComingSoon = "هذه الميزة ستتوفر قريباً مع تحديث النظام";
+
+  // --- Installments Feature (Figma Nodes #3:300 & #2303:4184) ---
+  static const String installmentsDashboardTitle = "متابعة الأقساط والديون";
+  static const String installmentsHistoryTitle = "سجل الأقساط";
+  static const String installmentsHistorySubtitle = "متابعة حالات السداد";
+  static const String activePlans = "خطط نشطة";
+  static const String clientsUnderActiveFollowUp = "عملاء تحت المتابعة الفورية";
+  static const String installmentPlansSection = "خطط التقسيط";
+  static const String viewFullHistory = "عرض السجل الكامل";
+  static const String recordPayment = "تسجيل السداد";
+  static const String phoneCallAction = "اتصال";
+  static const String overdueStatus = "متأخر";
+  static const String dueTodayStatus = "مستحق اليوم";
+  static const String upcomingStatus = "قادم";
+  static const String paidStatus = "تم تحصيله";
+  static const String settledStatus = "مسدد";
+  static const String regularStatus = "منتظم";
+  static const String mustPayToday = "يجب السداد اليوم";
+  static const String mustPayBeforeEndOfDay = "يجب السداد قبل نهاية اليوم";
+  static const String duringCurrentMonth = "خلال الشهر الجاري";
+  static const String nextInstallmentDueDate = "موعد الدفعة القادمة";
+  static const String totalLabel = "إجمالي";
+  static const String paidLabel = "مسدد";
+  static const String remainingLabel = "متبقي";
+  static const String installmentsSchedule = "الأقساط";
+  static const String allHistoryFilter = "الكل";
+  static const String overdueHistoryFilter = "متأخرة";
+  static const String dueTodayHistoryFilter = "تستحق اليوم";
+  static const String upcomingHistoryFilter = "القادمة";
+  static const String paidHistoryFilter = "المدفوعة";
+  static const String loadMore = "تحميل المزيد";
+  static const String pagePrefix = "صفحة";
+  static const String ofPages = "من";
+  static const String paidOnDate = "تم السداد في";
+  static const String overdueDaysCount = "متأخر";
+  static const String daysUnit = "يوماً";
+  static const String dayUnit = "يوم";
+  static const String untilDate = "حتى";
+  static const String installmentsCountSuffix = "أقساط";
+  static const String installmentCountSuffix = "قسط";
+  static const String paymentsCountSuffix = "دفعات";
+  static const String paymentCountSuffix = "دفعة";
+  static const String ofPayments = "من";
+  static const String noActivePlans = "لا توجد خطط أقساط نشطة حالياً";
+  static const String noHistoryItems = "لا توجد أقساط في هذه الحالة";
+  static const String earliestDueDatePrefix = "أقرب استحقاق:";
+  static const String upcomingInstallmentsPeriod = "استحقاقات قادمة";
 }
 

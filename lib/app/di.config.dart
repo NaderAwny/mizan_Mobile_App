@@ -65,6 +65,8 @@ import '../domain/use_case/get_contact_by_id_use_case.dart' as _i804;
 import '../domain/use_case/get_contact_profile_use_case.dart' as _i307;
 import '../domain/use_case/get_contacts_use_case.dart' as _i646;
 import '../domain/use_case/get_daily_statistics.dart' as _i273;
+import '../domain/use_case/get_installments_dashboard_use_case.dart' as _i1063;
+import '../domain/use_case/get_installments_history_use_case.dart' as _i200;
 import '../domain/use_case/get_list_transaction_use_case.dart' as _i463;
 import '../domain/use_case/get_list_voice_notes_use_case.dart' as _i474;
 import '../domain/use_case/get_profile_use_case.dart' as _i673;
@@ -89,6 +91,10 @@ import '../presentation/customers/contact_profile_cubit/contact_profile_cubit.da
     as _i906;
 import '../presentation/customers/contacts_cubit/contacts_cubit.dart' as _i232;
 import '../presentation/get_profile/cubit/get_profile_cubit.dart' as _i1007;
+import '../presentation/installments/installments_dashboard/installments_dashboard_cubit.dart'
+    as _i452;
+import '../presentation/installments/installments_history/installments_history_cubit.dart'
+    as _i783;
 import '../presentation/logout/logout_cubit/logout_cubit.dart' as _i995;
 import '../presentation/register/cubit/register_cubit.dart' as _i298;
 import '../presentation/select_user_type/select_user_type_cubit/select_user_type_cubit.dart'
@@ -305,8 +311,18 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1028.TokenLocalDataSource>(),
       ),
     );
+    gh.factory<_i1063.GetInstallmentsDashboardUseCase>(
+      () => _i1063.GetInstallmentsDashboardUseCase(
+        gh<_i182.InstallmentRepository>(),
+      ),
+    );
     gh.factory<_i529.PayInstallmentUseCase>(
       () => _i529.PayInstallmentUseCase(gh<_i182.InstallmentRepository>()),
+    );
+    gh.lazySingleton<_i200.GetInstallmentsHistoryUseCase>(
+      () => _i200.GetInstallmentsHistoryUseCase(
+        gh<_i182.InstallmentRepository>(),
+      ),
     );
     gh.factory<_i298.RegisterCubit>(
       () => _i298.RegisterCubit(gh<_i224.RegisterUseCase>()),
@@ -338,6 +354,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i484.VerifyOtpUseCase>(
       () => _i484.VerifyOtpUseCase(gh<_i306.AuthRepository>()),
     );
+    gh.factory<_i452.InstallmentsDashboardCubit>(
+      () => _i452.InstallmentsDashboardCubit(
+        gh<_i1063.GetInstallmentsDashboardUseCase>(),
+      ),
+    );
     gh.factory<_i472.TransactionFormCubit>(
       () => _i472.TransactionFormCubit(gh<_i807.CreateTransactionUseCase>()),
     );
@@ -358,6 +379,11 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i876.PayInstallmentCubit>(
       () => _i876.PayInstallmentCubit(gh<_i529.PayInstallmentUseCase>()),
+    );
+    gh.factory<_i783.InstallmentsHistoryCubit>(
+      () => _i783.InstallmentsHistoryCubit(
+        gh<_i200.GetInstallmentsHistoryUseCase>(),
+      ),
     );
     gh.factory<_i705.VerifyOtpCubit>(
       () => _i705.VerifyOtpCubit(gh<_i484.VerifyOtpUseCase>()),
