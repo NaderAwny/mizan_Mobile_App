@@ -11,7 +11,7 @@ import 'package:mizan/presentation/get_profile/cubit/get_profile_state.dart';
 import 'package:mizan/presentation/home/widgets/custom_bottom_nav_bar.dart';
 import 'package:mizan/presentation/home/widgets/hero_balance_card.dart';
 import 'package:mizan/presentation/home/widgets/home_header.dart';
-import 'package:mizan/presentation/home/widgets/monthly_summary_card.dart';
+
 import 'package:mizan/presentation/home/widgets/quick_actions_bar.dart';
 import 'package:mizan/presentation/home/widgets/recent_transactions_section.dart';
 import 'package:mizan/presentation/installments/installments_view.dart';
@@ -201,14 +201,14 @@ class _HomeScreenState extends State<_HomeScreen> {
                       // Quick Financial Actions (بيع، شراء، تحصيل، دفع)
                       const QuickActionsBar(),
 
-                      SizedBox(height: 14.h),
+                      // SizedBox(height: 14.h),
 
                       // Monthly Performance & Ring Summary Card
-                      MonthlySummaryCard(
-                        collectedAmount: totalSales,
-                        targetAmount: targetAmount,
-                        percentage: percentage,
-                      ),
+                      // MonthlySummaryCard(
+                      //   collectedAmount: totalSales,
+                      //   targetAmount: targetAmount,
+                      //   percentage: percentage,
+                      // ),
                     ],
                   );
                 },

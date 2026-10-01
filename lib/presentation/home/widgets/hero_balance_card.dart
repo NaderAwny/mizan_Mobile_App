@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mizan/presentation/resources/assets_manager.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
 import 'package:mizan/presentation/resources/font_manager.dart';
+import 'package:mizan/presentation/resources/routes_manager.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 import 'package:mizan/presentation/resources/styles_manager.dart';
 import 'package:mizan/presentation/resources/values_manager.dart';
@@ -54,227 +55,207 @@ class _HeroBalanceCardState extends State<HeroBalanceCard> {
     return isNegative ? "- $formatted" : formatted;
   }
 
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: ColorManager.primaryGradient,
-        borderRadius: BorderRadius.circular(AppRadius.r20.r),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x2EC57B57),
-            blurRadius: 16.0,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Subtle decorative background circles
-          Positioned(
-            top: -30.r,
-            left: -20.r,
-            child: Container(
-              width: 100.r,
-              height: 100.r,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withAlpha(15),
+    return InkWell(
+      onTap: () {
+        Navigator.pushNamed(context, Routes.analyticsRoute);
+      },
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: ColorManager.primaryGradient,
+          borderRadius: BorderRadius.circular(AppRadius.r20.r),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x2EC57B57),
+              blurRadius: 16.0,
+              offset: Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Subtle decorative background circles
+            Positioned(
+              top: -30.r,
+              left: -20.r,
+              child: Container(
+                width: 100.r,
+                height: 100.r,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withAlpha(15),
+                ),
               ),
             ),
-          ),
 
-          // Main Card Content - Compact & Responsive
-          Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: 16.w,
-              vertical: 14.h,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Top Row: "إجمالي الرصيد" Pill + Trend Pill + Eye Button
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Label Pill
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 10.w,
-                        vertical: 3.5.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(35),
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(
-                          color: Colors.white.withAlpha(30),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            AppStrings.totalBalance,
-                            style: getBoldStyle(
-                              color: ColorManager.white,
-                              fontSize: FontSize.s11,
-                            ),
-                          ),
-                          SizedBox(width: 4.w),
-                          Text(
-                            AppStrings.egpSymbol,
-                            style: getMediumStyle(
-                              color: ColorManager.white.withAlpha(200),
-                              fontSize: FontSize.s9,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Trend pill
-                        Container(
+            // Main Card Content - Compact & Responsive
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Top Row: "إجمالي الرصيد" Pill + Trend Pill + Eye Button
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Label Pill - Flexible so it shrinks on large text scale
+                      Flexible(
+                        child: Container(
                           padding: EdgeInsets.symmetric(
-                            horizontal: 6.w,
-                            vertical: 2.5.h,
+                            horizontal: 10.w,
+                            vertical: 3.5.h,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0x33E2FDE6),
-                            borderRadius: BorderRadius.circular(6.r),
+                            color: Colors.white.withAlpha(35),
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(
+                              color: Colors.white.withAlpha(30),
+                              width: 1,
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                Icons.trending_up_rounded,
-                                color: const Color(0xFFE2FDE6),
-                                size: 12.r,
+                              Flexible(
+                                child: Text(
+                                  AppStrings.totalBalance,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: getBoldStyle(
+                                    color: ColorManager.white,
+                                    fontSize: FontSize.s10.sp,
+                                  ),
+                                ),
                               ),
-                              SizedBox(width: 2.w),
+                              SizedBox(width: 4.w),
                               Text(
-                                "+12.5%",
-                                style: getBoldStyle(
-                                  color: const Color(0xFFE2FDE6),
-                                  fontSize: FontSize.s10,
+                                AppStrings.egpSymbol,
+                                style: getMediumStyle(
+                                  color: ColorManager.white.withAlpha(200),
+                                  fontSize: FontSize.s9,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        SizedBox(width: 8.w),
-                        // Eye button
-                        InkWell(
-                          onTap: _toggleBalanceVisibility,
-                          borderRadius: BorderRadius.circular(16.r),
-                          child: Padding(
-                            padding: EdgeInsets.all(2.r),
-                            child: Icon(
-                              _isBalanceVisible
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                              color: Colors.white.withAlpha(220),
-                              size: 18.r,
+                      ),
+
+                      SizedBox(width: 8.w),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Trend pill
+                          SizedBox(width: 8.w),
+                          // Eye button
+                          InkWell(
+                            onTap: _toggleBalanceVisibility,
+                            borderRadius: BorderRadius.circular(16.r),
+                            child: Padding(
+                              padding: EdgeInsets.all(2.r),
+                              child: Icon(
+                                _isBalanceVisible
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                                color: Colors.white.withAlpha(220),
+                                size: 18.r,
+                              ),
                             ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: 10.h),
+
+                  // Balance Number (FittedBox ensures zero overflow on any screen)
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          _isBalanceVisible
+                              ? _formatAmount(widget.totalBalance)
+                              : "••••••••",
+                          style: getBlackStyle(
+                            color: ColorManager.white,
+                            fontSize: FontSize.s24,
+                          ),
+                        ),
+                        SizedBox(width: 6.w),
+                        Text(
+                          widget.currency,
+                          style: getBoldStyle(
+                            color: ColorManager.white.withAlpha(220),
+                            fontSize: FontSize.s13,
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
 
-                SizedBox(height: 10.h),
+                  SizedBox(height: 12.h),
 
-                // Balance Number (FittedBox ensures zero overflow on any screen)
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerRight,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
+                  // Divider Line inside Card
+                  Container(
+                    width: double.infinity,
+                    height: 1.0,
+                    color: Colors.white.withAlpha(30),
+                  ),
+
+                  SizedBox(height: 10.h),
+
+                  // Bottom Row: Debts (You receive) & Payables (You pay)
+                  Row(
                     children: [
-                      Text(
-                        _isBalanceVisible
-                            ? _formatAmount(widget.totalBalance)
-                            : "••••••••",
-                        style: getBlackStyle(
-                          color: ColorManager.white,
-                          fontSize: FontSize.s24,
+                      // Debts
+                      Expanded(
+                        child: _HeroMetricItem(
+                          icon: IconAssets.arrowDownLeft,
+                          iconColor: const Color(0xFFE2FDE6),
+                          iconBgColor: Colors.white.withAlpha(25),
+                          title: AppStrings.totalDebts,
+                          amount: _isBalanceVisible
+                              ? "${_formatAmount(widget.totalDebts)} ${widget.currency}"
+                              : "••••••",
                         ),
                       ),
-                      SizedBox(width: 6.w),
-                      Text(
-                        widget.currency,
-                        style: getBoldStyle(
-                          color: ColorManager.white.withAlpha(220),
-                          fontSize: FontSize.s13,
+
+                      // Vertical subtle separator
+                      Container(
+                        width: 1.0,
+                        height: 30.h,
+                        color: Colors.white.withAlpha(30),
+                        margin: EdgeInsets.symmetric(horizontal: 8.w),
+                      ),
+
+                      // Payables
+                      Expanded(
+                        child: _HeroMetricItem(
+                          icon: IconAssets.arrowUpRight,
+                          iconColor: const Color(0xFFFFD4C8),
+                          iconBgColor: Colors.white.withAlpha(25),
+                          title: AppStrings.totalPayables,
+                          amount: _isBalanceVisible
+                              ? "${_formatAmount(widget.totalPayables)} ${widget.currency}"
+                              : "••••••",
                         ),
                       ),
                     ],
                   ),
-                ),
-
-                SizedBox(height: 12.h),
-
-                // Divider Line inside Card
-                Container(
-                  width: double.infinity,
-                  height: 1.0,
-                  color: Colors.white.withAlpha(30),
-                ),
-
-                SizedBox(height: 10.h),
-
-                // Bottom Row: Debts (You receive) & Payables (You pay)
-                Row(
-                  children: [
-                    // Debts
-                    Expanded(
-                      child: _HeroMetricItem(
-                        icon: IconAssets.arrowDownLeft,
-                        iconColor: const Color(0xFFE2FDE6),
-                        iconBgColor: Colors.white.withAlpha(25),
-                        title: AppStrings.totalDebts,
-                        amount: _isBalanceVisible
-                            ? "${_formatAmount(widget.totalDebts)} ${widget.currency}"
-                            : "••••••",
-                      ),
-                    ),
-
-                    // Vertical subtle separator
-                    Container(
-                      width: 1.0,
-                      height: 30.h,
-                      color: Colors.white.withAlpha(30),
-                      margin: EdgeInsets.symmetric(horizontal: 8.w),
-                    ),
-
-                    // Payables
-                    Expanded(
-                      child: _HeroMetricItem(
-                        icon: IconAssets.arrowUpRight,
-                        iconColor: const Color(0xFFFFD4C8),
-                        iconBgColor: Colors.white.withAlpha(25),
-                        title: AppStrings.totalPayables,
-                        amount: _isBalanceVisible
-                            ? "${_formatAmount(widget.totalPayables)} ${widget.currency}"
-                            : "••••••",
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

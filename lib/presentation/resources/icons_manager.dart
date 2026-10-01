@@ -11,6 +11,7 @@ class AppIcons {
   static const IconData settings = Icons.settings_rounded;
 
   // Actions
+
   static const IconData add = Icons.add_rounded;
   static const IconData remove = Icons.remove_rounded;
   static const IconData search = Icons.search_rounded;

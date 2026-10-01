@@ -345,8 +345,10 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
       return;
     }
 
-    final hasContact = _selectedContactId != null && _selectedContactId!.isNotEmpty;
-    final hasPartyName = _selectedPartyName != null && _selectedPartyName!.trim().isNotEmpty;
+    final hasContact =
+        _selectedContactId != null && _selectedContactId!.isNotEmpty;
+    final hasPartyName =
+        _selectedPartyName != null && _selectedPartyName!.trim().isNotEmpty;
     if (!hasContact && !hasPartyName) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -412,7 +414,8 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
           child: Scaffold(
             backgroundColor: ColorManager.background,
             body: SafeArea(
-              child: state.flowState?.getScreenWidget(
+              child:
+                  state.flowState?.getScreenWidget(
                     context,
                     _buildScreenBody(context),
                     () => _submitForm(),
@@ -553,8 +556,8 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
           color: _isRecording
               ? ColorManager.primary
               : _recordedAudioFile != null
-                  ? ColorManager.success
-                  : ColorManager.border,
+              ? ColorManager.success
+              : ColorManager.border,
           width: _isRecording || _recordedAudioFile != null ? 1.5 : 1.0,
         ),
         boxShadow: const [
@@ -672,7 +675,26 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(18, (index) {
-                final heights = [12, 22, 34, 18, 28, 42, 16, 30, 48, 24, 38, 14, 26, 44, 20, 32, 18, 10];
+                final heights = [
+                  12,
+                  22,
+                  34,
+                  18,
+                  28,
+                  42,
+                  16,
+                  30,
+                  48,
+                  24,
+                  38,
+                  14,
+                  26,
+                  44,
+                  20,
+                  32,
+                  18,
+                  10,
+                ];
                 final h = heights[index % heights.length];
                 return Container(
                   width: 3.5.w,
@@ -691,7 +713,11 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
               children: [
                 OutlinedButton.icon(
                   onPressed: _cancelRecording,
-                  icon: const Icon(Icons.close_rounded, size: 16, color: ColorManager.textSecondary),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    size: 16,
+                    color: ColorManager.textSecondary,
+                  ),
                   label: Text(
                     "إلغاء",
                     style: getMediumStyle(
@@ -709,7 +735,11 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                 SizedBox(width: 12.w),
                 ElevatedButton.icon(
                   onPressed: _stopRecording,
-                  icon: const Icon(Icons.stop_rounded, size: 18, color: ColorManager.white),
+                  icon: const Icon(
+                    Icons.stop_rounded,
+                    size: 18,
+                    color: ColorManager.white,
+                  ),
                   label: Text(
                     AppStrings.stopRecording,
                     style: getBoldStyle(
@@ -773,7 +803,9 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                             ),
                             decoration: BoxDecoration(
                               color: ColorManager.successContainer,
-                              borderRadius: BorderRadius.circular(AppRadius.r6.r),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.r6.r,
+                              ),
                             ),
                             child: Text(
                               _formatDuration(_recordSeconds),
@@ -811,7 +843,11 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
               children: [
                 TextButton.icon(
                   onPressed: _startRecording,
-                  icon: const Icon(Icons.refresh_rounded, size: 16, color: ColorManager.textSecondary),
+                  icon: const Icon(
+                    Icons.refresh_rounded,
+                    size: 16,
+                    color: ColorManager.textSecondary,
+                  ),
                   label: Text(
                     AppStrings.rerecord,
                     style: getMediumStyle(
@@ -925,7 +961,9 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                         width: 14.r,
                         height: 14.r,
                         colorFilter: ColorFilter.mode(
-                          isSelected ? ColorManager.white : ColorManager.textSecondary,
+                          isSelected
+                              ? ColorManager.white
+                              : ColorManager.textSecondary,
                           BlendMode.srcIn,
                         ),
                       ),
@@ -943,7 +981,11 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                       ),
                     ),
                     if (isSelected)
-                      Icon(Icons.check_circle_rounded, color: color, size: 16.r),
+                      Icon(
+                        Icons.check_circle_rounded,
+                        color: color,
+                        size: 16.r,
+                      ),
                   ],
                 ),
               ),
@@ -1223,8 +1265,10 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
 
   // ── 5. Date Section ───────────────────────────────────────────────────────
   Widget _buildDateSection() {
-    final formattedDate =
-        intl.DateFormat('yyyy/MM/dd', 'ar').format(_operationDate);
+    final formattedDate = intl.DateFormat(
+      'yyyy/MM/dd',
+      'ar',
+    ).format(_operationDate);
 
     return Container(
       padding: EdgeInsets.all(14.r),
@@ -1342,7 +1386,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
   Widget _buildSubmitButton() {
     return Container(
       width: double.infinity,
-      height: 52.h,
+      height: 72.h,
       decoration: BoxDecoration(
         gradient: ColorManager.primaryGradient,
         borderRadius: BorderRadius.circular(AppRadius.r14.r),

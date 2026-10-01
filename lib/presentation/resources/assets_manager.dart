@@ -49,6 +49,8 @@ class IconAssets {
       "$iconsPath/chart_network.svg"; // Analytics
 
   // --- Quick Actions & Financial Transactions ---
+  static const String mic2 = "$iconsPath/mic.svg";
+  static const String receipt = "$iconsPath/receipt.svg";
   static const String shoppingBag = "$iconsPath/shopping_bag.svg"; // Sale (بيع)
   static const String arrowDownLeft =
       "$iconsPath/arrow_down_left.svg"; // Collection (تحصيل)

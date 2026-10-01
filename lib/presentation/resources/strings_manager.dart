@@ -31,12 +31,14 @@ class AppStrings {
   static const String transactions = "المعاملات";
   static const String financialTransactions = "المعاملات المالية";
   static const String transactionsSubtitle = "أضف وتتبع الدفاتر";
-  static const String searchTransactionsHint = "ابحث برقم المعاملة أو الطرف الثاني...";
+  static const String searchTransactionsHint =
+      "ابحث برقم المعاملة أو الطرف الثاني...";
   static const String allTransactions = "الكل";
   static const String today = "اليوم";
   static const String yesterday = "أمس";
   static const String contacts = "العملاء";
   static const String installments = "الأقساط";
+  static const String installmentsHistory = "سجل الأقساط";
   static const String analytics = "التقارير";
   static const String notifications = "التنبيهات";
   static const String settings = "الإعدادات";
@@ -54,9 +56,9 @@ class AppStrings {
   static const String voiceRecording = "تسجيل صوتي ذكي";
 
   // --- Financial Dashboard Labels ---
-  static const String totalBalance = "إجمالي الرصيد";
-  static const String totalDebts = "الديون المستحقة لك";
-  static const String totalPayables = "المستحقات عليك";
+  static const String totalBalance = " صافي إجمالي الرصيد هذا الشهر";
+  static const String totalDebts = "(الشهر)المبيعات";
+  static const String totalPayables = "(الشهر)المشتريات";
   static const String sales = "المبيعات";
   static const String purchases = "المشتريات";
   static const String collections = "التحصيلات";
@@ -257,7 +259,8 @@ class AppStrings {
 
   // --- Voice Notes Feature ---
   static const String voiceNotesTitle = "الملاحظات الصوتية";
-  static const String voiceNotesSubtitle = "سجل المذكرات والمعاملات الصوتية الذكية";
+  static const String voiceNotesSubtitle =
+      "سجل المذكرات والمعاملات الصوتية الذكية";
   static const String newVoiceNote = "ملاحظة صوتية جديدة";
   static const String voiceNoteDetails = "تفاصيل الملاحظة الصوتية";
   static const String recordVoiceNote = "تسجيل الملاحظة";
@@ -276,13 +279,15 @@ class AppStrings {
   static const String partyNameHint = "اسم العميل أو المورد...";
   static const String operationDateLabel = "تاريخ العملية";
   static const String voiceNoteNotesLabel = "ملاحظات وتفريغ صوتي";
-  static const String voiceNoteNotesHint = "اكتب تفريغ التسجيل أو أي ملاحظات إضافية...";
+  static const String voiceNoteNotesHint =
+      "اكتب تفريغ التسجيل أو أي ملاحظات إضافية...";
   static const String noVoiceNotesTitle = "لا توجد ملاحظات صوتية مسجلة";
   static const String noVoiceNotesSubtitle =
       "سجل معاملاتك اليومية بصوتك وسيقوم النظام بحفظها لمساعدتك في تحويلها لمعاملات مالية.";
   static const String recordFirstVoiceNote = "تسجيل أول ملاحظة الآن";
   static const String voiceNoteSavedSuccess = "تم حفظ الملاحظة الصوتية بنجاح";
-  static const String featureComingSoon = "هذه الميزة ستتوفر قريباً مع تحديث النظام";
+  static const String featureComingSoon =
+      "هذه الميزة ستتوفر قريباً مع تحديث النظام";
 
   // --- Installments Feature (Figma Nodes #3:300 & #2303:4184) ---
   static const String installmentsDashboardTitle = "متابعة الأقساط والديون";
@@ -331,4 +336,3 @@ class AppStrings {
   static const String earliestDueDatePrefix = "أقرب استحقاق:";
   static const String upcomingInstallmentsPeriod = "استحقاقات قادمة";
 }
-

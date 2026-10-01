@@ -517,35 +517,36 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
                   color: ColorManager.primary,
                   borderRadius: BorderRadius.circular(AppRadius.r8.r),
                 ),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.calendar_month_rounded,
-                        size: 12.r,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.calendar_month_rounded,
+                      size: 12.r,
+                      color: ColorManager.white,
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      'تغيير الشهر',
+                      style: getSemiBoldStyle(
                         color: ColorManager.white,
+                        fontSize: FontSize.s10,
                       ),
-                      SizedBox(width: 4.w),
-                      Text(
-                        'تغيير الشهر',
-                        style: getSemiBoldStyle(
-                          color: ColorManager.white,
-                          fontSize: FontSize.s10,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
             const Spacer(),
-            Text(
-              'بيانات شهر: ${_formatMonthYearDisplay(monthYear)}',
-              style: getSemiBoldStyle(
-                color: ColorManager.primary,
-                fontSize: FontSize.s12,
+            Flexible(
+              child: Text(
+                'بيانات شهر: ${_formatMonthYearDisplay(monthYear)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: getSemiBoldStyle(
+                  color: ColorManager.primary,
+                  fontSize: FontSize.s12,
+                ),
               ),
             ),
             SizedBox(width: 6.w),
@@ -1089,16 +1090,26 @@ class _CostBar extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              '$pct% ($formattedAmount EGP)',
-              style: getSemiBoldStyle(color: color, fontSize: FontSize.s11),
-              textDirection: TextDirection.ltr,
+            Flexible(
+              child: Text(
+                '$pct% ($formattedAmount EGP)',
+                style: getSemiBoldStyle(color: color, fontSize: FontSize.s11),
+                textDirection: TextDirection.ltr,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            Text(
-              label,
-              style: getMediumStyle(
-                color: ColorManager.textPrimary,
-                fontSize: FontSize.s12,
+            SizedBox(width: 8.w),
+            Flexible(
+              child: Text(
+                label,
+                style: getMediumStyle(
+                  color: ColorManager.textPrimary,
+                  fontSize: FontSize.s12,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
               ),
             ),
           ],

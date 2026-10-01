@@ -18,47 +18,55 @@ class QuickActionsBar extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         // 1. بيع (Sale)
-        _QuickActionButton(
-          label: AppStrings.quickSale,
-          icon: IconAssets.shoppingBag,
-          bgColor: ColorManager.lightPrimary,
-          accentColor: ColorManager.primary,
-          onTap: () {
-            Navigator.pushNamed(context, Routes.quickSaleRoute);
-          },
+        Expanded(
+          child: _QuickActionButton(
+            label: AppStrings.quickSale,
+            icon: IconAssets.shoppingBag,
+            bgColor: ColorManager.successContainer,
+            accentColor: ColorManager.success,
+            onTap: () {
+              Navigator.pushNamed(context, Routes.quickSaleRoute);
+            },
+          ),
         ),
 
         // 2. شراء (Purchase)
-        _QuickActionButton(
-          label: AppStrings.quickPurchase,
-          icon: IconAssets.arrowUpRight,
-          bgColor: ColorManager.lightSecondary,
-          accentColor: ColorManager.secondary,
-          onTap: () {
-            Navigator.pushNamed(context, Routes.quickPurchaseRoute);
-          },
+        Expanded(
+          child: _QuickActionButton(
+            label: AppStrings.quickPurchase,
+            icon: IconAssets.arrowUpRight,
+            bgColor: ColorManager.errorContainer,
+            accentColor: ColorManager.error,
+            onTap: () {
+              Navigator.pushNamed(context, Routes.quickPurchaseRoute);
+            },
+          ),
         ),
 
-        // 3. تحصيل (Collection)
-        _QuickActionButton(
-          label: AppStrings.quickCollect,
-          icon: IconAssets.arrowDownLeft,
-          bgColor: ColorManager.successContainer,
-          accentColor: ColorManager.success,
-          onTap: () {
-            Navigator.pushNamed(context, Routes.quickCollectRoute);
-          },
+        // 3. التسجيلات الصوتيه
+        Expanded(
+          child: _QuickActionButton(
+            label: AppStrings.voiceNotesTitle,
+            icon: IconAssets.mic2,
+            bgColor: ColorManager.lightSecondary,
+            accentColor: ColorManager.secondary,
+            onTap: () {
+              Navigator.of(context).pushNamed(Routes.voiceNotesListRoute);
+            },
+          ),
         ),
 
-        // 4. دفع (Payment)
-        _QuickActionButton(
-          label: AppStrings.quickPay,
-          icon: IconAssets.wallet2,
-          bgColor: ColorManager.errorContainer,
-          accentColor: ColorManager.error,
-          onTap: () {
-            Navigator.pushNamed(context, Routes.quickPayRoute);
-          },
+        // 4. تحصيل الاقساط
+        Expanded(
+          child: _QuickActionButton(
+            label: AppStrings.installmentsHistory,
+            icon: IconAssets.receipt,
+            bgColor: ColorManager.lightPrimary,
+            accentColor: ColorManager.primary,
+            onTap: () {
+              Navigator.pushNamed(context, Routes.installmentsHistoryRoute);
+            },
+          ),
         ),
       ],
     );
@@ -128,48 +136,54 @@ class _QuickActionButtonState extends State<_QuickActionButton>
       onTapCancel: _onTapCancel,
       child: ScaleTransition(
         scale: _scaleAnimation,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 72.w,
-              height: 64.h,
-              decoration: BoxDecoration(
-                color: widget.bgColor,
-                borderRadius: BorderRadius.circular(AppRadius.r18.r),
-                border: Border.all(
-                  color: widget.accentColor.withAlpha(35),
-                  width: 1.0,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: widget.accentColor.withAlpha(20),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: double.infinity,
+                height: 64.h,
+                decoration: BoxDecoration(
+                  color: widget.bgColor,
+                  borderRadius: BorderRadius.circular(AppRadius.r18.r),
+                  border: Border.all(
+                    color: widget.accentColor.withAlpha(35),
+                    width: 1.0,
                   ),
-                ],
-              ),
-              child: Center(
-                child: SvgPicture.asset(
-                  widget.icon,
-                  width: 26.r,
-                  height: 26.r,
-                  colorFilter: ColorFilter.mode(
-                    widget.accentColor,
-                    BlendMode.srcIn,
+                  boxShadow: [
+                    BoxShadow(
+                      color: widget.accentColor.withAlpha(20),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    widget.icon,
+                    width: 26.r,
+                    height: 26.r,
+                    colorFilter: ColorFilter.mode(
+                      widget.accentColor,
+                      BlendMode.srcIn,
+                    ),
                   ),
                 ),
               ),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              widget.label,
-              style: getBoldStyle(
-                color: ColorManager.textPrimary,
-                fontSize: FontSize.s13,
+              SizedBox(height: 8.h),
+              Text(
+                widget.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: getBoldStyle(
+                  color: ColorManager.textPrimary,
+                  fontSize: FontSize.s12,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

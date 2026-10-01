@@ -76,6 +76,8 @@ class ColorManager {
   /// Error / Expense / Out-flow (#9B3A2C)
   static const Color error = Color(0xFF9B3A2C);
 
+  static const Color lightError = Color(0xFFF7ECE9);
+
   /// Error Light container (#F7ECE9)
   static const Color errorContainer = Color(0xFFF7ECE9);
 
@@ -108,11 +110,7 @@ class ColorManager {
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.centerRight,
     end: Alignment.centerLeft,
-    colors: [
-      Color(0xFFA8623B),
-      Color(0xFFD1A153),
-      Color(0xFFC57B57),
-    ],
+    colors: [Color(0xFFA8623B), Color(0xFFD1A153), Color(0xFFC57B57)],
     stops: [0.0, 0.5, 1.0],
   );
 
@@ -120,21 +118,14 @@ class ColorManager {
   static const LinearGradient splashGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [
-      Color(0xFFF9F5EC),
-      Color(0xFFF3EBDA),
-      Color(0xFFEEE1C2),
-    ],
+    colors: [Color(0xFFF9F5EC), Color(0xFFF3EBDA), Color(0xFFEEE1C2)],
   );
 
   /// Brand Dark Green to Gold gradient
   static const LinearGradient brandGradient = LinearGradient(
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
-    colors: [
-      Color(0xFF1C4A38),
-      Color(0xFFC29A4E),
-    ],
+    colors: [Color(0xFF1C4A38), Color(0xFFC29A4E)],
   );
 
   /// Radial glow for onboarding illustrations
