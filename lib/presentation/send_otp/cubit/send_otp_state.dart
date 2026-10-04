@@ -11,5 +11,7 @@ abstract class SendOtpState with _$SendOtpState {
     @Default(false) bool isEmailValid,
     @Default(false) bool isAllValid,
     @Default(false) bool sendOtpSuccess,
+    @Default(0) int secondsLeft,       // كان ValueNotifier<int> في الـ view
+    @Default(false) bool emailTouched, // كان _emailTouched setState في الـ view
   }) = _SendOtpState;
 }

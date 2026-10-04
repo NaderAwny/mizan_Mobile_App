@@ -96,6 +96,7 @@ import '../presentation/installments/installments_dashboard/installments_dashboa
 import '../presentation/installments/installments_history/installments_history_cubit.dart'
     as _i783;
 import '../presentation/logout/logout_cubit/logout_cubit.dart' as _i995;
+import '../presentation/onboarding/cubit/onboarding_cubit.dart' as _i171;
 import '../presentation/register/cubit/register_cubit.dart' as _i298;
 import '../presentation/select_user_type/select_user_type_cubit/select_user_type_cubit.dart'
     as _i710;
@@ -138,6 +139,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1028.TokenLocalDataSource>(
       () => _i388.SecureTokenLocalDataSource(gh<_i558.FlutterSecureStorage>()),
     );
+    gh.factory<_i171.OnBoardingCubit>(
+      () => _i171.OnBoardingCubit(gh<_i603.OnboardingLocalDataSource>()),
+    );
     gh.lazySingleton<_i371.NetworkInfo>(
       () => _i371.NetworkInfoImpl(gh<_i973.InternetConnectionChecker>()),
     );
@@ -149,12 +153,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i765.DioFactory(
         gh<_i1028.TokenLocalDataSource>(),
         gh<_i989.SessionManager>(),
-      ),
-    );
-    gh.factory<_i822.SplashCubit>(
-      () => _i822.SplashCubit(
-        gh<_i1028.TokenLocalDataSource>(),
-        gh<_i603.OnboardingLocalDataSource>(),
       ),
     );
     gh.lazySingleton<_i361.Dio>(() => appModule.dio(gh<_i765.DioFactory>()));
@@ -295,7 +293,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i508.SendOtpUseCase>(
       () => _i508.SendOtpUseCase(gh<_i943.SendOtpRepository>()),
     );
-    gh.factory<_i1007.GetProfileCubit>(
+    gh.lazySingleton<_i1007.GetProfileCubit>(
       () => _i1007.GetProfileCubit(gh<_i673.GetProfileUsecase>()),
     );
     gh.factory<_i215.ContactFormCubit>(
@@ -422,6 +420,15 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i877.GetListTransactionCubit>(
       () =>
           _i877.GetListTransactionCubit(gh<_i463.GetListTransactionsUseCase>()),
+    );
+    gh.factory<_i822.SplashCubit>(
+      () => _i822.SplashCubit(
+        gh<_i1028.TokenLocalDataSource>(),
+        gh<_i603.OnboardingLocalDataSource>(),
+        gh<_i1007.GetProfileCubit>(),
+        gh<_i1000.StatisticsCubit>(),
+        gh<_i877.GetListTransactionCubit>(),
+      ),
     );
     return this;
   }

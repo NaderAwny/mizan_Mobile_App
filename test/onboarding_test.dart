@@ -11,7 +11,7 @@ Widget createOnboardingScreen() {
     designSize: AppConstants.designSize,
     minTextAdapt: true,
     splitScreenMode: true,
-    builder: (context, child) {
+    builder: (BuildContext context, Widget? child) {
       return MaterialApp(
         theme: getApplicationTheme(),
         initialRoute: Routes.onBoardingRoute,
@@ -22,7 +22,9 @@ Widget createOnboardingScreen() {
 }
 
 void main() {
-  testWidgets('OnBoarding initial screen renders properly', (WidgetTester tester) async {
+  testWidgets('OnBoarding initial screen renders properly', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(createOnboardingScreen());
     await tester.pumpAndSettle();
 
@@ -32,50 +34,58 @@ void main() {
     expect(find.text(AppStrings.next), findsOneWidget);
   });
 
-  testWidgets('Skip button moves to the last page (slide 3), shows startNow and removes skip', (WidgetTester tester) async {
-    await tester.pumpWidget(createOnboardingScreen());
-    await tester.pumpAndSettle();
+  testWidgets(
+    'Skip button moves to the last page (slide 3), shows startNow and removes skip',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(createOnboardingScreen());
+      await tester.pumpAndSettle();
 
-    // Tap Skip button
-    await tester.tap(find.text(AppStrings.skip));
-    await tester.pumpAndSettle();
+      // Tap Skip button
+      await tester.tap(find.text(AppStrings.skip));
+      await tester.pumpAndSettle();
 
-    // Verify last slide title (Slide 3)
-    expect(find.text(AppStrings.onBoardingTitle3), findsOneWidget);
+      // Verify last slide title (Slide 3)
+      expect(find.text(AppStrings.onBoardingTitle3), findsOneWidget);
 
-    // Skip button should now be gone from the AppBar
-    expect(find.text(AppStrings.skip), findsNothing);
+      // Skip button should now be gone from the AppBar
+      expect(find.text(AppStrings.skip), findsNothing);
 
-    // Button should now show "ابدأ الآن"
-    expect(find.text(AppStrings.startNow), findsOneWidget);
-    expect(find.text(AppStrings.next), findsNothing);
-  });
+      // Button should now show "ابدأ الآن"
+      expect(find.text(AppStrings.startNow), findsOneWidget);
+      expect(find.text(AppStrings.next), findsNothing);
+    },
+  );
 
-  testWidgets('Next button advances pages one by one to slide 3 and navigates to login', (WidgetTester tester) async {
-    await tester.pumpWidget(createOnboardingScreen());
-    await tester.pumpAndSettle();
+  testWidgets(
+    'Next button advances pages one by one to slide 3 and navigates to login',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(createOnboardingScreen());
+      await tester.pumpAndSettle();
 
-    // Slide 1
-    expect(find.text(AppStrings.onBoardingTitle1), findsOneWidget);
+      // Slide 1
+      expect(find.text(AppStrings.onBoardingTitle1), findsOneWidget);
 
-    // Tap Next -> Slide 2
-    await tester.tap(find.text(AppStrings.next));
-    await tester.pumpAndSettle();
-    expect(find.text(AppStrings.onBoardingTitle2), findsOneWidget);
+      // Tap Next -> Slide 2
+      await tester.tap(find.text(AppStrings.next));
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.onBoardingTitle2), findsOneWidget);
 
-    // Tap Next -> Slide 3 (last slide)
-    await tester.tap(find.text(AppStrings.next));
-    await tester.pumpAndSettle();
-    expect(find.text(AppStrings.onBoardingTitle3), findsOneWidget);
-    expect(find.text(AppStrings.startNow), findsOneWidget);
+      // Tap Next -> Slide 3 (last slide)
+      await tester.tap(find.text(AppStrings.next));
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.onBoardingTitle3), findsOneWidget);
+      expect(find.text(AppStrings.startNow), findsOneWidget);
 
-    // Tap "ابدأ الآن" navigates to loginRoute
-    await tester.tap(find.text(AppStrings.startNow));
-    await tester.pumpAndSettle();
-    expect(find.text(AppStrings.loginTitle), findsWidgets);
-  });
+      // Tap "ابدأ الآن" navigates to loginRoute
+      await tester.tap(find.text(AppStrings.startNow));
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.loginTitle), findsWidgets);
+    },
+  );
 
-  testWidgets('AppBar shows both the logo icon and the text "ميزان"', (WidgetTester tester) async {
+  testWidgets('AppBar shows both the logo icon and the text "ميزان"', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(createOnboardingScreen());
     await tester.pumpAndSettle();
 
@@ -85,41 +95,44 @@ void main() {
     expect(find.text(AppStrings.skip), findsOneWidget);
   });
 
-  testWidgets('OnBoardingView is fully responsive on small screens with enlarged text scale', (WidgetTester tester) async {
-    // Configure small screen (iPhone SE / 5s size: 320x568)
-    tester.view.physicalSize = const Size(320, 568);
-    tester.view.devicePixelRatio = 1.0;
-    // Set enlarged accessibility font scale (1.5x)
-    tester.platformDispatcher.textScaleFactorTestValue = 1.5;
+  testWidgets(
+    'OnBoardingView is fully responsive on small screens with enlarged text scale',
+    (WidgetTester tester) async {
+      // Configure small screen (iPhone SE / 5s size: 320x568)
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1.0;
+      // Set enlarged accessibility font scale (1.5x)
+      tester.platformDispatcher.textScaleFactorTestValue = 1.5;
 
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
-      tester.platformDispatcher.clearTextScaleFactorTestValue();
-    });
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+        tester.platformDispatcher.clearTextScaleFactorTestValue();
+      });
 
-    await tester.pumpWidget(createOnboardingScreen());
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(createOnboardingScreen());
+      await tester.pumpAndSettle();
 
-    // Verify "تخطي" exists and renders on 1 line without overflow
-    final skipFinder = find.text(AppStrings.skip);
-    expect(skipFinder, findsOneWidget);
-    final Text skipWidget = tester.widget(skipFinder);
-    expect(skipWidget.maxLines, 1);
-    expect(skipWidget.softWrap, false);
+      // Verify "تخطي" exists and renders on 1 line without overflow
+      final Finder skipFinder = find.text(AppStrings.skip);
+      expect(skipFinder, findsOneWidget);
+      final Text skipWidget = tester.widget(skipFinder);
+      expect(skipWidget.maxLines, 1);
+      expect(skipWidget.softWrap, false);
 
-    // Verify logo and text exist
-    expect(find.text(AppStrings.appName), findsOneWidget);
+      // Verify logo and text exist
+      expect(find.text(AppStrings.appName), findsOneWidget);
 
-    // Verify next button is clickable and no RenderFlex overflow occurs
-    await tester.tap(find.text(AppStrings.next));
-    await tester.pumpAndSettle();
-    expect(find.text(AppStrings.onBoardingTitle2), findsOneWidget);
+      // Verify next button is clickable and no RenderFlex overflow occurs
+      await tester.tap(find.text(AppStrings.next));
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.onBoardingTitle2), findsOneWidget);
 
-    // Jump to last page via skip button
-    await tester.tap(find.text(AppStrings.skip));
-    await tester.pumpAndSettle();
-    expect(find.text(AppStrings.onBoardingTitle3), findsOneWidget);
-    expect(find.text(AppStrings.startNow), findsOneWidget);
-  });
+      // Jump to last page via skip button
+      await tester.tap(find.text(AppStrings.skip));
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.onBoardingTitle3), findsOneWidget);
+      expect(find.text(AppStrings.startNow), findsOneWidget);
+    },
+  );
 }

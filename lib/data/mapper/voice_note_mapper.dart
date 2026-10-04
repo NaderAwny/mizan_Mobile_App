@@ -21,14 +21,17 @@ extension VoiceNoteMapper on VoiceNoteData? {
 
 extension VoiceNotesPageMapper on VoiceNotesPageData? {
   VoiceNotesPage toDomain() {
-    final totalCount = this?.totalCount.orZero() ?? 0;
-    final rawPageSize = this?.pageSize.orZero() ?? 0;
-    final pageSize = rawPageSize > 0 ? rawPageSize : 20;
+    final int totalCount = this?.totalCount.orZero() ?? 0;
+    final int rawPageSize = this?.pageSize.orZero() ?? 0;
+    final int pageSize = rawPageSize > 0 ? rawPageSize : 20;
     // الـ API مش بيرجّع totalPages فبنحسبها من totalCount / pageSize
-    final totalPages = totalCount == 0 ? 1 : (totalCount / pageSize).ceil();
+    final int totalPages = totalCount == 0 ? 1 : (totalCount / pageSize).ceil();
 
     return VoiceNotesPage(
-      items: (this?.items?.map((e) => e.toDomain()) ?? const []).toList(),
+      items:
+          (this?.items?.map((VoiceNoteData e) => e.toDomain()) ??
+                  const <VoiceNoteModel>[])
+              .toList(),
       totalCount: totalCount,
       page: this?.page.orZero() ?? 1,
       pageSize: pageSize,

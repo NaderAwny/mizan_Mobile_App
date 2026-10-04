@@ -1,6 +1,9 @@
+import 'package:dartz/dartz.dart';
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/data/network/failure.dart';
+import 'package:mizan/domain/model/get_list_transactions_model.dart';
 import 'package:mizan/domain/use_case/get_list_transaction_use_case.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
@@ -25,12 +28,12 @@ class GetListTransactionCubit extends Cubit<GetListTransactionState> {
     String? dateTo,
   }) async {
     currentPage = 1;
-    final isInitialLoad = state.data == null;
+    final bool isInitialLoad = state.data == null;
 
-    final targetType = type ?? state.type;
-    final targetContactId = contactId ?? state.contactId;
-    final targetDateFrom = dateFrom ?? state.dateFrom;
-    final targetDateTo = dateTo ?? state.dateTo;
+    final String? targetType = type ?? state.type;
+    final String? targetContactId = contactId ?? state.contactId;
+    final String? targetDateFrom = dateFrom ?? state.dateFrom;
+    final String? targetDateTo = dateTo ?? state.dateTo;
 
     if (isInitialLoad) {
       emit(
@@ -59,19 +62,20 @@ class GetListTransactionCubit extends Cubit<GetListTransactionState> {
       );
     }
 
-    final result = await _getListTransactionsUseCase.execute(
-      GetListTransactionsParams(
-        page: 1,
-        pageSize: pageSize,
-        contactId: targetContactId,
-        type: targetType,
-        dateFrom: targetDateFrom,
-        dateTo: targetDateTo,
-      ),
-    );
+    final Either<Failure, GetListTransactionsPage> result =
+        await _getListTransactionsUseCase.execute(
+          GetListTransactionsParams(
+            page: 1,
+            pageSize: pageSize,
+            contactId: targetContactId,
+            type: targetType,
+            dateFrom: targetDateFrom,
+            dateTo: targetDateTo,
+          ),
+        );
 
     result.fold(
-      (failure) {
+      (Failure failure) {
         if (isClosed) return;
         emit(
           state.copyWith(
@@ -83,7 +87,7 @@ class GetListTransactionCubit extends Cubit<GetListTransactionState> {
           ),
         );
       },
-      (page) {
+      (GetListTransactionsPage page) {
         if (isClosed) return;
         currentPage = page.page;
         emit(
@@ -108,6 +112,11 @@ class GetListTransactionCubit extends Cubit<GetListTransactionState> {
     });
   }
 
+  void selectFilter(int index, String? type) {
+    emit(state.copyWith(selectedFilterIndex: index, type: type));
+    getListTransactions(type: type);
+  }
+
   void changeFilterType(String? type) {
     emit(state.copyWith(type: type));
     getListTransactions(type: type);
@@ -119,27 +128,30 @@ class GetListTransactionCubit extends Cubit<GetListTransactionState> {
     emit(state.copyWith(isLoadingMore: true));
     final int nextPage = currentPage + 1;
 
-    final result = await _getListTransactionsUseCase.execute(
-      GetListTransactionsParams(
-        page: nextPage,
-        pageSize: pageSize,
-        contactId: state.contactId,
-        type: state.type,
-        dateFrom: state.dateFrom,
-        dateTo: state.dateTo,
-      ),
-    );
+    final Either<Failure, GetListTransactionsPage> result =
+        await _getListTransactionsUseCase.execute(
+          GetListTransactionsParams(
+            page: nextPage,
+            pageSize: pageSize,
+            contactId: state.contactId,
+            type: state.type,
+            dateFrom: state.dateFrom,
+            dateTo: state.dateTo,
+          ),
+        );
 
     result.fold(
-      (failure) {
+      (Failure failure) {
         if (isClosed) return;
         emit(state.copyWith(isLoadingMore: false));
       },
-      (page) {
+      (GetListTransactionsPage page) {
         if (isClosed) return;
         currentPage = nextPage;
-        final currentItems = state.data ?? [];
-        final updatedItems = [...currentItems, ...page.items];
+        final List<GetListTransactionsModel> currentItems =
+            state.data ?? <GetListTransactionsModel>[];
+        final List<GetListTransactionsModel> updatedItems =
+            <GetListTransactionsModel>[...currentItems, ...page.items];
         emit(
           state.copyWith(
             data: updatedItems,

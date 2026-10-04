@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$OnBoardingState {
 
- int get currentIndex; List<SliderObject> get sliders; bool get isLast;
+ FlowState? get flowState; int get currentIndex; List<SliderObject> get sliders; bool get isLast; bool get completed;
 /// Create a copy of OnBoardingState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $OnBoardingStateCopyWith<OnBoardingState> get copyWith => _$OnBoardingStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OnBoardingState&&(identical(other.currentIndex, currentIndex) || other.currentIndex == currentIndex)&&const DeepCollectionEquality().equals(other.sliders, sliders)&&(identical(other.isLast, isLast) || other.isLast == isLast));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OnBoardingState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.currentIndex, currentIndex) || other.currentIndex == currentIndex)&&const DeepCollectionEquality().equals(other.sliders, sliders)&&(identical(other.isLast, isLast) || other.isLast == isLast)&&(identical(other.completed, completed) || other.completed == completed));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,currentIndex,const DeepCollectionEquality().hash(sliders),isLast);
+int get hashCode => Object.hash(runtimeType,flowState,currentIndex,const DeepCollectionEquality().hash(sliders),isLast,completed);
 
 @override
 String toString() {
-  return 'OnBoardingState(currentIndex: $currentIndex, sliders: $sliders, isLast: $isLast)';
+  return 'OnBoardingState(flowState: $flowState, currentIndex: $currentIndex, sliders: $sliders, isLast: $isLast, completed: $completed)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $OnBoardingStateCopyWith<$Res>  {
   factory $OnBoardingStateCopyWith(OnBoardingState value, $Res Function(OnBoardingState) _then) = _$OnBoardingStateCopyWithImpl;
 @useResult
 $Res call({
- int currentIndex, List<SliderObject> sliders, bool isLast
+ FlowState? flowState, int currentIndex, List<SliderObject> sliders, bool isLast, bool completed
 });
 
 
@@ -62,11 +62,13 @@ class _$OnBoardingStateCopyWithImpl<$Res>
 
 /// Create a copy of OnBoardingState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? currentIndex = null,Object? sliders = null,Object? isLast = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? currentIndex = null,Object? sliders = null,Object? isLast = null,Object? completed = null,}) {
   return _then(_self.copyWith(
-currentIndex: null == currentIndex ? _self.currentIndex : currentIndex // ignore: cast_nullable_to_non_nullable
+flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
+as FlowState?,currentIndex: null == currentIndex ? _self.currentIndex : currentIndex // ignore: cast_nullable_to_non_nullable
 as int,sliders: null == sliders ? _self.sliders : sliders // ignore: cast_nullable_to_non_nullable
 as List<SliderObject>,isLast: null == isLast ? _self.isLast : isLast // ignore: cast_nullable_to_non_nullable
+as bool,completed: null == completed ? _self.completed : completed // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -152,10 +154,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int currentIndex,  List<SliderObject> sliders,  bool isLast)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  int currentIndex,  List<SliderObject> sliders,  bool isLast,  bool completed)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _OnBoardingState() when $default != null:
-return $default(_that.currentIndex,_that.sliders,_that.isLast);case _:
+return $default(_that.flowState,_that.currentIndex,_that.sliders,_that.isLast,_that.completed);case _:
   return orElse();
 
 }
@@ -173,10 +175,10 @@ return $default(_that.currentIndex,_that.sliders,_that.isLast);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int currentIndex,  List<SliderObject> sliders,  bool isLast)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  int currentIndex,  List<SliderObject> sliders,  bool isLast,  bool completed)  $default,) {final _that = this;
 switch (_that) {
 case _OnBoardingState():
-return $default(_that.currentIndex,_that.sliders,_that.isLast);case _:
+return $default(_that.flowState,_that.currentIndex,_that.sliders,_that.isLast,_that.completed);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -193,10 +195,10 @@ return $default(_that.currentIndex,_that.sliders,_that.isLast);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int currentIndex,  List<SliderObject> sliders,  bool isLast)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  int currentIndex,  List<SliderObject> sliders,  bool isLast,  bool completed)?  $default,) {final _that = this;
 switch (_that) {
 case _OnBoardingState() when $default != null:
-return $default(_that.currentIndex,_that.sliders,_that.isLast);case _:
+return $default(_that.flowState,_that.currentIndex,_that.sliders,_that.isLast,_that.completed);case _:
   return null;
 
 }
@@ -208,9 +210,10 @@ return $default(_that.currentIndex,_that.sliders,_that.isLast);case _:
 
 
 class _OnBoardingState implements OnBoardingState {
-  const _OnBoardingState({this.currentIndex = 0, final  List<SliderObject> sliders = const [], this.isLast = false}): _sliders = sliders;
+  const _OnBoardingState({this.flowState, this.currentIndex = 0, final  List<SliderObject> sliders = const <SliderObject>[], this.isLast = false, this.completed = false}): _sliders = sliders;
   
 
+@override final  FlowState? flowState;
 @override@JsonKey() final  int currentIndex;
  final  List<SliderObject> _sliders;
 @override@JsonKey() List<SliderObject> get sliders {
@@ -220,6 +223,7 @@ class _OnBoardingState implements OnBoardingState {
 }
 
 @override@JsonKey() final  bool isLast;
+@override@JsonKey() final  bool completed;
 
 /// Create a copy of OnBoardingState
 /// with the given fields replaced by the non-null parameter values.
@@ -231,16 +235,16 @@ _$OnBoardingStateCopyWith<_OnBoardingState> get copyWith => __$OnBoardingStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OnBoardingState&&(identical(other.currentIndex, currentIndex) || other.currentIndex == currentIndex)&&const DeepCollectionEquality().equals(other._sliders, _sliders)&&(identical(other.isLast, isLast) || other.isLast == isLast));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OnBoardingState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.currentIndex, currentIndex) || other.currentIndex == currentIndex)&&const DeepCollectionEquality().equals(other._sliders, _sliders)&&(identical(other.isLast, isLast) || other.isLast == isLast)&&(identical(other.completed, completed) || other.completed == completed));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,currentIndex,const DeepCollectionEquality().hash(_sliders),isLast);
+int get hashCode => Object.hash(runtimeType,flowState,currentIndex,const DeepCollectionEquality().hash(_sliders),isLast,completed);
 
 @override
 String toString() {
-  return 'OnBoardingState(currentIndex: $currentIndex, sliders: $sliders, isLast: $isLast)';
+  return 'OnBoardingState(flowState: $flowState, currentIndex: $currentIndex, sliders: $sliders, isLast: $isLast, completed: $completed)';
 }
 
 
@@ -251,7 +255,7 @@ abstract mixin class _$OnBoardingStateCopyWith<$Res> implements $OnBoardingState
   factory _$OnBoardingStateCopyWith(_OnBoardingState value, $Res Function(_OnBoardingState) _then) = __$OnBoardingStateCopyWithImpl;
 @override @useResult
 $Res call({
- int currentIndex, List<SliderObject> sliders, bool isLast
+ FlowState? flowState, int currentIndex, List<SliderObject> sliders, bool isLast, bool completed
 });
 
 
@@ -268,11 +272,13 @@ class __$OnBoardingStateCopyWithImpl<$Res>
 
 /// Create a copy of OnBoardingState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? currentIndex = null,Object? sliders = null,Object? isLast = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? currentIndex = null,Object? sliders = null,Object? isLast = null,Object? completed = null,}) {
   return _then(_OnBoardingState(
-currentIndex: null == currentIndex ? _self.currentIndex : currentIndex // ignore: cast_nullable_to_non_nullable
+flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
+as FlowState?,currentIndex: null == currentIndex ? _self.currentIndex : currentIndex // ignore: cast_nullable_to_non_nullable
 as int,sliders: null == sliders ? _self._sliders : sliders // ignore: cast_nullable_to_non_nullable
 as List<SliderObject>,isLast: null == isLast ? _self.isLast : isLast // ignore: cast_nullable_to_non_nullable
+as bool,completed: null == completed ? _self.completed : completed // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

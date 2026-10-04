@@ -7,6 +7,9 @@ import 'package:mizan/data/mapper/pay_installment_mapper.dart';
 import 'package:mizan/data/network/error_handler.dart';
 import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/data/network/network_info.dart';
+import 'package:mizan/data/response/installments_dashboard_responses/installments_dashboard_responses.dart';
+import 'package:mizan/data/response/installments_history_responses/installments_history_responses.dart';
+import 'package:mizan/data/response/pay_installment_responses/pay_installment_responses.dart';
 import 'package:mizan/domain/model/installments_dashboard_model.dart';
 import 'package:mizan/domain/model/installments_history_model.dart';
 import 'package:mizan/domain/model/transaction_by_id_mode/transaction_by_id_mode.dart';
@@ -25,7 +28,8 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
   ) async {
     if (await _networkInfo.isConnected) {
       try {
-        final response = await _remoteDataSource.payInstallment(installmentId);
+        final PayInstallmentResponse response = await _remoteDataSource
+            .payInstallment(installmentId);
         if (response.success == true) {
           return Right(response.toDomain());
         } else {
@@ -49,7 +53,8 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
   getInstallmentsDashboard() async {
     if (await _networkInfo.isConnected) {
       try {
-        final response = await _remoteDataSource.getInstallmentsDashboard();
+        final InstallmentsDashboardResponse response = await _remoteDataSource
+            .getInstallmentsDashboard();
         if (response.success == true) {
           return Right(response.data.toDomain());
         } else {
@@ -76,11 +81,12 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
   }) async {
     if (await _networkInfo.isConnected) {
       try {
-        final response = await _remoteDataSource.getInstallmentsHistory(
-          status: status,
-          page: page,
-          pageSize: pageSize,
-        );
+        final InstallmentsHistoryResponse response = await _remoteDataSource
+            .getInstallmentsHistory(
+              status: status,
+              page: page,
+              pageSize: pageSize,
+            );
         if (response.success == true) {
           return Right(response.data.toDomain());
         } else {

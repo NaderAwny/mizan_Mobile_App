@@ -45,7 +45,7 @@ class _ContactProfileScreen extends StatelessWidget {
   const _ContactProfileScreen({required this.contactId});
 
   void _onEdit(BuildContext context, ContactProfile profile) async {
-    final contact = Contact(
+    final Contact contact = Contact(
       id: profile.contactId,
       name: profile.contactName,
       phoneNumber: profile.phoneNumber,
@@ -55,7 +55,7 @@ class _ContactProfileScreen extends StatelessWidget {
       createdAt: '',
       updatedAt: '',
     );
-    final result = await Navigator.pushNamed(
+    final Object? result = await Navigator.pushNamed(
       context,
       Routes.contactFormRoute,
       arguments: contact,
@@ -76,10 +76,10 @@ class _ContactProfileScreen extends StatelessWidget {
   }
 
   void _onAddTransaction(BuildContext context, ContactProfile profile) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
+      backgroundColor: ColorManager.transparent,
+      builder: (BuildContext ctx) => Container(
         padding: EdgeInsets.all(20.r),
         decoration: BoxDecoration(
           color: ColorManager.background,
@@ -87,7 +87,7 @@ class _ContactProfileScreen extends StatelessWidget {
             topLeft: Radius.circular(AppRadius.r24.r),
             topRight: Radius.circular(AppRadius.r24.r),
           ),
-          boxShadow: [
+          boxShadow: <BoxShadow>[
             BoxShadow(
               color: ColorManager.black.withAlpha(20),
               blurRadius: 20,
@@ -98,7 +98,7 @@ class _ContactProfileScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+          children: <Widget>[
             Center(
               child: Container(
                 width: 44.w,
@@ -162,7 +162,7 @@ class _ContactProfileScreen extends StatelessWidget {
               trailing: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
               onTap: () async {
                 Navigator.pop(ctx);
-                final res = await Navigator.pushNamed(
+                final Object? res = await Navigator.pushNamed(
                   context,
                   Routes.quickSaleRoute,
                   arguments: QuickTransactionArgs(
@@ -212,7 +212,7 @@ class _ContactProfileScreen extends StatelessWidget {
               trailing: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
               onTap: () async {
                 Navigator.pop(ctx);
-                final res = await Navigator.pushNamed(
+                final Object? res = await Navigator.pushNamed(
                   context,
                   Routes.quickPurchaseRoute,
                   arguments: QuickTransactionArgs(
@@ -237,12 +237,13 @@ class _ContactProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ContactProfileCubit, ContactProfileState>(
-      listenWhen: (prev, curr) => curr.isDeleted && !prev.isDeleted,
-      listener: (context, state) {
+      listenWhen: (ContactProfileState prev, ContactProfileState curr) =>
+          curr.isDeleted && !prev.isDeleted,
+      listener: (BuildContext context, ContactProfileState state) {
         Navigator.of(context).pop(true);
       },
-      builder: (context, state) {
-        final profile = state.data;
+      builder: (BuildContext context, ContactProfileState state) {
+        final ContactProfile? profile = state.data;
 
         return Scaffold(
           backgroundColor: ColorManager.background,
@@ -271,7 +272,7 @@ class _ContactProfileScreen extends StatelessWidget {
               ),
             ),
             title: Column(
-              children: [
+              children: <Widget>[
                 Text(
                   AppStrings.clientDetails,
                   style: getBoldStyle(
@@ -289,8 +290,8 @@ class _ContactProfileScreen extends StatelessWidget {
                 ),
               ],
             ),
-            actions: [
-              if (profile != null) ...[
+            actions: <Widget>[
+              if (profile != null) ...<Widget>[
                 IconButton(
                   icon: Icon(
                     Icons.edit_outlined,
@@ -332,7 +333,7 @@ class _ContactProfileScreen extends StatelessWidget {
       physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           // Header Banner (Figma Node #3:1234)
           ContactProfileHeader(profile: profile),
 
@@ -342,7 +343,7 @@ class _ContactProfileScreen extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 16.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: <Widget>[
                 // Financial Summary Card (2 columns: عدد العمليات / إجمالي الحساب)
                 ContactFinancialSummaryCard(
                   totalTransactions: profile.totalTransactions,
@@ -353,7 +354,7 @@ class _ContactProfileScreen extends StatelessWidget {
 
                 // Quick Action Buttons Row: Call & WhatsApp
                 Row(
-                  children: [
+                  children: <Widget>[
                     // WhatsApp Button
                     Expanded(
                       child: Container(
@@ -363,7 +364,7 @@ class _ContactProfileScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(AppRadius.r14.r),
                         ),
                         child: Material(
-                          color: Colors.transparent,
+                          color: ColorManager.transparent,
                           child: InkWell(
                             onTap: () {},
                             borderRadius: BorderRadius.circular(
@@ -371,7 +372,7 @@ class _ContactProfileScreen extends StatelessWidget {
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
+                              children: <Widget>[
                                 Text(
                                   AppStrings.whatsapp,
                                   style: getBoldStyle(
@@ -407,7 +408,7 @@ class _ContactProfileScreen extends StatelessWidget {
                           ),
                         ),
                         child: Material(
-                          color: Colors.transparent,
+                          color: ColorManager.transparent,
                           child: InkWell(
                             onTap: () {},
                             borderRadius: BorderRadius.circular(
@@ -415,7 +416,7 @@ class _ContactProfileScreen extends StatelessWidget {
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
+                              children: <Widget>[
                                 Text(
                                   AppStrings.call,
                                   style: getBoldStyle(
@@ -439,7 +440,7 @@ class _ContactProfileScreen extends StatelessWidget {
                 ),
 
                 // Notes Card (If available)
-                if (profile.notes.trim().isNotEmpty) ...[
+                if (profile.notes.trim().isNotEmpty) ...<Widget>[
                   SizedBox(height: 16.h),
                   Container(
                     width: double.infinity,
@@ -454,9 +455,9 @@ class _ContactProfileScreen extends StatelessWidget {
                         color: ColorManager.border,
                         width: 1.2,
                       ),
-                      boxShadow: const [
+                      boxShadow: const <BoxShadow>[
                         BoxShadow(
-                          color: Color(0x061C1816),
+                          color: ColorManager.shadowWarm,
                           offset: Offset(0, 2),
                           blurRadius: 8,
                         ),
@@ -464,9 +465,9 @@ class _ContactProfileScreen extends StatelessWidget {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      children: <Widget>[
                         Row(
-                          children: [
+                          children: <Widget>[
                             Container(
                               padding: EdgeInsets.all(6.r),
                               decoration: BoxDecoration(
@@ -512,7 +513,7 @@ class _ContactProfileScreen extends StatelessWidget {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
+                    children: <Widget>[
                       Text(
                         AppStrings.recentTransactions,
                         style: getBoldStyle(
@@ -562,15 +563,16 @@ class _ContactProfileScreen extends StatelessWidget {
                   )
                 else
                   ...profile.transactions.map(
-                    (tx) => ContactTransactionTile(
+                    (ContactTransaction tx) => ContactTransactionTile(
                       transaction: tx,
                       onTap: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => TransactionDetailsView(
-                              id: tx.id,
-                              transactionId: tx.id,
-                            ),
+                          MaterialPageRoute<void>(
+                            builder: (BuildContext context) =>
+                                TransactionDetailsView(
+                                  id: tx.id,
+                                  transactionId: tx.id,
+                                ),
                           ),
                         );
                       },

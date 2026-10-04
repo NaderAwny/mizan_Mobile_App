@@ -23,7 +23,7 @@ class RegisterView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
+    return BlocProvider<RegisterCubit>(
       create: (_) => getIt<RegisterCubit>(),
       child: const _RegisterScreen(),
     );
@@ -39,14 +39,10 @@ class _RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<_RegisterScreen>
     with SingleTickerProviderStateMixin {
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-
-  bool _firstNameTouched = false;
-  bool _lastNameTouched = false;
-  bool _emailTouched = false;
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
@@ -79,11 +75,14 @@ class _RegisterScreenState extends State<_RegisterScreen>
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<RegisterCubit, RegisterState>(
-      listenWhen: (prev, curr) => curr.registerSuccess && !prev.registerSuccess,
-      listener: (ctx, state) {
+      listenWhen: (RegisterState prev, RegisterState curr) =>
+          curr.registerSuccess && !prev.registerSuccess,
+      listener: (BuildContext ctx, RegisterState state) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           // 1. Dismiss any open loading dialog safely
-          Navigator.of(ctx, rootNavigator: true).popUntil((route) {
+          Navigator.of(ctx, rootNavigator: true).popUntil((
+            Route<dynamic> route,
+          ) {
             return route is! PopupRoute;
           });
 
@@ -101,11 +100,11 @@ class _RegisterScreenState extends State<_RegisterScreen>
           );
         });
       },
-      builder: (ctx, state) {
+      builder: (BuildContext ctx, RegisterState state) {
         // Show loading/error overlay only when state is LoadingState or ErrorState
-        final flowState = state.flowState;
+        final FlowState? flowState = state.flowState;
         if (flowState is LoadingState || flowState is ErrorState) {
-          final overlay = flowState!.getScreenWidget(
+          final Widget? overlay = flowState!.getScreenWidget(
             ctx,
             _buildBody(ctx, state),
             () => ctx.read<RegisterCubit>().register(),
@@ -134,7 +133,7 @@ class _RegisterScreenState extends State<_RegisterScreen>
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: <Widget>[
                   SizedBox(height: 24.h),
 
                   // ── Header ──────────────────────────────────────────────
@@ -143,7 +142,7 @@ class _RegisterScreenState extends State<_RegisterScreen>
                   SizedBox(height: 32.h),
 
                   // ── Progress indicator ───────────────────────────────────
-                  _StepIndicator(currentStep: 1, totalSteps: 3),
+                  const _StepIndicator(currentStep: 1, totalSteps: 3),
 
                   SizedBox(height: 28.h),
 
@@ -175,13 +174,15 @@ class _RegisterScreenState extends State<_RegisterScreen>
                     keyboardType: TextInputType.name,
                     textDirection: TextDirection.ltr,
                     prefixIcon: IconAssets.user,
-                    showError: _firstNameTouched && !state.isFirstNameValid,
+                    showError:
+                        state.firstNameTouched && !state.isFirstNameValid,
                     errorText: _firstNameHint(state),
-                    onChanged: (val) {
-                      setState(() => _firstNameTouched = true);
+                    onChanged: (String val) {
+                      context.read<RegisterCubit>().touchFirstName();
                       context.read<RegisterCubit>().setFirstName(val);
                     },
-                    showSuccess: _firstNameTouched && state.isFirstNameValid,
+                    showSuccess:
+                        state.firstNameTouched && state.isFirstNameValid,
                   ),
 
                   SizedBox(height: 16.h),
@@ -195,13 +196,13 @@ class _RegisterScreenState extends State<_RegisterScreen>
                     keyboardType: TextInputType.name,
                     textDirection: TextDirection.ltr,
                     prefixIcon: IconAssets.user,
-                    showError: _lastNameTouched && !state.isLastNameValid,
+                    showError: state.lastNameTouched && !state.isLastNameValid,
                     errorText: _lastNameHint(state),
-                    onChanged: (val) {
-                      setState(() => _lastNameTouched = true);
+                    onChanged: (String val) {
+                      context.read<RegisterCubit>().touchLastName();
                       context.read<RegisterCubit>().setLastName(val);
                     },
-                    showSuccess: _lastNameTouched && state.isLastNameValid,
+                    showSuccess: state.lastNameTouched && state.isLastNameValid,
                   ),
 
                   SizedBox(height: 16.h),
@@ -215,13 +216,13 @@ class _RegisterScreenState extends State<_RegisterScreen>
                     keyboardType: TextInputType.emailAddress,
                     textDirection: TextDirection.ltr,
                     prefixIcon: IconAssets.mailPlus,
-                    showError: _emailTouched && !state.isEmailValid,
+                    showError: state.emailTouched && !state.isEmailValid,
                     errorText: _emailHint(state),
-                    onChanged: (val) {
-                      setState(() => _emailTouched = true);
+                    onChanged: (String val) {
+                      context.read<RegisterCubit>().touchEmail();
                       context.read<RegisterCubit>().setEmail(val);
                     },
-                    showSuccess: _emailTouched && state.isEmailValid,
+                    showSuccess: state.emailTouched && state.isEmailValid,
                   ),
 
                   SizedBox(height: 12.h),
@@ -233,7 +234,8 @@ class _RegisterScreenState extends State<_RegisterScreen>
 
                   // ── Register Button ───────────────────────────────────────
                   _RegisterButton(
-                    isEnabled: state.isAllValid && state.flowState is! LoadingState,
+                    isEnabled:
+                        state.isAllValid && state.flowState is! LoadingState,
                     onPressed: () {
                       FocusScope.of(context).unfocus();
                       context.read<RegisterCubit>().register();
@@ -253,7 +255,7 @@ class _RegisterScreenState extends State<_RegisterScreen>
                             color: ColorManager.textSecondary,
                             fontSize: FontSize.s14,
                           ),
-                          children: [
+                          children: <InlineSpan>[
                             TextSpan(
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () {
@@ -296,8 +298,8 @@ class _RegisterScreenState extends State<_RegisterScreen>
   }
 
   String? _firstNameHint(RegisterState state) {
-    if (!_firstNameTouched) return null;
-    final v = _firstNameController.text;
+    if (!state.firstNameTouched) return null;
+    final String v = _firstNameController.text;
     if (v.isEmpty) return 'الاسم الأول مطلوب';
     if (v[0] != v[0].toUpperCase()) {
       return 'يجب أن يبدأ الاسم بحرف كبير (Capital)';
@@ -306,8 +308,8 @@ class _RegisterScreenState extends State<_RegisterScreen>
   }
 
   String? _lastNameHint(RegisterState state) {
-    if (!_lastNameTouched) return null;
-    final v = _lastNameController.text;
+    if (!state.lastNameTouched) return null;
+    final String v = _lastNameController.text;
     if (v.isEmpty) return 'الاسم الأخير مطلوب';
     if (v[0] != v[0].toUpperCase()) {
       return 'يجب أن يبدأ الاسم بحرف كبير (Capital)';
@@ -316,8 +318,8 @@ class _RegisterScreenState extends State<_RegisterScreen>
   }
 
   String? _emailHint(RegisterState state) {
-    if (!_emailTouched) return null;
-    final v = _emailController.text;
+    if (!state.emailTouched) return null;
+    final String v = _emailController.text;
     if (v.isEmpty) return 'البريد الإلكتروني مطلوب';
     return 'يرجى إدخال بريد إلكتروني صالح (مثال: user@gmail.com)';
   }
@@ -330,7 +332,7 @@ class _HeaderSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: [
+      children: <Widget>[
         // Back button
         // GestureDetector(
         //   onTap: () => Navigator.of(context).pop(),
@@ -363,7 +365,7 @@ class _HeaderSection extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
+            children: <Widget>[
               // 1. حاوية لوجو ميزان (Logo Box Icon)
               Image.asset(
                 ImageAssets.logoBoxFigmaPng,
@@ -401,8 +403,8 @@ class _StepIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: List.generate(totalSteps, (index) {
-        final isActive = index < currentStep;
+      children: List<Widget>.generate(totalSteps, (int index) {
+        final bool isActive = index < currentStep;
         return Expanded(
           child: Container(
             margin: EdgeInsets.only(left: index > 0 ? 6.w : 0),
@@ -447,7 +449,7 @@ class _MizanTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(AppRadius.r14.r);
+    final BorderRadius borderRadius = BorderRadius.circular(AppRadius.r14.r);
 
     Color activeBorderColor = showError
         ? ColorManager.error
@@ -457,13 +459,13 @@ class _MizanTextField extends StatelessWidget {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      children: <Widget>[
         AnimatedContainer(
           duration: AppDuration.d200,
           decoration: BoxDecoration(
             borderRadius: borderRadius,
             boxShadow: showSuccess || showError
-                ? [
+                ? <BoxShadow>[
                     BoxShadow(
                       color:
                           (showError
@@ -583,7 +585,7 @@ class _MizanTextField extends StatelessWidget {
               ? Padding(
                   padding: EdgeInsets.only(top: 6.h, right: 4.w),
                   child: Row(
-                    children: [
+                    children: <Widget>[
                       SvgPicture.asset(
                         IconAssets.alertTriangle,
                         width: 12.r,
@@ -629,9 +631,9 @@ class _ValidationHintCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Row(
-            children: [
+            children: <Widget>[
               SvgPicture.asset(
                 IconAssets.helpCircle,
                 width: 16.r,
@@ -652,19 +654,19 @@ class _ValidationHintCard extends StatelessWidget {
             ],
           ),
           SizedBox(height: 10.h),
-          _HintRow(
+          const _HintRow(
             icon: IconAssets.checkCircle,
             text:
                 'البريد الإلكتروني يجب أن يكون بصيغة صحيحة (مثال: user@gmail.com)',
           ),
           SizedBox(height: 6.h),
-          _HintRow(
+          const _HintRow(
             icon: IconAssets.checkCircle,
             text:
                 'الاسم الأول والأخير يجب أن يبدأ بـ حرف كبير (Capital) — مثال: Ahmed',
           ),
           SizedBox(height: 6.h),
-          _HintRow(
+          const _HintRow(
             icon: IconAssets.checkCircle,
             text: 'الاسم يقبل أحرف إنجليزية فقط بدون أرقام أو رموز',
           ),
@@ -683,7 +685,7 @@ class _HintRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      children: <Widget>[
         Padding(
           padding: EdgeInsets.only(top: 1.h),
           child: SvgPicture.asset(
@@ -733,16 +735,16 @@ class _RegisterButton extends StatelessWidget {
             gradient: isEnabled ? ColorManager.primaryGradient : null,
             color: isEnabled ? null : ColorManager.surfaceVariant,
             borderRadius: BorderRadius.circular(AppRadius.r14.r),
-            boxShadow: isEnabled ? [AppShadows.fabShadow] : null,
+            boxShadow: isEnabled ? <BoxShadow>[AppShadows.fabShadow] : null,
           ),
           child: ElevatedButton(
             onPressed: isEnabled ? onPressed : null,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
+              backgroundColor: ColorManager.transparent,
+              shadowColor: ColorManager.transparent,
               foregroundColor: ColorManager.white,
               disabledForegroundColor: ColorManager.textTertiary,
-              disabledBackgroundColor: Colors.transparent,
+              disabledBackgroundColor: ColorManager.transparent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadius.r14.r),
               ),
@@ -750,7 +752,7 @@ class _RegisterButton extends StatelessWidget {
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+              children: <Widget>[
                 Text(
                   'إنشاء الحساب',
                   style: getBoldStyle(

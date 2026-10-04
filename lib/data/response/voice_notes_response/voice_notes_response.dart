@@ -55,7 +55,7 @@ class VoiceNoteResponse extends BaseResponse {
 
   factory VoiceNoteResponse.fromJson(Map<String, dynamic> json) {
     if (json.containsKey('data') && json['data'] is Map<String, dynamic>) {
-      final res = _$VoiceNoteResponseFromJson(json);
+      final VoiceNoteResponse res = _$VoiceNoteResponseFromJson(json);
       // ignore: prefer_conditional_assignment
       if (res.success == null) res.success = true;
       return res;
@@ -104,8 +104,8 @@ class VoiceNotesPageResponse extends BaseResponse {
 
   factory VoiceNotesPageResponse.fromJson(Map<String, dynamic> json) {
     if (json.containsKey('data') && json['data'] is Map<String, dynamic>) {
-      final res = _$VoiceNotesPageResponseFromJson(json);
-      if (res.success == null) res.success = true;
+      final VoiceNotesPageResponse res = _$VoiceNotesPageResponseFromJson(json);
+      res.success ??= true;
       return res;
     }
     if (json.containsKey('items')) {

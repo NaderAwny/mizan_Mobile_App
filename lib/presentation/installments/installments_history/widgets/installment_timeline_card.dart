@@ -1,4 +1,4 @@
-// ─────────────────────────────────────────────────────────────
+﻿// ─────────────────────────────────────────────────────────────
 // InstallmentTimelineCard — Timeline Row Item & Card
 // Mizan Design System — Responsive & Clickable to Transaction Details
 // ─────────────────────────────────────────────────────────────
@@ -69,31 +69,29 @@ class InstallmentTimelineCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusStyle = InstallmentStatusHelper.getHistoryItemStyle(
-      isPaid: item.isPaid,
-      daysOverdue: item.daysOverdue,
-      status: item.status,
-    );
+    final InstallmentStatusStyle statusStyle =
+        InstallmentStatusHelper.getHistoryItemStyle(
+          isPaid: item.isPaid,
+          daysOverdue: item.daysOverdue,
+          status: item.status,
+        );
 
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+        children: <Widget>[
           // ── Timeline Vertical Line & Indicator Dot ──
           SizedBox(
             width: 24.w,
             child: Stack(
               alignment: Alignment.topCenter,
-              children: [
+              children: <Widget>[
                 // Connecting line
                 Positioned(
                   top: isFirst ? 18.h : 0,
                   bottom: isLast ? null : 0,
                   height: isLast ? 18.h : null,
-                  child: Container(
-                    width: 2.w,
-                    color: ColorManager.border,
-                  ),
+                  child: Container(width: 2.w, color: ColorManager.border),
                 ),
 
                 // Dot
@@ -109,7 +107,7 @@ class InstallmentTimelineCard extends StatelessWidget {
                         color: ColorManager.surface,
                         width: 2.0,
                       ),
-                      boxShadow: [
+                      boxShadow: <BoxShadow>[
                         BoxShadow(
                           color: statusStyle.dotColor.withAlpha(50),
                           blurRadius: 4.0,
@@ -132,20 +130,17 @@ class InstallmentTimelineCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: ColorManager.surface,
                 borderRadius: BorderRadius.circular(AppRadius.r16.r),
-                border: Border.all(
-                  color: ColorManager.border,
-                  width: 1.0,
-                ),
-                boxShadow: const [
+                border: Border.all(color: ColorManager.border, width: 1.0),
+                boxShadow: const <BoxShadow>[
                   BoxShadow(
-                    color: Color(0x061C1816),
+                    color: ColorManager.shadowWarm,
                     blurRadius: 8.0,
                     offset: Offset(0, 2),
                   ),
                 ],
               ),
               child: Material(
-                color: Colors.transparent,
+                color: ColorManager.transparent,
                 child: InkWell(
                   onTap: () => _onCardTap(context),
                   borderRadius: BorderRadius.circular(AppRadius.r16.r),
@@ -153,22 +148,24 @@ class InstallmentTimelineCard extends StatelessWidget {
                     padding: EdgeInsets.all(AppPadding.p14.r),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
+                      children: <Widget>[
                         // ── 1. Top Row: Contact Name + Status Badge + Details Arrow ──
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
+                          children: <Widget>[
                             // Initials Avatar
                             Container(
                               width: 34.r,
                               height: 34.r,
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 color: ColorManager.lightPrimary,
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
                                 child: Text(
-                                  InstallmentFormatters.getInitials(item.contactName),
+                                  InstallmentFormatters.getInitials(
+                                    item.contactName,
+                                  ),
                                   style: getBoldStyle(
                                     color: ColorManager.primary,
                                     fontSize: FontSize.s12,
@@ -182,7 +179,7 @@ class InstallmentTimelineCard extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
-                                children: [
+                                children: <Widget>[
                                   Text(
                                     item.contactName,
                                     style: getBoldStyle(
@@ -192,7 +189,7 @@ class InstallmentTimelineCard extends StatelessWidget {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  if (item.phoneNumber.isNotEmpty) ...[
+                                  if (item.phoneNumber.isNotEmpty) ...<Widget>[
                                     SizedBox(height: 1.h),
                                     Text(
                                       item.phoneNumber,
@@ -216,7 +213,9 @@ class InstallmentTimelineCard extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: statusStyle.backgroundColor,
-                                borderRadius: BorderRadius.circular(AppRadius.r999.r),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.r999.r,
+                                ),
                                 border: Border.all(
                                   color: statusStyle.borderColor,
                                   width: 1.0,
@@ -252,7 +251,7 @@ class InstallmentTimelineCard extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
+                          children: <Widget>[
                             // Amount (Large & Bold)
                             Flexible(
                               flex: 4,
@@ -279,7 +278,7 @@ class InstallmentTimelineCard extends StatelessWidget {
                         ),
 
                         // ── 3. Bottom Action Button (for unpaid installments) ──
-                        if (!item.isPaid) ...[
+                        if (!item.isPaid) ...<Widget>[
                           SizedBox(height: 12.h),
                           SizedBox(
                             height: 38.h,
@@ -289,8 +288,9 @@ class InstallmentTimelineCard extends StatelessWidget {
                                 backgroundColor: ColorManager.primary,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(AppRadius.r10.r),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.r10.r,
+                                  ),
                                 ),
                                 padding: EdgeInsets.symmetric(horizontal: 12.w),
                               ),
@@ -327,10 +327,12 @@ class InstallmentTimelineCard extends StatelessWidget {
 
   Widget _buildDateInfo(InstallmentStatusStyle statusStyle) {
     if (item.isPaid) {
-      final dateToShow = item.paidAt.isNotEmpty ? item.paidAt : item.dueDate;
+      final String dateToShow = item.paidAt.isNotEmpty
+          ? item.paidAt
+          : item.dueDate;
       return Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
+        children: <Widget>[
           SvgPicture.asset(
             IconAssets.checkCheck,
             width: 13.r,
@@ -359,7 +361,7 @@ class InstallmentTimelineCard extends StatelessWidget {
     if (item.daysOverdue > 0) {
       return Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
+        children: <Widget>[
           SvgPicture.asset(
             IconAssets.alertTriangle,
             width: 12.r,
@@ -385,11 +387,11 @@ class InstallmentTimelineCard extends StatelessWidget {
       );
     }
 
-    final lower = item.status.toLowerCase();
+    final String lower = item.status.toLowerCase();
     if (lower == 'duetoday' || lower == 'due_today') {
       return Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
+        children: <Widget>[
           SvgPicture.asset(
             IconAssets.alarmClock,
             width: 12.r,
@@ -417,7 +419,7 @@ class InstallmentTimelineCard extends StatelessWidget {
 
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [
+      children: <Widget>[
         SvgPicture.asset(
           IconAssets.calendar,
           width: 12.r,

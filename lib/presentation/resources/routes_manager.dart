@@ -84,19 +84,19 @@ class RouteGenerator {
   static Route<dynamic> getRoute(RouteSettings settings) {
     switch (settings.name) {
       case Routes.splashRoute:
-        return MaterialPageRoute(builder: (_) => const SplashView());
+        return MaterialPageRoute<void>(builder: (_) => const SplashView());
       case Routes.onBoardingRoute:
-        return MaterialPageRoute(builder: (_) => const OnBoardingView());
+        return MaterialPageRoute<void>(builder: (_) => const OnBoardingView());
       case Routes.registerRoute:
-        return MaterialPageRoute(builder: (_) => RegisterView());
+        return MaterialPageRoute<void>(builder: (_) => const RegisterView());
       case Routes.sendOtpRoute:
-        final email = settings.arguments is String
+        final String? email = settings.arguments is String
             ? settings.arguments as String
             : null;
-        return MaterialPageRoute(builder: (_) => SendOtp(initialEmail: email));
+        return MaterialPageRoute<void>(builder: (_) => SendOtp(initialEmail: email));
       case Routes.authVerificationRoute:
         // Accept either a plain String (legacy/login path) or AuthVerificationArgs
-        final args = settings.arguments;
+        final Object? args = settings.arguments;
         final String? email;
         final bool isFromRegistration;
         if (args is AuthVerificationArgs) {
@@ -109,89 +109,89 @@ class RouteGenerator {
           email = null;
           isFromRegistration = false;
         }
-        return MaterialPageRoute(
+        return MaterialPageRoute<void>(
           builder: (_) => AuthVerification(
             initialEmail: email,
             isFromRegistration: isFromRegistration,
           ),
         );
       case Routes.selectUserRoute:
-        return MaterialPageRoute(builder: (_) => const SelectUserTypeView());
+        return MaterialPageRoute<void>(builder: (_) => const SelectUserTypeView());
       case Routes.homeRoute:
-        return MaterialPageRoute(builder: (_) => const HomeView());
+        return MaterialPageRoute<void>(builder: (_) => const HomeView());
       case Routes.customersRoute:
-        return MaterialPageRoute(builder: (_) => const CustomersView());
+        return MaterialPageRoute<void>(builder: (_) => const CustomersView());
       case Routes.contactFormRoute:
-        final contact = settings.arguments is Contact
+        final Contact? contact = settings.arguments is Contact
             ? settings.arguments as Contact
             : null;
-        return MaterialPageRoute(
+        return MaterialPageRoute<void>(
           builder: (_) => ContactFormView(contact: contact),
         );
       case Routes.contactProfileRoute:
-        final contactId = settings.arguments is String
+        final String contactId = settings.arguments is String
             ? settings.arguments as String
             : "";
-        return MaterialPageRoute(
+        return MaterialPageRoute<void>(
           builder: (_) => ContactProfileView(contactId: contactId),
         );
       case Routes.transactionsRoute:
-        return MaterialPageRoute(builder: (_) => const TransactionsView());
+        return MaterialPageRoute<void>(builder: (_) => const TransactionsView());
       case Routes.installmentsRoute:
-        return MaterialPageRoute(builder: (_) => const InstallmentsView());
+        return MaterialPageRoute<void>(builder: (_) => const InstallmentsView());
       case Routes.installmentsHistoryRoute:
-        return MaterialPageRoute(
+        return MaterialPageRoute<void>(
           builder: (_) => const InstallmentsHistoryView(),
         );
       case Routes.analyticsRoute:
-        return MaterialPageRoute(builder: (_) => const AnalyticsView());
+        return MaterialPageRoute<void>(builder: (_) => const AnalyticsView());
       case Routes.notificationsRoute:
-        return MaterialPageRoute(builder: (_) => const NotificationsView());
+        return MaterialPageRoute<void>(builder: (_) => const NotificationsView());
       case Routes.quickSaleRoute:
-        final args = settings.arguments is QuickTransactionArgs
+        final QuickTransactionArgs? args =
+            settings.arguments is QuickTransactionArgs
             ? settings.arguments as QuickTransactionArgs
             : null;
-        return MaterialPageRoute(builder: (_) => QuickSaleView(args: args));
+        return MaterialPageRoute<void>(builder: (_) => QuickSaleView(args: args));
       case Routes.quickPurchaseRoute:
-        final args = settings.arguments is QuickTransactionArgs
+        final QuickTransactionArgs? args =
+            settings.arguments is QuickTransactionArgs
             ? settings.arguments as QuickTransactionArgs
             : null;
-        return MaterialPageRoute(builder: (_) => QuickPurchaseView(args: args));
+        return MaterialPageRoute<void>(builder: (_) => QuickPurchaseView(args: args));
       case Routes.quickCollectRoute:
-        return MaterialPageRoute(builder: (_) => const QuickCollectView());
+        return MaterialPageRoute<void>(builder: (_) => const QuickCollectView());
       case Routes.quickPayRoute:
-        return MaterialPageRoute(builder: (_) => const QuickPayView());
+        return MaterialPageRoute<void>(builder: (_) => const QuickPayView());
       case Routes.profileRoute:
-        return MaterialPageRoute(builder: (_) => const GetProfileView());
+        return MaterialPageRoute<void>(builder: (_) => const GetProfileView());
       case Routes.transactionDetailsRoute:
-        final transactionId = settings.arguments is String
+        final String transactionId = settings.arguments is String
             ? settings.arguments as String
             : "";
-        final id = settings.arguments is String
+        final String id = settings.arguments is String
             ? settings.arguments as String
             : "";
-        return MaterialPageRoute(
+        return MaterialPageRoute<void>(
           builder: (_) =>
               TransactionDetailsView(transactionId: transactionId, id: id),
         );
       case Routes.voiceNotesListRoute:
-        return MaterialPageRoute(builder: (_) => const GetVoiceNoteView());
+        return MaterialPageRoute<void>(builder: (_) => const GetVoiceNoteView());
       case Routes.createVoiceNoteRoute:
-        return MaterialPageRoute(builder: (_) => const CreateVoiceNoteView());
+        return MaterialPageRoute<void>(builder: (_) => const CreateVoiceNoteView());
       case Routes.voiceNoteDetailsRoute:
-        final id = settings.arguments is String
+        final String id = settings.arguments is String
             ? settings.arguments as String
             : "";
-        return MaterialPageRoute(
-          builder: (_) => GetVoiceNoteByIdView(id: id),
-        );
+        return MaterialPageRoute<void>(builder: (_) => GetVoiceNoteByIdView(id: id));
       default:
         return unDefinedRoute();
     }
   }
 
   static Route<dynamic> unDefinedRoute() {
-    return MaterialPageRoute(
+    return MaterialPageRoute<void>(
       builder: (_) => Scaffold(
         appBar: AppBar(title: const Text(AppStrings.noRouteFound)),
         body: const Center(child: Text(AppStrings.noRouteFound)),

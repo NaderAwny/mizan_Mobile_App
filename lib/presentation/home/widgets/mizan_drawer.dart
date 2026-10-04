@@ -1,4 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────────────
+﻿// ─────────────────────────────────────────────────────────────────────────────
 // MizanDrawer — App navigation drawer (Figma Node 2218-9)
 // Simple, fast, no cubit — pure navigation widget
 // ─────────────────────────────────────────────────────────────────────────────
@@ -23,18 +23,18 @@ class MizanDrawer extends StatelessWidget {
       width: 0.75.sw,
       child: SafeArea(
         child: Column(
-          children: [
+          children: <Widget>[
             // ── Header / Logo area ───────────────────────────────────────────
             _DrawerHeader(),
 
-            Divider(color: ColorManager.border, height: 1),
+            const Divider(color: ColorManager.border, height: 1),
 
             // ── Navigation items ─────────────────────────────────────────────
             Expanded(
               child: ListView(
                 padding: EdgeInsets.symmetric(vertical: 8.h),
                 physics: const BouncingScrollPhysics(),
-                children: [
+                children: <Widget>[
                   _DrawerItem(
                     icon: IconAssets.home,
                     label: AppStrings.home,
@@ -42,7 +42,7 @@ class MizanDrawer extends StatelessWidget {
                       Navigator.of(context).pop();
                       Navigator.of(context).pushNamedAndRemoveUntil(
                         Routes.homeRoute,
-                        (route) => false,
+                        (Route<dynamic> route) => false,
                       );
                     },
                   ),
@@ -83,7 +83,9 @@ class MizanDrawer extends StatelessWidget {
                     label: AppStrings.voiceNotesTitle,
                     onTap: () {
                       Navigator.of(context).pop();
-                      Navigator.of(context).pushNamed(Routes.voiceNotesListRoute);
+                      Navigator.of(
+                        context,
+                      ).pushNamed(Routes.voiceNotesListRoute);
                     },
                   ),
 
@@ -92,7 +94,7 @@ class MizanDrawer extends StatelessWidget {
                       horizontal: 16.w,
                       vertical: 8.h,
                     ),
-                    child: Divider(color: ColorManager.border, height: 1),
+                    child: const Divider(color: ColorManager.border, height: 1),
                   ),
 
                   _DrawerItem(
@@ -108,7 +110,9 @@ class MizanDrawer extends StatelessWidget {
                     label: AppStrings.notifications,
                     onTap: () {
                       Navigator.of(context).pop();
-                      Navigator.of(context).pushNamed(Routes.notificationsRoute);
+                      Navigator.of(
+                        context,
+                      ).pushNamed(Routes.notificationsRoute);
                     },
                   ),
                 ],
@@ -133,11 +137,9 @@ class _DrawerHeader extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-      decoration: BoxDecoration(
-        gradient: ColorManager.primaryGradient,
-      ),
+      decoration: const BoxDecoration(gradient: ColorManager.primaryGradient),
       child: Row(
-        children: [
+        children: <Widget>[
           // Logo
           Image.asset(
             ImageAssets.logoBoxFigmaPng,
@@ -149,7 +151,7 @@ class _DrawerHeader extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: [
+            children: <Widget>[
               Text(
                 AppStrings.appName,
                 style: getExtraBoldStyle(
@@ -189,14 +191,14 @@ class _DrawerItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent,
+      color: ColorManager.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.r12.r),
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 13.h),
           child: Row(
-            children: [
+            children: <Widget>[
               Container(
                 width: 38.r,
                 height: 38.r,

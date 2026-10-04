@@ -1,5 +1,8 @@
+﻿import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/data/network/failure.dart';
+import 'package:mizan/domain/model/voice_note_model/voice_note_model.dart';
 import 'package:mizan/domain/use_case/get_list_voice_notes_use_case.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
@@ -18,7 +21,7 @@ class GetListVoiceNotesCubit extends Cubit<GetListVoiceNotesState> {
 
   Future<void> getListVoiceNotes() async {
     currentPage = 1;
-    final isInitialLoad = state.data == null;
+    final bool isInitialLoad = state.data == null;
 
     if (isInitialLoad) {
       emit(
@@ -35,12 +38,13 @@ class GetListVoiceNotesCubit extends Cubit<GetListVoiceNotesState> {
       emit(state.copyWith(hasMore: true));
     }
 
-    final result = await _getListVoiceNotesUseCase.execute(
-      GetListVoiceNotesParams(page: 1, pageSize: pageSize),
-    );
+    final Either<Failure, VoiceNotesPage> result =
+        await _getListVoiceNotesUseCase.execute(
+          GetListVoiceNotesParams(page: 1, pageSize: pageSize),
+        );
 
     result.fold(
-      (failure) {
+      (Failure failure) {
         if (isClosed) return;
         emit(
           state.copyWith(
@@ -52,7 +56,7 @@ class GetListVoiceNotesCubit extends Cubit<GetListVoiceNotesState> {
           ),
         );
       },
-      (page) {
+      (VoiceNotesPage page) {
         if (isClosed) return;
         currentPage = page.page;
         emit(
@@ -74,22 +78,24 @@ class GetListVoiceNotesCubit extends Cubit<GetListVoiceNotesState> {
     emit(state.copyWith(isLoadingMore: true));
     final int nextPage = currentPage + 1;
 
-    final result = await _getListVoiceNotesUseCase.execute(
-      GetListVoiceNotesParams(page: nextPage, pageSize: pageSize),
-    );
+    final Either<Failure, VoiceNotesPage> result =
+        await _getListVoiceNotesUseCase.execute(
+          GetListVoiceNotesParams(page: nextPage, pageSize: pageSize),
+        );
 
     result.fold(
-      (failure) {
+      (Failure failure) {
         if (isClosed) return;
         emit(state.copyWith(isLoadingMore: false));
       },
-      (page) {
+      (VoiceNotesPage page) {
         if (isClosed) return;
         currentPage = nextPage;
-        final currentItems = state.data ?? [];
+        final List<VoiceNoteModel> currentItems =
+            state.data ?? <VoiceNoteModel>[];
         emit(
           state.copyWith(
-            data: [...currentItems, ...page.items],
+            data: <VoiceNoteModel>[...currentItems, ...page.items],
             isLoadingMore: false,
             hasMore: page.hasNextPage,
           ),

@@ -1,7 +1,9 @@
+import 'package:dartz/dartz.dart';
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/domain/model/contact_model.dart';
 import 'package:mizan/domain/use_case/delete_contact_use_case.dart';
 import 'package:mizan/domain/use_case/get_contacts_use_case.dart';
@@ -35,28 +37,28 @@ class ContactsCubit extends Cubit<ContactsState> {
     final bool vipFilter = isVipOnly ?? state.isVipOnly;
     final String query = search ?? state.searchQuery;
 
-    final isInitialLoad = state.data == null && query.isEmpty;
+    final bool isInitialLoad = state.data == null && query.isEmpty;
 
     if (isInitialLoad) {
-      emit(state.copyWith(
-        flowState: LoadingState(
-          stateRendererType: StateRendererType.fullScreenLoadingState,
-          title: AppStrings.loading,
-          message: "جاري جلب قائمة العملاء...",
+      emit(
+        state.copyWith(
+          flowState: LoadingState(
+            stateRendererType: StateRendererType.fullScreenLoadingState,
+            title: AppStrings.loading,
+            message: "جاري جلب قائمة العملاء...",
+          ),
+          isVipOnly: vipFilter,
+          searchQuery: query,
+          hasMore: true,
         ),
-        isVipOnly: vipFilter,
-        searchQuery: query,
-        hasMore: true,
-      ));
+      );
     } else {
-      emit(state.copyWith(
-        isVipOnly: vipFilter,
-        searchQuery: query,
-        hasMore: true,
-      ));
+      emit(
+        state.copyWith(isVipOnly: vipFilter, searchQuery: query, hasMore: true),
+      );
     }
 
-    final result = vipFilter
+    final Either<Failure, ContactsPage> result = vipFilter
         ? await _getVipContactsUseCase.execute(
             GetVipContactsInput(page: currentPage, pageSize: pageSize),
           )
@@ -69,25 +71,29 @@ class ContactsCubit extends Cubit<ContactsState> {
           );
 
     result.fold(
-      (failure) {
+      (Failure failure) {
         if (isClosed) return;
-        emit(state.copyWith(
-          flowState: ErrorState(
-            StateRendererType.fullScreenErrorState,
-            failure.message,
-            title: "تعذر تحميل العملاء",
+        emit(
+          state.copyWith(
+            flowState: ErrorState(
+              StateRendererType.fullScreenErrorState,
+              failure.message,
+              title: "تعذر تحميل العملاء",
+            ),
           ),
-        ));
+        );
       },
-      (page) {
+      (ContactsPage page) {
         if (isClosed) return;
-        emit(state.copyWith(
-          data: page.items,
-          flowState: page.items.isEmpty
-              ? EmptyState(AppStrings.noContactsYet)
-              : ContentState(),
-          hasMore: currentPage < page.totalPages,
-        ));
+        emit(
+          state.copyWith(
+            data: page.items,
+            flowState: page.items.isEmpty
+                ? EmptyState(AppStrings.noContactsYet)
+                : ContentState(),
+            hasMore: currentPage < page.totalPages,
+          ),
+        );
       },
     );
   }
@@ -98,7 +104,7 @@ class ContactsCubit extends Cubit<ContactsState> {
     emit(state.copyWith(isLoadingMore: true));
     final int nextPage = currentPage + 1;
 
-    final result = state.isVipOnly
+    final Either<Failure, ContactsPage> result = state.isVipOnly
         ? await _getVipContactsUseCase.execute(
             GetVipContactsInput(page: nextPage, pageSize: pageSize),
           )
@@ -111,20 +117,25 @@ class ContactsCubit extends Cubit<ContactsState> {
           );
 
     result.fold(
-      (failure) {
+      (Failure failure) {
         if (isClosed) return;
         emit(state.copyWith(isLoadingMore: false));
       },
-      (page) {
+      (ContactsPage page) {
         if (isClosed) return;
         currentPage = nextPage;
-        final currentItems = state.data ?? [];
-        final updatedItems = [...currentItems, ...page.items];
-        emit(state.copyWith(
-          data: updatedItems,
-          isLoadingMore: false,
-          hasMore: currentPage < page.totalPages,
-        ));
+        final List<Contact> currentItems = state.data ?? <Contact>[];
+        final List<Contact> updatedItems = <Contact>[
+          ...currentItems,
+          ...page.items,
+        ];
+        emit(
+          state.copyWith(
+            data: updatedItems,
+            isLoadingMore: false,
+            hasMore: currentPage < page.totalPages,
+          ),
+        );
       },
     );
   }
@@ -142,14 +153,14 @@ class ContactsCubit extends Cubit<ContactsState> {
   }
 
   Future<void> toggleVip(String contactId) async {
-    final currentList = state.data;
+    final List<Contact>? currentList = state.data;
     if (currentList == null || currentList.isEmpty) return;
 
-    final index = currentList.indexWhere((c) => c.id == contactId);
+    final int index = currentList.indexWhere((Contact c) => c.id == contactId);
     if (index == -1) return;
 
-    final originalContact = currentList[index];
-    final updatedContact = Contact(
+    final Contact originalContact = currentList[index];
+    final Contact updatedContact = Contact(
       id: originalContact.id,
       name: originalContact.name,
       phoneNumber: originalContact.phoneNumber,
@@ -160,34 +171,45 @@ class ContactsCubit extends Cubit<ContactsState> {
       updatedAt: originalContact.updatedAt,
     );
 
-    final optimisticList = List<Contact>.from(currentList);
+    final List<Contact> optimisticList = List<Contact>.from(currentList);
     optimisticList[index] = updatedContact;
     emit(state.copyWith(data: optimisticList));
 
-    final result = await _toggleVipContactUseCase.execute(contactId);
+    final Either<Failure, Contact> result = await _toggleVipContactUseCase
+        .execute(contactId);
 
     result.fold(
-      (failure) {
+      (Failure failure) {
         if (isClosed) return;
         // Revert to original
-        final revertedList = List<Contact>.from(state.data ?? optimisticList);
-        final revIndex = revertedList.indexWhere((c) => c.id == contactId);
+        final List<Contact> revertedList = List<Contact>.from(
+          state.data ?? optimisticList,
+        );
+        final int revIndex = revertedList.indexWhere(
+          (Contact c) => c.id == contactId,
+        );
         if (revIndex != -1) {
           revertedList[revIndex] = originalContact;
         }
-        emit(state.copyWith(
-          data: revertedList,
-          flowState: ErrorState(
-            StateRendererType.popupErrorStatete,
-            failure.message,
-            title: "فشل تحديث حالة التمييز",
+        emit(
+          state.copyWith(
+            data: revertedList,
+            flowState: ErrorState(
+              StateRendererType.popupErrorStatete,
+              failure.message,
+              title: "فشل تحديث حالة التمييز",
+            ),
           ),
-        ));
+        );
       },
-      (serverContact) {
+      (Contact serverContact) {
         if (isClosed) return;
-        final confirmedList = List<Contact>.from(state.data ?? optimisticList);
-        final confirmedIndex = confirmedList.indexWhere((c) => c.id == contactId);
+        final List<Contact> confirmedList = List<Contact>.from(
+          state.data ?? optimisticList,
+        );
+        final int confirmedIndex = confirmedList.indexWhere(
+          (Contact c) => c.id == contactId,
+        );
         if (confirmedIndex != -1) {
           confirmedList[confirmedIndex] = serverContact;
         }
@@ -197,39 +219,47 @@ class ContactsCubit extends Cubit<ContactsState> {
   }
 
   Future<bool> deleteContact(String contactId) async {
-    emit(state.copyWith(
-      flowState: LoadingState(
-        stateRendererType: StateRendererType.popupLoadingState,
-        title: "جاري الحذف",
-        message: "جاري حذف الطرف...",
+    emit(
+      state.copyWith(
+        flowState: LoadingState(
+          stateRendererType: StateRendererType.popupLoadingState,
+          title: "جاري الحذف",
+          message: "جاري حذف الطرف...",
+        ),
       ),
-    ));
+    );
 
-    final result = await _deleteContactUseCase.execute(contactId);
+    final Either<Failure, void> result = await _deleteContactUseCase.execute(
+      contactId,
+    );
 
     return result.fold(
-      (failure) {
+      (Failure failure) {
         if (isClosed) return false;
-        emit(state.copyWith(
-          flowState: ErrorState(
-            StateRendererType.popupErrorStatete,
-            failure.message,
-            title: "فشل الحذف",
+        emit(
+          state.copyWith(
+            flowState: ErrorState(
+              StateRendererType.popupErrorStatete,
+              failure.message,
+              title: "فشل الحذف",
+            ),
           ),
-        ));
+        );
         return false;
       },
       (_) {
         if (isClosed) return true;
-        final updatedList = (state.data ?? [])
-            .where((c) => c.id != contactId)
+        final List<Contact> updatedList = (state.data ?? <Contact>[])
+            .where((Contact c) => c.id != contactId)
             .toList();
-        emit(state.copyWith(
-          data: updatedList,
-          flowState: updatedList.isEmpty
-              ? EmptyState(AppStrings.noContactsYet)
-              : ContentState(),
-        ));
+        emit(
+          state.copyWith(
+            data: updatedList,
+            flowState: updatedList.isEmpty
+                ? EmptyState(AppStrings.noContactsYet)
+                : ContentState(),
+          ),
+        );
         return true;
       },
     );

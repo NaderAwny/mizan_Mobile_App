@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -40,14 +40,9 @@ class _SelectUserTypeScreen extends StatefulWidget {
 
 class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
     with SingleTickerProviderStateMixin {
-  // Selected user type: 'shop_owner' | 'customer'
-  String? _selectedType;
-
   // Controllers for shop owner details
-  final _shopNameController = TextEditingController();
-  final _addressController = TextEditingController();
-
-  bool _shopNameTouched = false;
+  final TextEditingController _shopNameController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
 
   late final AnimationController _animController;
   late final Animation<double> _fadeAnim;
@@ -76,43 +71,41 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
     super.dispose();
   }
 
-  bool get _isShopNameValid {
-    if (_selectedType != 'shop_owner') return true;
-    final name = _shopNameController.text.trim();
+  bool _isShopNameValid(SelectUserTypeState s) {
+    if (s.selectedType != 'shop_owner') return true;
+    final String name = _shopNameController.text.trim();
     return name.isNotEmpty && name.length <= 100;
   }
 
-  bool get _canProceed {
-    if (_selectedType == null) return false;
-    if (_selectedType == 'shop_owner') {
-      return _isShopNameValid;
-    }
+  bool _canProceed(SelectUserTypeState s) {
+    if (s.selectedType == null) return false;
+    if (s.selectedType == 'shop_owner') return _isShopNameValid(s);
     return true;
   }
 
-  void _onConfirm(BuildContext context) {
-    if (!_canProceed) {
-      if (_selectedType == 'shop_owner') {
-        setState(() => _shopNameTouched = true);
+  void _onConfirm(BuildContext context, SelectUserTypeState s) {
+    if (!_canProceed(s)) {
+      if (s.selectedType == 'shop_owner') {
+        context.read<SelectUserTypeCubit>().touchShopName();
       }
       return;
     }
 
     FocusScope.of(context).unfocus();
-    final cubit = context.read<SelectUserTypeCubit>();
+    final SelectUserTypeCubit cubit = context.read<SelectUserTypeCubit>();
 
-    final shopName = _selectedType == 'shop_owner'
+    final String? shopName = s.selectedType == 'shop_owner'
         ? _shopNameController.text.trim()
         : null;
 
-    final address =
-        (_selectedType == 'shop_owner' &&
+    final String? address =
+        (s.selectedType == 'shop_owner' &&
             _addressController.text.trim().isNotEmpty)
         ? _addressController.text.trim()
         : null;
 
     cubit.selectUserType(
-      userType: _selectedType!,
+      userType: s.selectedType!,
       shopName: shopName,
       address: address,
     );
@@ -120,35 +113,40 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
 
   void _onSkip(BuildContext context) {
     FocusScope.of(context).unfocus();
-    Navigator.of(
-      context,
-    ).pushNamedAndRemoveUntil(Routes.onBoardingRoute, (route) => false);
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      Routes.onBoardingRoute,
+      (Route<dynamic> route) => false,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<SelectUserTypeCubit, SelectUserTypeState>(
-      listenWhen: (prev, curr) => curr.data != null && prev.data == null,
-      listener: (ctx, state) {
+      listenWhen: (SelectUserTypeState prev, SelectUserTypeState curr) =>
+          curr.data != null && prev.data == null,
+      listener: (BuildContext ctx, SelectUserTypeState state) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           // Dismiss any open loading dialog
-          Navigator.of(ctx, rootNavigator: true).popUntil((route) {
+          Navigator.of(ctx, rootNavigator: true).popUntil((
+            Route<dynamic> route,
+          ) {
             return route is! PopupRoute;
           });
 
           // Navigate to Onboarding, clearing auth stack
-          Navigator.of(
-            ctx,
-          ).pushNamedAndRemoveUntil(Routes.homeRoute, (route) => false);
+          Navigator.of(ctx).pushNamedAndRemoveUntil(
+            Routes.homeRoute,
+            (Route<dynamic> route) => false,
+          );
         });
       },
-      builder: (ctx, state) {
-        final flowState = state.flowState;
+      builder: (BuildContext ctx, SelectUserTypeState state) {
+        final FlowState? flowState = state.flowState;
         if (flowState is LoadingState || flowState is ErrorState) {
-          final overlay = flowState!.getScreenWidget(
+          final Widget? overlay = flowState!.getScreenWidget(
             ctx,
             _buildBody(ctx, state),
-            () => _onConfirm(ctx),
+            () => _onConfirm(ctx, state),
           );
           if (overlay != null) {
             return Scaffold(
@@ -167,7 +165,7 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
   }
 
   Widget _buildBody(BuildContext context, SelectUserTypeState state) {
-    final isLoading = state.flowState is LoadingState;
+    final bool isLoading = state.flowState is LoadingState;
 
     return SafeArea(
       child: FadeTransition(
@@ -182,7 +180,7 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: <Widget>[
                 // ── Header Bar (Figma Node #2025:20) ────────────────────────
                 _buildHeaderBar(context),
 
@@ -200,15 +198,15 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
                 AnimatedSize(
                   duration: AppDuration.d300,
                   curve: Curves.easeInOut,
-                  child: _selectedType == 'shop_owner'
-                      ? _buildShopOwnerForm()
+                  child: state.selectedType == 'shop_owner'
+                      ? _buildShopOwnerForm(state)
                       : const SizedBox.shrink(),
                 ),
 
                 SizedBox(height: 32.h),
 
                 // ── Primary Action Button ("تأكيد ومتابعة") ──────────────────
-                _buildActionButton(context, isLoading),
+                _buildActionButton(context, state, isLoading),
 
                 SizedBox(height: 24.h),
               ],
@@ -224,7 +222,7 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
+      children: <Widget>[
         // Skip Button (تخطي)
         GestureDetector(
           onTap: () => _onSkip(context),
@@ -245,7 +243,7 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
         Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
+          children: <Widget>[
             Text(
               AppStrings.step3Of3,
               style: getBoldStyle(
@@ -257,7 +255,7 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
             // Dots: 2 dots + 1 active pill
             Row(
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: <Widget>[
                 _buildDot(isPill: false),
                 SizedBox(width: 4.w),
                 _buildDot(isPill: false),
@@ -296,7 +294,7 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
   Widget _buildTitleBlock() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      children: <Widget>[
         Text(
           AppStrings.accountSetupTitle,
           style: getBlackStyle(
@@ -322,7 +320,7 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
   Widget _buildAccountTypesSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      children: <Widget>[
         Text(
           AppStrings.accountType,
           style: getBoldStyle(
@@ -337,11 +335,12 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
           title: AppStrings.merchantTypeTitle,
           subtitle: AppStrings.merchantTypeSubtitle,
           icon: IconAssets.store,
-          isSelected: _selectedType == 'shop_owner',
+
+          isSelected:
+              context.read<SelectUserTypeCubit>().state.selectedType ==
+              'shop_owner',
           onTap: () {
-            setState(() {
-              _selectedType = 'shop_owner';
-            });
+            context.read<SelectUserTypeCubit>().setSelectedType('shop_owner');
           },
         ),
 
@@ -352,11 +351,11 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
           title: AppStrings.customerTypeTitle,
           subtitle: AppStrings.customerTypeSubtitle,
           icon: IconAssets.user,
-          isSelected: _selectedType == 'customer',
+          isSelected:
+              context.read<SelectUserTypeCubit>().state.selectedType ==
+              'customer',
           onTap: () {
-            setState(() {
-              _selectedType = 'customer';
-            });
+            context.read<SelectUserTypeCubit>().setSelectedType('customer');
           },
         ),
       ],
@@ -364,13 +363,13 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
   }
 
   /// Dynamic Business Form: Divider line + Shop Name + Address with Map Pin
-  Widget _buildShopOwnerForm() {
-    final hasShopNameError =
-        _shopNameTouched && _shopNameController.text.trim().isEmpty;
+  Widget _buildShopOwnerForm(SelectUserTypeState s) {
+    final bool hasShopNameError =
+        s.shopNameTouched && _shopNameController.text.trim().isEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      children: <Widget>[
         // Divider Line (Figma Node #2025:49)
         Container(
           width: double.infinity,
@@ -407,10 +406,8 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
             color: ColorManager.textPrimary,
             fontSize: FontSize.s14,
           ),
-          onChanged: (val) {
-            setState(() {
-              _shopNameTouched = true;
-            });
+          onChanged: (String val) {
+            context.read<SelectUserTypeCubit>().touchShopName();
           },
           decoration: InputDecoration(
             counterText: "",
@@ -453,10 +450,10 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
           ),
         ),
 
-        if (hasShopNameError) ...[
+        if (hasShopNameError) ...<Widget>[
           SizedBox(height: 6.h),
           Row(
-            children: [
+            children: <Widget>[
               SvgPicture.asset(
                 IconAssets.alertTriangle,
                 width: 13.r,
@@ -528,9 +525,7 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
               child: InkWell(
                 onTap: () {
                   if (_addressController.text.trim().isEmpty) {
-                    setState(() {
-                      _addressController.text = "القاهرة، مصر";
-                    });
+                    _addressController.text = 'القاهرة، مصر';
                   }
                 },
                 borderRadius: BorderRadius.circular(AppRadius.r8.r),
@@ -543,7 +538,7 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
+                    children: <Widget>[
                       SvgPicture.asset(
                         IconAssets.mapPin,
                         width: 14.r,
@@ -573,8 +568,12 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
   }
 
   /// Primary Action Button ("تأكيد ومتابعة")
-  Widget _buildActionButton(BuildContext context, bool isLoading) {
-    final isEnabled = _canProceed && !isLoading;
+  Widget _buildActionButton(
+    BuildContext context,
+    SelectUserTypeState s,
+    bool isLoading,
+  ) {
+    final bool isEnabled = _canProceed(s) && !isLoading;
 
     return AnimatedOpacity(
       duration: AppDuration.d300,
@@ -587,16 +586,18 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
             gradient: isEnabled ? ColorManager.primaryGradient : null,
             color: isEnabled ? null : ColorManager.border,
             borderRadius: BorderRadius.circular(AppRadius.r14.r),
-            boxShadow: isEnabled ? const [AppShadows.fabShadow] : null,
+            boxShadow: isEnabled
+                ? const <BoxShadow>[AppShadows.fabShadow]
+                : null,
           ),
           child: ElevatedButton(
-            onPressed: isEnabled ? () => _onConfirm(context) : null,
+            onPressed: isEnabled ? () => _onConfirm(context, s) : null,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
+              backgroundColor: ColorManager.transparent,
+              shadowColor: ColorManager.transparent,
               foregroundColor: ColorManager.white,
               disabledForegroundColor: ColorManager.textTertiary,
-              disabledBackgroundColor: Colors.transparent,
+              disabledBackgroundColor: ColorManager.transparent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadius.r14.r),
               ),
@@ -615,7 +616,7 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
                   )
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
+                    children: <Widget>[
                       Text(
                         AppStrings.confirmAndContinue,
                         style: getBoldStyle(
@@ -673,7 +674,7 @@ class _UserTypeSelectionCard extends StatelessWidget {
           width: isSelected ? 2.0 : 1.0,
         ),
         boxShadow: isSelected
-            ? [
+            ? <BoxShadow>[
                 BoxShadow(
                   color: ColorManager.primary.withAlpha(25),
                   blurRadius: 14,
@@ -683,14 +684,14 @@ class _UserTypeSelectionCard extends StatelessWidget {
             : null,
       ),
       child: Material(
-        color: Colors.transparent,
+        color: ColorManager.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppRadius.r16.r),
           child: Padding(
             padding: EdgeInsets.all(AppPadding.p16.r),
             child: Row(
-              children: [
+              children: <Widget>[
                 // Radio Indicator (Figma Node #2025:35 & #2025:43)
                 AnimatedContainer(
                   duration: AppDuration.d200,
@@ -726,7 +727,7 @@ class _UserTypeSelectionCard extends StatelessWidget {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    children: <Widget>[
                       Text(
                         title,
                         style: getBoldStyle(

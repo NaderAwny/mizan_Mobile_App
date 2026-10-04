@@ -27,7 +27,7 @@ class ContactFinancialSummaryCard extends StatelessWidget {
         color: ColorManager.surface,
         borderRadius: BorderRadius.circular(AppRadius.r20.r),
         border: Border.all(color: ColorManager.border, width: 1.2),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             color: Color(0x081C1816),
             offset: Offset(0, 3),
@@ -36,12 +36,12 @@ class ContactFinancialSummaryCard extends StatelessWidget {
         ],
       ),
       child: Row(
-        children: [
+        children: <Widget>[
           // Left Column: Total Account Balance
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
+              children: <Widget>[
                 Text(
                   AppStrings.totalAccountBalance,
                   style: getRegularStyle(
@@ -63,17 +63,13 @@ class ContactFinancialSummaryCard extends StatelessWidget {
           ),
 
           // Middle Vertical Divider
-          Container(
-            height: 38.h,
-            width: 1.2,
-            color: ColorManager.divider,
-          ),
+          Container(height: 38.h, width: 1.2, color: ColorManager.divider),
 
           // Right Column: Total Transactions
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
+              children: <Widget>[
                 Text(
                   AppStrings.totalTransactions,
                   style: getRegularStyle(

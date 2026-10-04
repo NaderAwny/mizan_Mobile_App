@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
 import 'package:mizan/presentation/resources/font_manager.dart';
@@ -25,7 +25,7 @@ class DeleteContactBottomSheet extends StatelessWidget {
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: ColorManager.transparent,
       builder: (_) => DeleteContactBottomSheet(
         contactName: contactName,
         onConfirmDelete: onConfirmDelete,
@@ -53,7 +53,7 @@ class DeleteContactBottomSheet extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
+          children: <Widget>[
             // Top Drag Handle
             Container(
               width: 44.w,

@@ -16,7 +16,7 @@ class QuickActionsBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
+      children: <Widget>[
         // 1. بيع (Sale)
         Expanded(
           child: _QuickActionButton(
@@ -140,7 +140,7 @@ class _QuickActionButtonState extends State<_QuickActionButton>
           padding: EdgeInsets.symmetric(horizontal: 4.w),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
+            children: <Widget>[
               Container(
                 width: double.infinity,
                 height: 64.h,
@@ -151,7 +151,7 @@ class _QuickActionButtonState extends State<_QuickActionButton>
                     color: widget.accentColor.withAlpha(35),
                     width: 1.0,
                   ),
-                  boxShadow: [
+                  boxShadow: <BoxShadow>[
                     BoxShadow(
                       color: widget.accentColor.withAlpha(20),
                       blurRadius: 10,

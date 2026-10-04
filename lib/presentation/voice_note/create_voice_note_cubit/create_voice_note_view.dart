@@ -18,6 +18,7 @@ import 'package:mizan/presentation/operations/widgets/contact_picker_bottom_shee
 import 'package:mizan/presentation/resources/assets_manager.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
 import 'package:mizan/presentation/resources/font_manager.dart';
+import 'package:mizan/presentation/resources/routes_manager.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 import 'package:mizan/presentation/resources/styles_manager.dart';
 import 'package:mizan/presentation/resources/values_manager.dart';
@@ -47,39 +48,18 @@ class _CreateVoiceNoteScreen extends StatefulWidget {
 
 class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
     with SingleTickerProviderStateMixin {
-  final _formKey = GlobalKey<FormState>();
-  final _amountController = TextEditingController();
-  final _notesController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
 
-  // Selected Operation Type
-  String _selectedOperationType = VoiceNoteOperationType.sale;
-
-  // Selected Contact
-  String? _selectedContactId;
-  String? _selectedPartyName;
-  bool _isPartyVip = false;
-
-  // Operation Date
-  DateTime _operationDate = DateTime.now();
-
-  // Real Audio Recording & Playback State
   final AudioRecorder _audioRecorder = AudioRecorder();
   final AudioPlayer _audioPlayer = AudioPlayer();
-
-  bool _isRecording = false;
-  int _recordSeconds = 0;
-  Timer? _recordTimer;
-  File? _recordedAudioFile;
-
-  bool _isPlayingPreview = false;
-  double _previewProgress = 0.0;
-  Duration _totalAudioDuration = Duration.zero;
 
   // Animation controller for pulsing mic button
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
 
-  final List<num> _quickAmountChips = [50, 100, 250, 500, 1000, 2000];
+  final List<num> _quickAmountChips = <num>[50, 100, 250, 500, 1000, 2000];
 
   @override
   void initState() {
@@ -92,48 +72,47 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
-    _audioPlayer.onPositionChanged.listen((pos) {
-      if (mounted && _recordedAudioFile != null) {
-        final totalMs = _totalAudioDuration.inMilliseconds > 0
-            ? _totalAudioDuration.inMilliseconds
-            : (_recordSeconds * 1000);
-        if (totalMs > 0) {
-          setState(() {
-            _previewProgress = (pos.inMilliseconds / totalMs).clamp(0.0, 1.0);
-          });
+    _audioPlayer.onPositionChanged.listen((Duration pos) {
+      if (mounted) {
+        final VoiceNoteFormState st = context.read<VoiceNoteFormCubit>().state;
+        if (st.recordedAudioPath != null) {
+          final int totalMs = st.totalAudioDuration.inMilliseconds > 0
+              ? st.totalAudioDuration.inMilliseconds
+              : (st.recordSeconds * 1000);
+          if (totalMs > 0) {
+            final double prog = (pos.inMilliseconds / totalMs).clamp(0.0, 1.0);
+            context.read<VoiceNoteFormCubit>().updatePlayback(progress: prog);
+          }
         }
       }
     });
 
-    _audioPlayer.onDurationChanged.listen((dur) {
+    _audioPlayer.onDurationChanged.listen((Duration dur) {
       if (mounted) {
-        setState(() {
-          _totalAudioDuration = dur;
-        });
+        context.read<VoiceNoteFormCubit>().updatePlayback(duration: dur);
       }
     });
 
     _audioPlayer.onPlayerComplete.listen((_) {
       if (mounted) {
-        setState(() {
-          _isPlayingPreview = false;
-          _previewProgress = 0.0;
-        });
+        context.read<VoiceNoteFormCubit>().updatePlayback(
+          isPlaying: false,
+          progress: 0.0,
+        );
       }
     });
 
-    _audioPlayer.onPlayerStateChanged.listen((state) {
+    _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
       if (mounted) {
-        setState(() {
-          _isPlayingPreview = state == PlayerState.playing;
-        });
+        context.read<VoiceNoteFormCubit>().updatePlayback(
+          isPlaying: state == PlayerState.playing,
+        );
       }
     });
   }
 
   @override
   void dispose() {
-    _recordTimer?.cancel();
     _pulseController.dispose();
     _audioRecorder.dispose();
     _audioPlayer.dispose();
@@ -146,8 +125,8 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
   Future<void> _startRecording() async {
     try {
       if (await _audioRecorder.hasPermission()) {
-        final tempDir = await getTemporaryDirectory();
-        final filePath =
+        final Directory tempDir = await getTemporaryDirectory();
+        final String filePath =
             '${tempDir.path}/mizan_voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
 
         await _audioRecorder.start(
@@ -159,24 +138,10 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
           path: filePath,
         );
 
-        setState(() {
-          _isRecording = true;
-          _recordSeconds = 0;
-          _recordedAudioFile = null;
-          _isPlayingPreview = false;
-          _previewProgress = 0.0;
-          _totalAudioDuration = Duration.zero;
-        });
+        if (mounted) {
+          context.read<VoiceNoteFormCubit>().startRecordingTimer();
+        }
         _pulseController.repeat(reverse: true);
-
-        _recordTimer?.cancel();
-        _recordTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-          if (mounted) {
-            setState(() {
-              _recordSeconds++;
-            });
-          }
-        });
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -192,100 +157,90 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
   }
 
   Future<void> _stopRecording() async {
-    _recordTimer?.cancel();
     _pulseController.stop();
     _pulseController.reset();
 
     try {
-      final path = await _audioRecorder.stop();
-      if (path != null && mounted) {
-        final file = File(path);
-        setState(() {
-          _isRecording = false;
-          _recordedAudioFile = file;
-          if (_recordSeconds == 0) _recordSeconds = 1;
-        });
-      } else if (mounted) {
-        setState(() {
-          _isRecording = false;
-        });
+      final String? path = await _audioRecorder.stop();
+      if (mounted) {
+        context.read<VoiceNoteFormCubit>().stopRecordingTimer(path);
       }
     } catch (e) {
       debugPrint('Error stopping audio recording: $e');
       if (mounted) {
-        setState(() {
-          _isRecording = false;
-        });
+        context.read<VoiceNoteFormCubit>().stopRecordingTimer(null);
       }
     }
   }
 
   Future<void> _cancelRecording() async {
-    _recordTimer?.cancel();
     _pulseController.stop();
     _pulseController.reset();
     try {
       await _audioRecorder.stop();
     } catch (_) {}
-    if (_isPlayingPreview) {
+    if (!mounted) return;
+    if (context.read<VoiceNoteFormCubit>().state.isPlayingPreview) {
       await _audioPlayer.stop();
     }
-    setState(() {
-      _isRecording = false;
-      _recordSeconds = 0;
-      _recordedAudioFile = null;
-      _isPlayingPreview = false;
-      _previewProgress = 0.0;
-      _totalAudioDuration = Duration.zero;
-    });
+    if (mounted) {
+      context.read<VoiceNoteFormCubit>().resetRecording();
+    }
   }
 
   Future<void> _togglePreviewPlay() async {
-    if (_recordedAudioFile == null) return;
+    final VoiceNoteFormState state = context.read<VoiceNoteFormCubit>().state;
+    if (state.recordedAudioPath == null) return;
 
-    if (_isPlayingPreview) {
+    if (state.isPlayingPreview) {
       await _audioPlayer.pause();
-      setState(() => _isPlayingPreview = false);
-    } else {
-      if (_previewProgress >= 0.99) {
-        _previewProgress = 0.0;
+      if (mounted) {
+        context.read<VoiceNoteFormCubit>().updatePlayback(isPlaying: false);
       }
-      await _audioPlayer.play(DeviceFileSource(_recordedAudioFile!.path));
-      setState(() => _isPlayingPreview = true);
+    } else {
+      if (state.previewProgress >= 0.99) {
+        context.read<VoiceNoteFormCubit>().updatePlayback(progress: 0.0);
+      }
+      await _audioPlayer.play(DeviceFileSource(state.recordedAudioPath!));
+      if (mounted) {
+        context.read<VoiceNoteFormCubit>().updatePlayback(isPlaying: true);
+      }
     }
   }
 
   String _formatDuration(int seconds) {
-    final mins = (seconds ~/ 60).toString().padLeft(2, '0');
-    final secs = (seconds % 60).toString().padLeft(2, '0');
+    final String mins = (seconds ~/ 60).toString().padLeft(2, '0');
+    final String secs = (seconds % 60).toString().padLeft(2, '0');
     return '$mins:$secs';
   }
 
   // ── Contact Picker ────────────────────────────────────────────────────────
   Future<void> _pickContact() async {
-    final result = await ContactPickerBottomSheet.show(
+    final VoiceNoteFormState state = context.read<VoiceNoteFormCubit>().state;
+    final ContactPickerResult? result = await ContactPickerBottomSheet.show(
       context,
-      selectedContactId: _selectedContactId,
-      selectedName: _selectedPartyName,
+      selectedContactId: state.contactId,
+      selectedName: state.partyName,
     );
 
     if (result != null && mounted) {
-      setState(() {
-        _selectedContactId = result.contactId;
-        _selectedPartyName = result.name;
-        _isPartyVip = result.isVip;
-      });
+      context.read<VoiceNoteFormCubit>().setContact(
+        contactId: result.contactId,
+        partyName: result.name,
+        isVip: result.isVip,
+      );
     }
   }
 
   // ── Date Picker ───────────────────────────────────────────────────────────
   Future<void> _selectDate() async {
-    final picked = await showDatePicker(
+    final VoiceNoteFormState state = context.read<VoiceNoteFormCubit>().state;
+    final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _operationDate,
+      initialDate: state.operationDate ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime.now().add(const Duration(days: 365)),
-      builder: (context, child) {
+      builder: (BuildContext context, Widget? child) {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
@@ -300,15 +255,14 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
     );
 
     if (picked != null && mounted) {
-      setState(() {
-        _operationDate = picked;
-      });
+      context.read<VoiceNoteFormCubit>().setOperationDate(picked);
     }
   }
 
   // ── Submit Voice Note ─────────────────────────────────────────────────────
   void _submitForm() {
-    if (_recordedAudioFile == null) {
+    final VoiceNoteFormState state = context.read<VoiceNoteFormCubit>().state;
+    if (state.recordedAudioPath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -327,7 +281,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
 
     if (!_formKey.currentState!.validate()) return;
 
-    final amount = num.tryParse(_amountController.text.trim()) ?? 0;
+    final num amount = num.tryParse(_amountController.text.trim()) ?? 0;
     if (amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -345,10 +299,10 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
       return;
     }
 
-    final hasContact =
-        _selectedContactId != null && _selectedContactId!.isNotEmpty;
-    final hasPartyName =
-        _selectedPartyName != null && _selectedPartyName!.trim().isNotEmpty;
+    final bool hasContact =
+        state.contactId != null && state.contactId!.isNotEmpty;
+    final bool hasPartyName =
+        state.partyName != null && state.partyName!.trim().isNotEmpty;
     if (!hasContact && !hasPartyName) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -366,13 +320,13 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
       return;
     }
 
-    final request = CreateVoiceNoteRequest(
-      audioFile: _recordedAudioFile!,
-      operationType: _selectedOperationType,
+    final CreateVoiceNoteRequest request = CreateVoiceNoteRequest(
+      audioFile: File(state.recordedAudioPath!),
+      operationType: state.operationType,
       amount: amount,
-      operationDate: _operationDate.toIso8601String(),
-      contactId: _selectedContactId,
-      partyName: _selectedPartyName,
+      operationDate: (state.operationDate ?? DateTime.now()).toIso8601String(),
+      contactId: state.contactId,
+      partyName: state.partyName,
       notes: _notesController.text.trim().isNotEmpty
           ? _notesController.text.trim()
           : null,
@@ -384,19 +338,24 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<VoiceNoteFormCubit, VoiceNoteFormState>(
-      listener: (context, state) {
+      listener: (BuildContext context, VoiceNoteFormState state) {
         if (state.isActionSuccess && state.savedVoiceNote != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
-                children: [
-                  const Icon(Icons.check_circle_rounded, color: Colors.white),
-                  SizedBox(width: 8.w),
-                  Text(
-                    AppStrings.voiceNoteSavedSuccess,
-                    style: getBoldStyle(
-                      color: ColorManager.white,
-                      fontSize: FontSize.s13,
+                children: <Widget>[
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: ColorManager.white,
+                  ),
+                  SizedBox(width: 5.w),
+                  Expanded(
+                    child: Text(
+                      AppStrings.voiceNoteSavedSuccess,
+                      style: getBoldStyle(
+                        color: ColorManager.white,
+                        fontSize: FontSize.s12.sp,
+                      ),
                     ),
                   ),
                 ],
@@ -405,10 +364,12 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
               behavior: SnackBarBehavior.floating,
             ),
           );
-          Navigator.of(context).pop(true);
+          Navigator.of(
+            context,
+          ).pushReplacementNamed(Routes.voiceNotesListRoute);
         }
       },
-      builder: (context, state) {
+      builder: (BuildContext context, VoiceNoteFormState state) {
         return Directionality(
           textDirection: TextDirection.rtl,
           child: Scaffold(
@@ -417,10 +378,10 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
               child:
                   state.flowState?.getScreenWidget(
                     context,
-                    _buildScreenBody(context),
+                    _buildScreenBody(context, state),
                     () => _submitForm(),
                   ) ??
-                  _buildScreenBody(context),
+                  _buildScreenBody(context, state),
             ),
           ),
         );
@@ -428,11 +389,11 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
     );
   }
 
-  Widget _buildScreenBody(BuildContext context) {
+  Widget _buildScreenBody(BuildContext context, VoiceNoteFormState state) {
     return Column(
-      children: [
+      children: <Widget>[
         // ── Custom AppBar ─────────────────────────────────────────────────────
-        _buildAppBar(context),
+        _buildAppBar(context, state),
 
         // ── Scrollable Form Content ───────────────────────────────────────────
         Expanded(
@@ -443,14 +404,14 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+                children: <Widget>[
                   // 1. Audio Recorder / Player Card
-                  _buildAudioRecorderCard(),
+                  _buildAudioRecorderCard(state),
 
                   SizedBox(height: 16.h),
 
                   // 2. Operation Type Selector
-                  _buildOperationTypeSelector(),
+                  _buildOperationTypeSelector(state),
 
                   SizedBox(height: 16.h),
 
@@ -460,12 +421,12 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                   SizedBox(height: 16.h),
 
                   // 4. Contact / Party Selection
-                  _buildContactSection(),
+                  _buildContactSection(state),
 
                   SizedBox(height: 16.h),
 
                   // 5. Operation Date Picker
-                  _buildDateSection(),
+                  _buildDateSection(state),
 
                   SizedBox(height: 16.h),
 
@@ -488,17 +449,17 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
   }
 
   // ── AppBar ────────────────────────────────────────────────────────────────
-  Widget _buildAppBar(BuildContext context) {
+  Widget _buildAppBar(BuildContext context, VoiceNoteFormState state) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: ColorManager.surface,
         border: Border(
           bottom: BorderSide(color: ColorManager.border, width: 1),
         ),
       ),
       child: Row(
-        children: [
+        children: <Widget>[
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
             style: IconButton.styleFrom(
@@ -520,7 +481,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: <Widget>[
                 Text(
                   AppStrings.newVoiceNote,
                   style: getBoldStyle(
@@ -545,7 +506,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
   }
 
   // ── 1. Audio Recorder / Player Card ───────────────────────────────────────
-  Widget _buildAudioRecorderCard() {
+  Widget _buildAudioRecorderCard(VoiceNoteFormState state) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(16.r),
@@ -553,24 +514,27 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
         color: ColorManager.surface,
         borderRadius: BorderRadius.circular(AppRadius.r18.r),
         border: Border.all(
-          color: _isRecording
+          color: state.isRecording
               ? ColorManager.primary
-              : _recordedAudioFile != null
+              : state.recordedAudioPath != null
               ? ColorManager.success
               : ColorManager.border,
-          width: _isRecording || _recordedAudioFile != null ? 1.5 : 1.0,
+          width: state.isRecording || state.recordedAudioPath != null
+              ? 1.5
+              : 1.0,
         ),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
-            color: Color(0x0A000000),
+            color: ColorManager.shadowMedium,
             blurRadius: 12,
             offset: Offset(0, 4),
           ),
         ],
       ),
       child: Column(
-        children: [
-          if (!_isRecording && _recordedAudioFile == null) ...[
+        children: <Widget>[
+          if (!state.isRecording &&
+              state.recordedAudioPath == null) ...<Widget>[
             // State A: Idle (Ready to record)
             GestureDetector(
               onTap: _startRecording,
@@ -580,7 +544,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                 decoration: BoxDecoration(
                   gradient: ColorManager.primaryGradient,
                   shape: BoxShape.circle,
-                  boxShadow: [
+                  boxShadow: <BoxShadow>[
                     BoxShadow(
                       color: ColorManager.primary.withAlpha(70),
                       blurRadius: 18,
@@ -618,11 +582,11 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                 fontSize: FontSize.s11,
               ),
             ),
-          ] else if (_isRecording) ...[
+          ] else if (state.isRecording) ...<Widget>[
             // State B: Active Recording
             AnimatedBuilder(
               animation: _pulseAnimation,
-              builder: (context, child) {
+              builder: (BuildContext context, Widget? child) {
                 return Transform.scale(
                   scale: _pulseAnimation.value,
                   child: Container(
@@ -631,7 +595,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                     decoration: BoxDecoration(
                       color: ColorManager.primary,
                       shape: BoxShape.circle,
-                      boxShadow: [
+                      boxShadow: <BoxShadow>[
                         BoxShadow(
                           color: ColorManager.primary.withAlpha(120),
                           blurRadius: 24,
@@ -656,7 +620,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
             ),
             SizedBox(height: 14.h),
             Text(
-              _formatDuration(_recordSeconds),
+              _formatDuration(state.recordSeconds),
               style: getBoldStyle(
                 color: ColorManager.primary,
                 fontSize: FontSize.s22,
@@ -674,8 +638,8 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
             // Waveform simulation bars
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(18, (index) {
-                final heights = [
+              children: List<Widget>.generate(18, (int index) {
+                final List<int> heights = <int>[
                   12,
                   22,
                   34,
@@ -695,7 +659,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                   18,
                   10,
                 ];
-                final h = heights[index % heights.length];
+                final int h = heights[index % heights.length];
                 return Container(
                   width: 3.5.w,
                   height: h.h * 0.7,
@@ -710,7 +674,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
             SizedBox(height: 18.h),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+              children: <Widget>[
                 OutlinedButton.icon(
                   onPressed: _cancelRecording,
                   icon: const Icon(
@@ -756,10 +720,10 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                 ),
               ],
             ),
-          ] else ...[
+          ] else ...<Widget>[
             // State C: Recorded Audio Ready
             Row(
-              children: [
+              children: <Widget>[
                 // Play / Pause Circle Button
                 GestureDetector(
                   onTap: _togglePreviewPlay,
@@ -772,7 +736,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                     ),
                     child: Center(
                       child: Icon(
-                        _isPlayingPreview
+                        state.isPlayingPreview
                             ? Icons.pause_rounded
                             : Icons.play_arrow_rounded,
                         color: ColorManager.white,
@@ -785,10 +749,10 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    children: <Widget>[
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
+                        children: <Widget>[
                           Text(
                             "التسجيل جاهز للحفظ",
                             style: getBoldStyle(
@@ -808,7 +772,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                               ),
                             ),
                             child: Text(
-                              _formatDuration(_recordSeconds),
+                              _formatDuration(state.recordSeconds),
                               style: getBoldStyle(
                                 color: ColorManager.success,
                                 fontSize: FontSize.s11,
@@ -822,7 +786,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                       ClipRRect(
                         borderRadius: BorderRadius.circular(4.r),
                         child: LinearProgressIndicator(
-                          value: _previewProgress,
+                          value: state.previewProgress,
                           backgroundColor: ColorManager.surfaceVariant,
                           valueColor: const AlwaysStoppedAnimation<Color>(
                             ColorManager.primary,
@@ -836,11 +800,11 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
               ],
             ),
             SizedBox(height: 12.h),
-            Divider(color: ColorManager.border, height: 1),
+            const Divider(color: ColorManager.border, height: 1),
             SizedBox(height: 8.h),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
+              children: <Widget>[
                 TextButton.icon(
                   onPressed: _startRecording,
                   icon: const Icon(
@@ -872,41 +836,41 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
   }
 
   // ── 2. Operation Type Selector ────────────────────────────────────────────
-  Widget _buildOperationTypeSelector() {
-    final types = [
-      {
+  Widget _buildOperationTypeSelector(VoiceNoteFormState state) {
+    final List<Map<String, Object>> types = <Map<String, Object>>[
+      <String, Object>{
         'key': VoiceNoteOperationType.sale,
         'label': AppStrings.quickSale,
         'color': ColorManager.success,
         'container': ColorManager.successContainer,
         'icon': IconAssets.shoppingBag,
       },
-      {
+      <String, Object>{
         'key': VoiceNoteOperationType.purchase,
         'label': AppStrings.quickPurchase,
         'color': ColorManager.error,
         'container': ColorManager.errorContainer,
         'icon': IconAssets.arrowUpRight,
       },
-      {
+      <String, Object>{
         'key': VoiceNoteOperationType.installmentCollection,
         'label': "تحصيل قسط",
         'color': ColorManager.secondary,
         'container': ColorManager.lightSecondary,
         'icon': IconAssets.arrowDownLeft,
       },
-      {
+      <String, Object>{
         'key': VoiceNoteOperationType.installmentPayment,
         'label': "سداد قسط",
-        'color': const Color(0xFF5E48B8),
-        'container': const Color(0xFFF0EDFC),
+        'color': ColorManager.voiceNotePurple,
+        'container': ColorManager.voiceNoteContainer,
         'icon': IconAssets.walletCards,
       },
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      children: <Widget>[
         Text(
           AppStrings.operationTypeLabel,
           style: getBoldStyle(
@@ -925,18 +889,16 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
             childAspectRatio: 2.6,
           ),
           itemCount: types.length,
-          itemBuilder: (context, index) {
-            final t = types[index];
-            final isSelected = _selectedOperationType == t['key'];
-            final color = t['color'] as Color;
-            final containerColor = t['container'] as Color;
+          itemBuilder: (BuildContext context, int index) {
+            final Map<String, Object> t = types[index];
+            final bool isSelected = state.operationType == t['key'];
+            final Color color = t['color'] as Color;
+            final Color containerColor = t['container'] as Color;
 
             return GestureDetector(
-              onTap: () {
-                setState(() {
-                  _selectedOperationType = t['key'] as String;
-                });
-              },
+              onTap: () => context.read<VoiceNoteFormCubit>().setOperationType(
+                t['key'] as String,
+              ),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
@@ -949,7 +911,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                   ),
                 ),
                 child: Row(
-                  children: [
+                  children: <Widget>[
                     Container(
                       padding: EdgeInsets.all(6.r),
                       decoration: BoxDecoration(
@@ -1007,10 +969,10 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
+            children: <Widget>[
               Text(
                 AppStrings.amountLabel,
                 style: getBoldStyle(
@@ -1071,11 +1033,11 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                 vertical: 12.h,
               ),
             ),
-            validator: (value) {
+            validator: (String? value) {
               if (value == null || value.trim().isEmpty) {
                 return AppStrings.amountRequired;
               }
-              final numVal = num.tryParse(value.trim());
+              final num? numVal = num.tryParse(value.trim());
               if (numVal == null || numVal <= 0) {
                 return AppStrings.amountRequired;
               }
@@ -1088,7 +1050,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             child: Row(
-              children: _quickAmountChips.map((chipVal) {
+              children: _quickAmountChips.map((num chipVal) {
                 return Padding(
                   padding: EdgeInsets.only(left: 6.w),
                   child: InkWell(
@@ -1125,10 +1087,10 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
   }
 
   // ── 4. Contact Section ────────────────────────────────────────────────────
-  Widget _buildContactSection() {
-    final hasSelectedContact =
-        (_selectedPartyName != null && _selectedPartyName!.isNotEmpty) ||
-        (_selectedContactId != null && _selectedContactId!.isNotEmpty);
+  Widget _buildContactSection(VoiceNoteFormState state) {
+    final bool hasSelectedContact =
+        (state.partyName != null && state.partyName!.isNotEmpty) ||
+        (state.contactId != null && state.contactId!.isNotEmpty);
 
     return Container(
       padding: EdgeInsets.all(14.r),
@@ -1139,10 +1101,10 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
+            children: <Widget>[
               Text(
                 AppStrings.partyNameLabel,
                 style: getBoldStyle(
@@ -1153,11 +1115,11 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
               if (hasSelectedContact)
                 GestureDetector(
                   onTap: () {
-                    setState(() {
-                      _selectedContactId = null;
-                      _selectedPartyName = null;
-                      _isPartyVip = false;
-                    });
+                    context.read<VoiceNoteFormCubit>().setContact(
+                      contactId: null,
+                      partyName: null,
+                      isVip: false,
+                    );
                   },
                   child: Text(
                     "مسح",
@@ -1180,7 +1142,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                 borderRadius: BorderRadius.circular(AppRadius.r10.r),
               ),
               child: Row(
-                children: [
+                children: <Widget>[
                   Container(
                     padding: EdgeInsets.all(6.r),
                     decoration: BoxDecoration(
@@ -1205,10 +1167,10 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                   Expanded(
                     child: hasSelectedContact
                         ? Row(
-                            children: [
+                            children: <Widget>[
                               Flexible(
                                 child: Text(
-                                  _selectedPartyName ?? "طرف مجهول",
+                                  state.partyName ?? "طرف مجهول",
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: getBoldStyle(
@@ -1217,7 +1179,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                                   ),
                                 ),
                               ),
-                              if (_isPartyVip) ...[
+                              if (state.isPartyVip) ...<Widget>[
                                 SizedBox(width: 6.w),
                                 Container(
                                   padding: EdgeInsets.symmetric(
@@ -1264,12 +1226,12 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
   }
 
   // ── 5. Date Section ───────────────────────────────────────────────────────
-  Widget _buildDateSection() {
-    final formattedDate = intl.DateFormat(
+  Widget _buildDateSection(VoiceNoteFormState state) {
+    final DateTime date = state.operationDate ?? DateTime.now();
+    final String formattedDate = intl.DateFormat(
       'yyyy/MM/dd',
       'ar',
-    ).format(_operationDate);
-
+    ).format(date);
     return Container(
       padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
@@ -1279,7 +1241,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Text(
             AppStrings.operationDateLabel,
             style: getBoldStyle(
@@ -1298,7 +1260,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
                 borderRadius: BorderRadius.circular(AppRadius.r10.r),
               ),
               child: Row(
-                children: [
+                children: <Widget>[
                   SvgPicture.asset(
                     IconAssets.calendar,
                     width: 16.r,
@@ -1343,7 +1305,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Text(
             AppStrings.voiceNoteNotesLabel,
             style: getBoldStyle(
@@ -1390,7 +1352,7 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
       decoration: BoxDecoration(
         gradient: ColorManager.primaryGradient,
         borderRadius: BorderRadius.circular(AppRadius.r14.r),
-        boxShadow: [
+        boxShadow: <BoxShadow>[
           BoxShadow(
             color: ColorManager.primary.withAlpha(70),
             blurRadius: 12,
@@ -1401,15 +1363,15 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
       child: ElevatedButton(
         onPressed: _submitForm,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
+          backgroundColor: ColorManager.transparent,
+          shadowColor: ColorManager.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.r14.r),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+          children: <Widget>[
             SvgPicture.asset(
               IconAssets.mic,
               width: 18.r,

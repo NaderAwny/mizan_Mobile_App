@@ -34,11 +34,8 @@ class ActivePlansBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: ColorManager.surface,
         borderRadius: BorderRadius.circular(AppRadius.r16.r),
-        border: Border.all(
-          color: ColorManager.border,
-          width: 1.0,
-        ),
-        boxShadow: const [
+        border: Border.all(color: ColorManager.border, width: 1.0),
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             color: Color(0x081C1816),
             blurRadius: 10.0,
@@ -47,7 +44,7 @@ class ActivePlansBanner extends StatelessWidget {
         ],
       ),
       child: Row(
-        children: [
+        children: <Widget>[
           // Icon Container
           Container(
             width: 44.r,
@@ -78,7 +75,7 @@ class ActivePlansBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: <Widget>[
                 Text(
                   '$totalDebtsCount ${AppStrings.activePlans}',
                   style: getBoldStyle(

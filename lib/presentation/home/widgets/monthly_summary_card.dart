@@ -1,4 +1,4 @@
-// import 'package:flutter/material.dart';
+﻿// import 'package:flutter/material.dart';
 // import 'package:flutter_screenutil/flutter_screenutil.dart';
 // import 'package:intl/intl.dart';
 // import 'package:mizan/presentation/resources/color_manager.dart';
@@ -41,7 +41,7 @@
 //     }
 
 //     return Material(
-//       color: Colors.transparent,
+//       color: ColorManager.transparent,
 //       child: InkWell(
 //         onTap: () {
 //           Navigator.pushNamed(context, Routes.analyticsRoute);

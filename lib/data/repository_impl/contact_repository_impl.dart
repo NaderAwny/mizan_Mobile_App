@@ -6,6 +6,7 @@ import 'package:mizan/data/network/error_handler.dart';
 import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/data/network/network_info.dart';
 import 'package:mizan/data/request/contact_request.dart';
+import 'package:mizan/data/response/base_responses/base_responses.dart';
 import 'package:mizan/data/response/contact_responses/contact_responses.dart';
 import 'package:mizan/domain/model/contact_model.dart';
 import 'package:mizan/domain/repository/contact_repository.dart';
@@ -23,9 +24,8 @@ class ContactRepositoryImpl implements ContactRepository {
   ) async {
     if (await networkInfo.isConnected) {
       try {
-        final response = await contactRemoteDataSource.createContact(
-          createContactRequest,
-        );
+        final ContactResponse response = await contactRemoteDataSource
+            .createContact(createContactRequest);
         if (response.success == true) {
           return Right(response.data.toDomain());
         } else {
@@ -50,9 +50,8 @@ class ContactRepositoryImpl implements ContactRepository {
   ) async {
     if (await networkInfo.isConnected) {
       try {
-        final response = await contactRemoteDataSource.getContacts(
-          getContactsRequest,
-        );
+        final ContactsPageResponse response = await contactRemoteDataSource
+            .getContacts(getContactsRequest);
         if (response.success == true) {
           return Right(response.data.toDomain());
         } else {
@@ -77,9 +76,8 @@ class ContactRepositoryImpl implements ContactRepository {
   ) async {
     if (await networkInfo.isConnected) {
       try {
-        final response = await contactRemoteDataSource.getVipContacts(
-          getVipContactsRequest,
-        );
+        final ContactsPageResponse response = await contactRemoteDataSource
+            .getVipContacts(getVipContactsRequest);
         if (response.success == true) {
           return Right(response.data.toDomain());
         } else {
@@ -102,7 +100,8 @@ class ContactRepositoryImpl implements ContactRepository {
   Future<Either<Failure, Contact>> getContactById(String id) async {
     if (await networkInfo.isConnected) {
       try {
-        final response = await contactRemoteDataSource.getContactById(id);
+        final ContactResponse response = await contactRemoteDataSource
+            .getContactById(id);
         if (response.success == true) {
           return Right(response.data.toDomain());
         } else {
@@ -125,7 +124,8 @@ class ContactRepositoryImpl implements ContactRepository {
   Future<Either<Failure, Contact>> toggleVip(String id) async {
     if (await networkInfo.isConnected) {
       try {
-        final response = await contactRemoteDataSource.toggleVip(id);
+        final ContactResponse response = await contactRemoteDataSource
+            .toggleVip(id);
         if (response.success == true) {
           return Right(response.data.toDomain());
         } else {
@@ -148,14 +148,18 @@ class ContactRepositoryImpl implements ContactRepository {
   Future<Either<Failure, ContactProfile>> getContactProfile(String id) async {
     if (await networkInfo.isConnected) {
       try {
-        final profileFuture = contactRemoteDataSource.getContactProfile(id);
-        final contactFuture = contactRemoteDataSource
+        final Future<ContactProfileResponse> profileFuture =
+            contactRemoteDataSource.getContactProfile(id);
+        final Future<ContactResponse> contactFuture = contactRemoteDataSource
             .getContactById(id)
             .catchError((_) => ContactResponse());
 
-        final results = await Future.wait([profileFuture, contactFuture]);
-        final profileRes = results[0] as ContactProfileResponse;
-        final contactRes = results[1] as ContactResponse;
+        final List<BaseResponse> results = await Future.wait(
+          <Future<BaseResponse>>[profileFuture, contactFuture],
+        );
+        final ContactProfileResponse profileRes =
+            results[0] as ContactProfileResponse;
+        final ContactResponse contactRes = results[1] as ContactResponse;
 
         if (profileRes.success != true && contactRes.success != true) {
           return Left(
@@ -168,14 +172,14 @@ class ContactRepositoryImpl implements ContactRepository {
           );
         }
 
-        final domain = profileRes.data.toDomain();
-        final contactDomain = contactRes.data?.toDomain();
+        final ContactProfile domain = profileRes.data.toDomain();
+        final Contact? contactDomain = contactRes.data?.toDomain();
 
-        final resolvedNotes = domain.notes.trim().isNotEmpty
+        final String resolvedNotes = domain.notes.trim().isNotEmpty
             ? domain.notes
             : (contactDomain?.notes ?? '');
 
-        final combined = domain.copyWith(
+        final ContactProfile combined = domain.copyWith(
           notes: resolvedNotes,
           contactName: domain.contactName.isNotEmpty
               ? domain.contactName
@@ -204,9 +208,8 @@ class ContactRepositoryImpl implements ContactRepository {
   ) async {
     if (await networkInfo.isConnected) {
       try {
-        final response = await contactRemoteDataSource.updateContact(
-          updateContactRequest,
-        );
+        final ContactResponse response = await contactRemoteDataSource
+            .updateContact(updateContactRequest);
         if (response.success == true) {
           return Right(response.data.toDomain());
         } else {

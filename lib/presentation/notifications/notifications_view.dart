@@ -42,7 +42,7 @@ class NotificationsView extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
+            children: <Widget>[
               Container(
                 width: 88.r,
                 height: 88.r,

@@ -6,6 +6,7 @@ import 'package:mizan/data/network/error_handler.dart';
 import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/data/network/network_info.dart';
 import 'package:mizan/data/request/voice_note_request.dart';
+import 'package:mizan/data/response/voice_notes_response/voice_notes_response.dart';
 import 'package:mizan/domain/model/voice_note_model/voice_note_model.dart';
 import 'package:mizan/domain/repository/voice_note_repository.dart';
 
@@ -22,7 +23,9 @@ class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
   ) async {
     if (await _networkInfo.isConnected) {
       try {
-        final response = await _remote.createVoiceNote(request);
+        final VoiceNoteResponse response = await _remote.createVoiceNote(
+          request,
+        );
         if (response.success == true || response.data != null) {
           return Right(response.data.toDomain());
         } else {
@@ -48,7 +51,7 @@ class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
   }) async {
     if (await _networkInfo.isConnected) {
       try {
-        final response = await _remote.getVoiceNotes(
+        final VoiceNotesPageResponse response = await _remote.getVoiceNotes(
           page: page,
           pageSize: pageSize,
         );
@@ -74,7 +77,7 @@ class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
   Future<Either<Failure, VoiceNoteModel>> getVoiceNoteById(String id) async {
     if (await _networkInfo.isConnected) {
       try {
-        final response = await _remote.getVoiceNoteById(id);
+        final VoiceNoteResponse response = await _remote.getVoiceNoteById(id);
         if (response.success == true || response.data != null) {
           return Right(response.data.toDomain());
         } else {

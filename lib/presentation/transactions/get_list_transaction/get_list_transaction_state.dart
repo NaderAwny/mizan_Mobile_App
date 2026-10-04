@@ -16,5 +16,6 @@ abstract class GetListTransactionState with _$GetListTransactionState {
     String? type,
     String? dateFrom,
     String? dateTo,
+    @Default(0) int selectedFilterIndex,
   }) = _GetListTransactionState;
 }

@@ -44,20 +44,25 @@ class _ContactFormScreenState extends State<_ContactFormScreen> {
   late final TextEditingController _phoneController;
   late final TextEditingController _notesController;
   late final TextEditingController _emailController;
-  bool _isVip = false;
 
-  final _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.contact?.name ?? '');
     _phoneController = TextEditingController(
-      text: widget.contact?.phoneNumber.replaceAll('+20', '').replaceAll('+966', '').trim() ?? '',
+      text:
+          widget.contact?.phoneNumber
+              .replaceAll('+20', '')
+              .replaceAll('+966', '')
+              .trim() ??
+          '',
     );
     _notesController = TextEditingController(text: widget.contact?.notes ?? '');
-    _emailController = TextEditingController(text: widget.contact?.contactEmail ?? '');
-    _isVip = widget.contact?.isVip ?? false;
+    _emailController = TextEditingController(
+      text: widget.contact?.contactEmail ?? '',
+    );
   }
 
   @override
@@ -72,27 +77,31 @@ class _ContactFormScreenState extends State<_ContactFormScreen> {
   void _submit() {
     FocusScope.of(context).unfocus();
     context.read<ContactFormCubit>().submit(
-          name: _nameController.text,
-          phoneNumber: _phoneController.text,
-          notes: _notesController.text,
-          isVip: _isVip,
-          contactEmail: _emailController.text,
-        );
+      name: _nameController.text,
+      phoneNumber: _phoneController.text,
+      notes: _notesController.text,
+      isVip: context.read<ContactFormCubit>().state.isVip,
+      contactEmail: _emailController.text,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isEdit = widget.contact != null;
+    final bool isEdit = widget.contact != null;
 
     return BlocConsumer<ContactFormCubit, ContactFormState>(
-      listenWhen: (prev, curr) => curr.isActionSuccess && !prev.isActionSuccess,
-      listener: (context, state) {
+      listenWhen: (ContactFormState prev, ContactFormState curr) =>
+          curr.isActionSuccess && !prev.isActionSuccess,
+      listener: (BuildContext context, ContactFormState state) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          Navigator.of(context, rootNavigator: true).popUntil((route) => route is! PopupRoute);
+          Navigator.of(
+            context,
+            rootNavigator: true,
+          ).popUntil((Route<dynamic> route) => route is! PopupRoute);
           Navigator.of(context).pop(true);
         });
       },
-      builder: (context, state) {
+      builder: (BuildContext context, ContactFormState state) {
         return Scaffold(
           backgroundColor: ColorManager.background,
           appBar: AppBar(
@@ -120,9 +129,11 @@ class _ContactFormScreenState extends State<_ContactFormScreen> {
               ),
             ),
             title: Column(
-              children: [
+              children: <Widget>[
                 Text(
-                  isEdit ? AppStrings.editContact : AppStrings.addNewContactTitle,
+                  isEdit
+                      ? AppStrings.editContact
+                      : AppStrings.addNewContactTitle,
                   style: getBoldStyle(
                     color: ColorManager.textPrimary,
                     fontSize: FontSize.s16,
@@ -130,7 +141,9 @@ class _ContactFormScreenState extends State<_ContactFormScreen> {
                 ),
                 SizedBox(height: 2.h),
                 Text(
-                  isEdit ? AppStrings.editContactSubtitle : AppStrings.addContactSubtitle,
+                  isEdit
+                      ? AppStrings.editContactSubtitle
+                      : AppStrings.addContactSubtitle,
                   style: getRegularStyle(
                     color: ColorManager.textSecondary,
                     fontSize: FontSize.s11,
@@ -139,7 +152,8 @@ class _ContactFormScreenState extends State<_ContactFormScreen> {
               ],
             ),
           ),
-          body: state.flowState?.getScreenWidget(
+          body:
+              state.flowState?.getScreenWidget(
                 context,
                 _buildFormContent(context, isEdit),
                 () {},
@@ -158,7 +172,7 @@ class _ContactFormScreenState extends State<_ContactFormScreen> {
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          children: <Widget>[
             // Field 1: Name
             _buildFieldLabel(AppStrings.clientOrBusinessName),
             SizedBox(height: 8.h),
@@ -178,7 +192,7 @@ class _ContactFormScreenState extends State<_ContactFormScreen> {
             SizedBox(height: 18.h),
 
             // Field 3: Email (Required in edit mode or optional)
-            if (isEdit) ...[
+            if (isEdit) ...<Widget>[
               _buildFieldLabel(AppStrings.optionalEmail),
               SizedBox(height: 8.h),
               _buildTextInputField(
@@ -197,7 +211,7 @@ class _ContactFormScreenState extends State<_ContactFormScreen> {
             SizedBox(height: 20.h),
 
             // Field 5: VIP Toggle Card (Figma Node #2175:14)
-            if (isEdit) ...[
+            if (isEdit) ...<Widget>[
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                 decoration: BoxDecoration(
@@ -210,12 +224,19 @@ class _ContactFormScreenState extends State<_ContactFormScreen> {
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Switch.adaptive(
-                      value: _isVip,
-                      activeThumbColor: ColorManager.secondary,
-                      activeTrackColor: ColorManager.secondary.withAlpha(120),
-                      onChanged: (val) => setState(() => _isVip = val),
+                  children: <Widget>[
+                    BlocBuilder<ContactFormCubit, ContactFormState>(
+                      buildWhen: (ContactFormState p, ContactFormState c) =>
+                          p.isVip != c.isVip,
+                      builder: (BuildContext ctx, ContactFormState s) =>
+                          Switch.adaptive(
+                            value: s.isVip,
+                            activeThumbColor: ColorManager.secondary,
+                            activeTrackColor: ColorManager.secondary.withAlpha(
+                              120,
+                            ),
+                            onChanged: ctx.read<ContactFormCubit>().toggleVip,
+                          ),
                     ),
                     Text(
                       AppStrings.markAsVipToggle,
@@ -239,7 +260,7 @@ class _ContactFormScreenState extends State<_ContactFormScreen> {
               decoration: BoxDecoration(
                 gradient: ColorManager.primaryGradient,
                 borderRadius: BorderRadius.circular(AppRadius.r14.r),
-                boxShadow: const [
+                boxShadow: const <BoxShadow>[
                   BoxShadow(
                     color: Color(0x33C57B57),
                     offset: Offset(0, 4),
@@ -248,13 +269,15 @@ class _ContactFormScreenState extends State<_ContactFormScreen> {
                 ],
               ),
               child: Material(
-                color: Colors.transparent,
+                color: ColorManager.transparent,
                 child: InkWell(
                   onTap: _submit,
                   borderRadius: BorderRadius.circular(AppRadius.r14.r),
                   child: Center(
                     child: Text(
-                      isEdit ? AppStrings.saveChanges : AppStrings.saveContactToDirectory,
+                      isEdit
+                          ? AppStrings.saveChanges
+                          : AppStrings.saveContactToDirectory,
                       style: getBoldStyle(
                         color: ColorManager.white,
                         fontSize: FontSize.s15,
@@ -313,7 +336,10 @@ class _ContactFormScreenState extends State<_ContactFormScreen> {
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 15.h),
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 16.w,
+            vertical: 15.h,
+          ),
         ),
       ),
     );
@@ -327,7 +353,7 @@ class _ContactFormScreenState extends State<_ContactFormScreen> {
         border: Border.all(color: ColorManager.border, width: 1.2),
       ),
       child: Row(
-        children: [
+        children: <Widget>[
           // Country Code Prefix
           Container(
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 15.h),
@@ -337,7 +363,7 @@ class _ContactFormScreenState extends State<_ContactFormScreen> {
               ),
             ),
             child: Text(
-              "+966",
+              "+20",
               style: getBoldStyle(
                 color: ColorManager.textPrimary,
                 fontSize: FontSize.s14,
@@ -366,7 +392,10 @@ class _ContactFormScreenState extends State<_ContactFormScreen> {
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 15.h),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 14.w,
+                  vertical: 15.h,
+                ),
               ),
             ),
           ),
@@ -403,7 +432,10 @@ class _ContactFormScreenState extends State<_ContactFormScreen> {
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 16.w,
+            vertical: 14.h,
+          ),
         ),
       ),
     );

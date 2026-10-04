@@ -5,6 +5,7 @@ import 'package:mizan/data/network/error_handler.dart';
 import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/data/network/network_info.dart';
 import 'package:mizan/data/data_source/get_profile_data_source.dart';
+import 'package:mizan/data/response/get_profile_responses/get_profile_responses.dart';
 import 'package:mizan/domain/model/get_profile_model/get_profile_model.dart';
 import 'package:mizan/domain/repository/get_profile_repository.dart';
 
@@ -19,7 +20,8 @@ class GetProfileRepositoryImpl implements GetProfileRepository {
   Future<Either<Failure, GetProfileModel>> getProfile() async {
     if (await networkInfo.isConnected) {
       try {
-        final response = await getProfileDataSource.getProfile();
+        final GetProfileDataResponse response = await getProfileDataSource
+            .getProfile();
 
         // ignore: unrelated_type_equality_checks
         if (response.success == true) {

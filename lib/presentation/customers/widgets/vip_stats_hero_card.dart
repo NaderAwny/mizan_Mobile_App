@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mizan/presentation/resources/color_manager.dart';
 import 'package:mizan/presentation/resources/font_manager.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 import 'package:mizan/presentation/resources/styles_manager.dart';
@@ -26,13 +27,10 @@ class VipStatsHeroCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [
-            Color(0xFFBA704F),
-            Color(0xFFD6A75D),
-          ],
+          colors: <Color>[Color(0xFFBA704F), Color(0xFFD6A75D)],
         ),
         borderRadius: BorderRadius.circular(AppRadius.r20.r),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             color: Color(0x28C57B57),
             offset: Offset(0, 6),
@@ -42,20 +40,20 @@ class VipStatsHeroCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           // Top Row: Title & Badge
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
+            children: <Widget>[
               // Badge: كبار العملاء
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(50),
+                  color: ColorManager.white.withAlpha(50),
                   borderRadius: BorderRadius.circular(AppRadius.r10.r),
                   border: Border.all(
-                    color: Colors.white.withAlpha(40),
+                    color: ColorManager.white.withAlpha(40),
                     width: 1,
                   ),
                 ),
@@ -87,12 +85,12 @@ class VipStatsHeroCard extends StatelessWidget {
 
           // Bottom Stats Row: 2 Balanced Expanded Columns
           Row(
-            children: [
+            children: <Widget>[
               // Right Column (in RTL): Total Pages
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  children: <Widget>[
                     Text(
                       "$totalPages ${AppStrings.pages}",
                       style: getBoldStyle(
@@ -122,7 +120,7 @@ class VipStatsHeroCard extends StatelessWidget {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
+                  children: <Widget>[
                     Text(
                       "$totalVipCount ${AppStrings.client}",
                       style: getBoldStyle(

@@ -370,11 +370,7 @@ class ErrorState extends FlowState {
   final String message;
   final String? title;
   bool isShown = false;
-  ErrorState(
-    this.stateRendererType,
-    this.message, {
-    this.title,
-  });
+  ErrorState(this.stateRendererType, this.message, {this.title});
   @override
   String getMessage() => message;
   String getTitle() => title ?? "";
@@ -389,11 +385,7 @@ class SuccessState extends FlowState {
   final String message;
   final String? title;
   bool isShown = false;
-  SuccessState(
-    this.stateRendererType,
-    this.message, {
-    this.title,
-  });
+  SuccessState(this.stateRendererType, this.message, {this.title});
   @override
   String getMessage() => message;
   String getTitle() => title ?? AppStrings.success;
@@ -439,7 +431,7 @@ extension FlowStateExtension on FlowState {
     switch (runtimeType) {
       case LoadingState:
         {
-          var loadingState = this as LoadingState;
+          LoadingState loadingState = this as LoadingState;
           if (getStateRendererType() == StateRendererType.popupLoadingState) {
             //popup loading state
             if (!loadingState.isShown) {
@@ -460,14 +452,15 @@ extension FlowStateExtension on FlowState {
               stateRendererType: getStateRendererType(),
               message: getMessage(),
               title: loadingState.getTitle(),
-              retryAction: retryActionFunction,
+              // ignore: avoid_dynamic_calls
+              retryAction: () => retryActionFunction(),
             );
           }
         }
       //success state
       case SuccessState:
         {
-          var successState = this as SuccessState;
+          SuccessState successState = this as SuccessState;
           if (getStateRendererType() == StateRendererType.successScreenState) {
             //popup success state
             if (!successState.isShown) {
@@ -488,7 +481,8 @@ extension FlowStateExtension on FlowState {
               stateRendererType: getStateRendererType(),
               message: getMessage(),
               title: successState.getTitle(),
-              retryAction: retryActionFunction,
+              // ignore: avoid_dynamic_calls
+              retryAction: () => retryActionFunction(),
             );
           }
         }
@@ -496,7 +490,7 @@ extension FlowStateExtension on FlowState {
       //error state
       case ErrorState:
         {
-          var errorState = this as ErrorState;
+          ErrorState errorState = this as ErrorState;
           if (getStateRendererType() == StateRendererType.popupErrorStatete) {
             //popup error state
             if (!errorState.isShown) {
@@ -518,13 +512,14 @@ extension FlowStateExtension on FlowState {
               stateRendererType: getStateRendererType(),
               message: getMessage(),
               title: errorState.getTitle(),
-              retryAction: retryActionFunction,
+              // ignore: avoid_dynamic_calls
+              retryAction: () => retryActionFunction(),
             );
           }
         }
       case ContentState:
         {
-          var contentState = this as ContentState;
+          ContentState contentState = this as ContentState;
           if (!contentState.isShown) {
             dismissDialog(context);
             contentState.isShown = true;
@@ -548,13 +543,10 @@ extension FlowStateExtension on FlowState {
   }
 
   // ignore: strict_top_level_inference
-  bool _isCurrentDialogShowing(BuildContext context) =>
-      _isStateRendererPopupOpen && _activeStateRendererPopupContext != null;
-
-  // ignore: strict_top_level_inference
   void dismissDialog(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_isStateRendererPopupOpen && _activeStateRendererPopupContext != null) {
+      if (_isStateRendererPopupOpen &&
+          _activeStateRendererPopupContext != null) {
         if (Navigator.of(_activeStateRendererPopupContext!).canPop()) {
           Navigator.of(_activeStateRendererPopupContext!).pop(true);
           developer.log("dialog dismissed");
@@ -572,29 +564,28 @@ extension FlowStateExtension on FlowState {
     String message, {
     String title = AppConstants.empty,
   }) {
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) {
-        if (_isStateRendererPopupOpen && _activeStateRendererPopupContext != null) {
-          return;
-        }
-        _isStateRendererPopupOpen = true;
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (dialogCtx) {
-            _activeStateRendererPopupContext = dialogCtx;
-            return StateRandrer(
-              message: message,
-              title: title,
-              retryAction: () {},
-              stateRendererType: stateRandererType,
-            );
-          },
-        ).then((_) {
-          _isStateRendererPopupOpen = false;
-          _activeStateRendererPopupContext = null;
-        });
-      },
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_isStateRendererPopupOpen &&
+          _activeStateRendererPopupContext != null) {
+        return;
+      }
+      _isStateRendererPopupOpen = true;
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext dialogCtx) {
+          _activeStateRendererPopupContext = dialogCtx;
+          return StateRandrer(
+            message: message,
+            title: title,
+            retryAction: () {},
+            stateRendererType: stateRandererType,
+          );
+        },
+      ).then((_) {
+        _isStateRendererPopupOpen = false;
+        _activeStateRendererPopupContext = null;
+      });
+    });
   }
 }

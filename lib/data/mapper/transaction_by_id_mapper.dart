@@ -5,8 +5,8 @@ import 'package:mizan/app/constants.dart';
 
 extension InstallmentResponseMapper on InstallmentDataById? {
   InstallmentbyidModel toDomain() {
-    final status = this?.status.orEmpty() ?? Constants.empty;
-    final paidAt = this?.paidAt.orEmpty() ?? Constants.empty;
+    final String status = this?.status.orEmpty() ?? Constants.empty;
+    final String paidAt = this?.paidAt.orEmpty() ?? Constants.empty;
     return InstallmentbyidModel(
       id: this?.id.orEmpty() ?? Constants.empty,
       installmentNumber: this?.installmentNumber.orZero() ?? 0,
@@ -37,8 +37,10 @@ extension TransactionResponseMapper on TransactionDataById? {
       noteType: this?.noteType.orEmpty() ?? '',
       noteText: this?.noteText.orEmpty() ?? '',
       hasVoiceNote: this?.hasVoiceNote.orFalse() ?? false,
-      installments: (this?.installments?.map((i) => i.toDomain()) ?? const [])
-          .toList(),
+      installments:
+          (this?.installments?.map((InstallmentDataById i) => i.toDomain()) ??
+                  const <InstallmentbyidModel>[])
+              .toList(),
       totalPaid: this?.totalPaid.orZeroNum() ?? 0,
       totalRemaining: this?.totalRemaining.orZeroNum() ?? 0,
       isActive: this?.isActive.orFalse() ?? false,

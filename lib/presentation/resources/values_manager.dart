@@ -199,4 +199,6 @@ class AppDuration {
   static const Duration d1000 = Duration(milliseconds: 1000);
   static const Duration d2200 = Duration(milliseconds: 2200);
   static const Duration d3000 = Duration(milliseconds: 3000);
+  static const Duration splashMin = Duration(seconds: 2);
+  static const Duration splashTimeout = Duration(seconds: 12);
 }

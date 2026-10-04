@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'di.config.dart';
 
-final getIt = GetIt.instance;
+final GetIt getIt = GetIt.instance;
 
 @InjectableInit(
   initializerName: 'init', // default
@@ -13,7 +13,7 @@ final getIt = GetIt.instance;
 )
 Future<void> configureDependencies() async {
   // SharedPreferences async — لازم يتسجل قبل getIt.init()
-  final prefs = await SharedPreferences.getInstance();
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
   getIt.registerLazySingleton<SharedPreferences>(() => prefs);
   getIt.init();
 }

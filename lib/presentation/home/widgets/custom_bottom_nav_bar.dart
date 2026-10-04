@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mizan/presentation/resources/assets_manager.dart';
@@ -27,18 +27,15 @@ class CustomBottomNavBar extends StatelessWidget {
           topLeft: Radius.circular(AppRadius.r20.r),
           topRight: Radius.circular(AppRadius.r20.r),
         ),
-        boxShadow: [
+        boxShadow: <BoxShadow>[
           BoxShadow(
             color: ColorManager.black.withAlpha(10),
             blurRadius: 16,
             offset: const Offset(0, -3),
           ),
         ],
-        border: Border(
-          top: BorderSide(
-            color: ColorManager.border,
-            width: 1.0,
-          ),
+        border: const Border(
+          top: BorderSide(color: ColorManager.border, width: 1.0),
         ),
       ),
       child: SafeArea(
@@ -49,7 +46,7 @@ class CustomBottomNavBar extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            children: [
+            children: <Widget>[
               _NavBarItem(
                 index: 0,
                 currentIndex: currentIndex,
@@ -147,7 +144,7 @@ class _NavBarItemState extends State<_NavBarItem>
 
   @override
   Widget build(BuildContext context) {
-    final isSelected = widget.index == widget.currentIndex;
+    final bool isSelected = widget.index == widget.currentIndex;
 
     return GestureDetector(
       onTap: _handleTap,
@@ -164,15 +161,15 @@ class _NavBarItemState extends State<_NavBarItem>
           decoration: BoxDecoration(
             color: isSelected
                 ? ColorManager.lightPrimary
-                : Colors.transparent,
+                : ColorManager.transparent,
             borderRadius: BorderRadius.circular(AppRadius.r14.r),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
+            children: <Widget>[
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 180),
-                transitionBuilder: (child, anim) =>
+                transitionBuilder: (Widget child, Animation<double> anim) =>
                     ScaleTransition(scale: anim, child: child),
                 child: SvgPicture.asset(
                   widget.icon,

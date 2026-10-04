@@ -41,10 +41,12 @@ class InstallmentPlanCard extends StatelessWidget {
   }
 
   void _onPayFirstUnpaid(BuildContext context) {
-    final unpaidIndex = plan.installments.indexWhere((inst) => !inst.isPaid);
+    final int unpaidIndex = plan.installments.indexWhere(
+      (DashboardInstallmentModel inst) => !inst.isPaid,
+    );
     if (unpaidIndex == -1) return;
 
-    final unpaid = plan.installments[unpaidIndex];
+    final DashboardInstallmentModel unpaid = plan.installments[unpaidIndex];
     showPayInstallmentSheet(
       context: context,
       installment: InstallmentbyidModel(
@@ -68,13 +70,16 @@ class InstallmentPlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusStyle = InstallmentStatusHelper.getPlanStatusStyle(
-      isOverdue: plan.isOverdue,
-      isDueToday: plan.isDueToday,
-      status: plan.status,
-    );
+    final InstallmentStatusStyle statusStyle =
+        InstallmentStatusHelper.getPlanStatusStyle(
+          isOverdue: plan.isOverdue,
+          isDueToday: plan.isDueToday,
+          status: plan.status,
+        );
 
-    final hasUnpaid = plan.installments.any((inst) => !inst.isPaid);
+    final bool hasUnpaid = plan.installments.any(
+      (DashboardInstallmentModel inst) => !inst.isPaid,
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -86,7 +91,7 @@ class InstallmentPlanCard extends StatelessWidget {
               : ColorManager.border,
           width: plan.isOverdue ? 1.5 : 1.0,
         ),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             color: Color(0x0A1C1816),
             blurRadius: 12.0,
@@ -95,18 +100,18 @@ class InstallmentPlanCard extends StatelessWidget {
         ],
       ),
       child: Material(
-        color: Colors.transparent,
+        color: ColorManager.transparent,
         child: InkWell(
           onTap: () => _onCardTap(context),
           borderRadius: BorderRadius.circular(AppRadius.r18.r),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+            children: <Widget>[
               // ── 1. Header: Avatar + Contact Info + Status Badge ──
               Padding(
                 padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
                 child: Row(
-                  children: [
+                  children: <Widget>[
                     // Initials Avatar
                     Container(
                       width: 42.r,
@@ -135,7 +140,7 @@ class InstallmentPlanCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
-                        children: [
+                        children: <Widget>[
                           Text(
                             plan.contactName,
                             style: getBoldStyle(
@@ -145,7 +150,7 @@ class InstallmentPlanCard extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          if (plan.phoneNumber.isNotEmpty) ...[
+                          if (plan.phoneNumber.isNotEmpty) ...<Widget>[
                             SizedBox(height: 2.h),
                             Text(
                               plan.phoneNumber,
@@ -194,7 +199,7 @@ class InstallmentPlanCard extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                 child: Column(
-                  children: [
+                  children: <Widget>[
                     // 3 Financial metrics
                     Container(
                       width: double.infinity,
@@ -208,7 +213,7 @@ class InstallmentPlanCard extends StatelessWidget {
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
+                        children: <Widget>[
                           _PlanAmountMetric(
                             label: AppStrings.totalLabel,
                             amount: plan.totalAmount,
@@ -242,7 +247,7 @@ class InstallmentPlanCard extends StatelessWidget {
                     // Progress Label & Track
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
+                      children: <Widget>[
                         Text(
                           '${plan.paidInstallmentsCount} ${AppStrings.ofPayments} ${plan.totalInstallmentsCount} ${AppStrings.paymentsCountSuffix}',
                           style: getMediumStyle(
@@ -286,7 +291,7 @@ class InstallmentPlanCard extends StatelessWidget {
               ),
 
               // ── 3. Next Due Date Section (if exists) ──
-              if (plan.nextDueDate.isNotEmpty) ...[
+              if (plan.nextDueDate.isNotEmpty) ...<Widget>[
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
                   child: Container(
@@ -303,7 +308,7 @@ class InstallmentPlanCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(AppRadius.r10.r),
                     ),
                     child: Row(
-                      children: [
+                      children: <Widget>[
                         SvgPicture.asset(
                           IconAssets.calendar,
                           width: 14.r,
@@ -354,12 +359,12 @@ class InstallmentPlanCard extends StatelessWidget {
               ],
 
               // ── 4. Nested Installments List ──
-              if (plan.installments.isNotEmpty) ...[
+              if (plan.installments.isNotEmpty) ...<Widget>[
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    children: <Widget>[
                       Text(
                         AppStrings.installmentsSchedule,
                         style: getBoldStyle(
@@ -378,14 +383,15 @@ class InstallmentPlanCard extends StatelessWidget {
                           ),
                         ),
                         child: Column(
-                          children: List.generate(plan.installments.length, (
-                            index,
+                          children: List<Widget>.generate(plan.installments.length, (
+                            int index,
                           ) {
-                            final inst = plan.installments[index];
-                            final isLast =
+                            final DashboardInstallmentModel inst =
+                                plan.installments[index];
+                            final bool isLast =
                                 index == plan.installments.length - 1;
                             return Column(
-                              children: [
+                              children: <Widget>[
                                 _InstallmentRow(
                                   ordinal: InstallmentFormatters.getOrdinal(
                                     index,
@@ -414,9 +420,9 @@ class InstallmentPlanCard extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
                 child: Row(
-                  children: [
+                  children: <Widget>[
                     // Record Payment Button
-                    if (hasUnpaid) ...[
+                    if (hasUnpaid) ...<Widget>[
                       Expanded(
                         child: SizedBox(
                           height: 42.h,
@@ -518,7 +524,7 @@ class _PlanAmountMetric extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
-      children: [
+      children: <Widget>[
         Text(
           label,
           style: getRegularStyle(
@@ -544,22 +550,23 @@ class _InstallmentRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final itemStyle = InstallmentStatusHelper.getDashboardInstallmentStyle(
-      isPaid: installment.isPaid,
-      daysOverdue: installment.daysOverdue,
-      status: installment.status,
-    );
+    final InstallmentStatusStyle itemStyle =
+        InstallmentStatusHelper.getDashboardInstallmentStyle(
+          isPaid: installment.isPaid,
+          daysOverdue: installment.daysOverdue,
+          status: installment.status,
+        );
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       child: Row(
-        children: [
+        children: <Widget>[
           // Ordinal & Date
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: <Widget>[
                 Text(
                   ordinal,
                   style: getSemiBoldStyle(

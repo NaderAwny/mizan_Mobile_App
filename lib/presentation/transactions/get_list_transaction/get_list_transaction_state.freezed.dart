@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$GetListTransactionState {
 
- FlowState? get flowState; List<GetListTransactionsModel>? get data; bool get isLoadingMore; bool get hasMore; String get searchQuery; String? get contactId; String? get type; String? get dateFrom; String? get dateTo;
+ FlowState? get flowState; List<GetListTransactionsModel>? get data; bool get isLoadingMore; bool get hasMore; String get searchQuery; String? get contactId; String? get type; String? get dateFrom; String? get dateTo; int get selectedFilterIndex;
 /// Create a copy of GetListTransactionState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $GetListTransactionStateCopyWith<GetListTransactionState> get copyWith => _$GetL
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GetListTransactionState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&const DeepCollectionEquality().equals(other.data, data)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.contactId, contactId) || other.contactId == contactId)&&(identical(other.type, type) || other.type == type)&&(identical(other.dateFrom, dateFrom) || other.dateFrom == dateFrom)&&(identical(other.dateTo, dateTo) || other.dateTo == dateTo));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GetListTransactionState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&const DeepCollectionEquality().equals(other.data, data)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.contactId, contactId) || other.contactId == contactId)&&(identical(other.type, type) || other.type == type)&&(identical(other.dateFrom, dateFrom) || other.dateFrom == dateFrom)&&(identical(other.dateTo, dateTo) || other.dateTo == dateTo)&&(identical(other.selectedFilterIndex, selectedFilterIndex) || other.selectedFilterIndex == selectedFilterIndex));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,flowState,const DeepCollectionEquality().hash(data),isLoadingMore,hasMore,searchQuery,contactId,type,dateFrom,dateTo);
+int get hashCode => Object.hash(runtimeType,flowState,const DeepCollectionEquality().hash(data),isLoadingMore,hasMore,searchQuery,contactId,type,dateFrom,dateTo,selectedFilterIndex);
 
 @override
 String toString() {
-  return 'GetListTransactionState(flowState: $flowState, data: $data, isLoadingMore: $isLoadingMore, hasMore: $hasMore, searchQuery: $searchQuery, contactId: $contactId, type: $type, dateFrom: $dateFrom, dateTo: $dateTo)';
+  return 'GetListTransactionState(flowState: $flowState, data: $data, isLoadingMore: $isLoadingMore, hasMore: $hasMore, searchQuery: $searchQuery, contactId: $contactId, type: $type, dateFrom: $dateFrom, dateTo: $dateTo, selectedFilterIndex: $selectedFilterIndex)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $GetListTransactionStateCopyWith<$Res>  {
   factory $GetListTransactionStateCopyWith(GetListTransactionState value, $Res Function(GetListTransactionState) _then) = _$GetListTransactionStateCopyWithImpl;
 @useResult
 $Res call({
- FlowState? flowState, List<GetListTransactionsModel>? data, bool isLoadingMore, bool hasMore, String searchQuery, String? contactId, String? type, String? dateFrom, String? dateTo
+ FlowState? flowState, List<GetListTransactionsModel>? data, bool isLoadingMore, bool hasMore, String searchQuery, String? contactId, String? type, String? dateFrom, String? dateTo, int selectedFilterIndex
 });
 
 
@@ -62,7 +62,7 @@ class _$GetListTransactionStateCopyWithImpl<$Res>
 
 /// Create a copy of GetListTransactionState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? data = freezed,Object? isLoadingMore = null,Object? hasMore = null,Object? searchQuery = null,Object? contactId = freezed,Object? type = freezed,Object? dateFrom = freezed,Object? dateTo = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? data = freezed,Object? isLoadingMore = null,Object? hasMore = null,Object? searchQuery = null,Object? contactId = freezed,Object? type = freezed,Object? dateFrom = freezed,Object? dateTo = freezed,Object? selectedFilterIndex = null,}) {
   return _then(_self.copyWith(
 flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
 as FlowState?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -73,7 +73,8 @@ as String,contactId: freezed == contactId ? _self.contactId : contactId // ignor
 as String?,type: freezed == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String?,dateFrom: freezed == dateFrom ? _self.dateFrom : dateFrom // ignore: cast_nullable_to_non_nullable
 as String?,dateTo: freezed == dateTo ? _self.dateTo : dateTo // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,selectedFilterIndex: null == selectedFilterIndex ? _self.selectedFilterIndex : selectedFilterIndex // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -158,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  List<GetListTransactionsModel>? data,  bool isLoadingMore,  bool hasMore,  String searchQuery,  String? contactId,  String? type,  String? dateFrom,  String? dateTo)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  List<GetListTransactionsModel>? data,  bool isLoadingMore,  bool hasMore,  String searchQuery,  String? contactId,  String? type,  String? dateFrom,  String? dateTo,  int selectedFilterIndex)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _GetListTransactionState() when $default != null:
-return $default(_that.flowState,_that.data,_that.isLoadingMore,_that.hasMore,_that.searchQuery,_that.contactId,_that.type,_that.dateFrom,_that.dateTo);case _:
+return $default(_that.flowState,_that.data,_that.isLoadingMore,_that.hasMore,_that.searchQuery,_that.contactId,_that.type,_that.dateFrom,_that.dateTo,_that.selectedFilterIndex);case _:
   return orElse();
 
 }
@@ -179,10 +180,10 @@ return $default(_that.flowState,_that.data,_that.isLoadingMore,_that.hasMore,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  List<GetListTransactionsModel>? data,  bool isLoadingMore,  bool hasMore,  String searchQuery,  String? contactId,  String? type,  String? dateFrom,  String? dateTo)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  List<GetListTransactionsModel>? data,  bool isLoadingMore,  bool hasMore,  String searchQuery,  String? contactId,  String? type,  String? dateFrom,  String? dateTo,  int selectedFilterIndex)  $default,) {final _that = this;
 switch (_that) {
 case _GetListTransactionState():
-return $default(_that.flowState,_that.data,_that.isLoadingMore,_that.hasMore,_that.searchQuery,_that.contactId,_that.type,_that.dateFrom,_that.dateTo);case _:
+return $default(_that.flowState,_that.data,_that.isLoadingMore,_that.hasMore,_that.searchQuery,_that.contactId,_that.type,_that.dateFrom,_that.dateTo,_that.selectedFilterIndex);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +200,10 @@ return $default(_that.flowState,_that.data,_that.isLoadingMore,_that.hasMore,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  List<GetListTransactionsModel>? data,  bool isLoadingMore,  bool hasMore,  String searchQuery,  String? contactId,  String? type,  String? dateFrom,  String? dateTo)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  List<GetListTransactionsModel>? data,  bool isLoadingMore,  bool hasMore,  String searchQuery,  String? contactId,  String? type,  String? dateFrom,  String? dateTo,  int selectedFilterIndex)?  $default,) {final _that = this;
 switch (_that) {
 case _GetListTransactionState() when $default != null:
-return $default(_that.flowState,_that.data,_that.isLoadingMore,_that.hasMore,_that.searchQuery,_that.contactId,_that.type,_that.dateFrom,_that.dateTo);case _:
+return $default(_that.flowState,_that.data,_that.isLoadingMore,_that.hasMore,_that.searchQuery,_that.contactId,_that.type,_that.dateFrom,_that.dateTo,_that.selectedFilterIndex);case _:
   return null;
 
 }
@@ -214,7 +215,7 @@ return $default(_that.flowState,_that.data,_that.isLoadingMore,_that.hasMore,_th
 
 
 class _GetListTransactionState implements GetListTransactionState {
-  const _GetListTransactionState({this.flowState, final  List<GetListTransactionsModel>? data, this.isLoadingMore = false, this.hasMore = true, this.searchQuery = '', this.contactId, this.type, this.dateFrom, this.dateTo}): _data = data;
+  const _GetListTransactionState({this.flowState, final  List<GetListTransactionsModel>? data, this.isLoadingMore = false, this.hasMore = true, this.searchQuery = '', this.contactId, this.type, this.dateFrom, this.dateTo, this.selectedFilterIndex = 0}): _data = data;
   
 
 @override final  FlowState? flowState;
@@ -234,6 +235,7 @@ class _GetListTransactionState implements GetListTransactionState {
 @override final  String? type;
 @override final  String? dateFrom;
 @override final  String? dateTo;
+@override@JsonKey() final  int selectedFilterIndex;
 
 /// Create a copy of GetListTransactionState
 /// with the given fields replaced by the non-null parameter values.
@@ -245,16 +247,16 @@ _$GetListTransactionStateCopyWith<_GetListTransactionState> get copyWith => __$G
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GetListTransactionState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&const DeepCollectionEquality().equals(other._data, _data)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.contactId, contactId) || other.contactId == contactId)&&(identical(other.type, type) || other.type == type)&&(identical(other.dateFrom, dateFrom) || other.dateFrom == dateFrom)&&(identical(other.dateTo, dateTo) || other.dateTo == dateTo));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GetListTransactionState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&const DeepCollectionEquality().equals(other._data, _data)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.contactId, contactId) || other.contactId == contactId)&&(identical(other.type, type) || other.type == type)&&(identical(other.dateFrom, dateFrom) || other.dateFrom == dateFrom)&&(identical(other.dateTo, dateTo) || other.dateTo == dateTo)&&(identical(other.selectedFilterIndex, selectedFilterIndex) || other.selectedFilterIndex == selectedFilterIndex));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,flowState,const DeepCollectionEquality().hash(_data),isLoadingMore,hasMore,searchQuery,contactId,type,dateFrom,dateTo);
+int get hashCode => Object.hash(runtimeType,flowState,const DeepCollectionEquality().hash(_data),isLoadingMore,hasMore,searchQuery,contactId,type,dateFrom,dateTo,selectedFilterIndex);
 
 @override
 String toString() {
-  return 'GetListTransactionState(flowState: $flowState, data: $data, isLoadingMore: $isLoadingMore, hasMore: $hasMore, searchQuery: $searchQuery, contactId: $contactId, type: $type, dateFrom: $dateFrom, dateTo: $dateTo)';
+  return 'GetListTransactionState(flowState: $flowState, data: $data, isLoadingMore: $isLoadingMore, hasMore: $hasMore, searchQuery: $searchQuery, contactId: $contactId, type: $type, dateFrom: $dateFrom, dateTo: $dateTo, selectedFilterIndex: $selectedFilterIndex)';
 }
 
 
@@ -265,7 +267,7 @@ abstract mixin class _$GetListTransactionStateCopyWith<$Res> implements $GetList
   factory _$GetListTransactionStateCopyWith(_GetListTransactionState value, $Res Function(_GetListTransactionState) _then) = __$GetListTransactionStateCopyWithImpl;
 @override @useResult
 $Res call({
- FlowState? flowState, List<GetListTransactionsModel>? data, bool isLoadingMore, bool hasMore, String searchQuery, String? contactId, String? type, String? dateFrom, String? dateTo
+ FlowState? flowState, List<GetListTransactionsModel>? data, bool isLoadingMore, bool hasMore, String searchQuery, String? contactId, String? type, String? dateFrom, String? dateTo, int selectedFilterIndex
 });
 
 
@@ -282,7 +284,7 @@ class __$GetListTransactionStateCopyWithImpl<$Res>
 
 /// Create a copy of GetListTransactionState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? data = freezed,Object? isLoadingMore = null,Object? hasMore = null,Object? searchQuery = null,Object? contactId = freezed,Object? type = freezed,Object? dateFrom = freezed,Object? dateTo = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? data = freezed,Object? isLoadingMore = null,Object? hasMore = null,Object? searchQuery = null,Object? contactId = freezed,Object? type = freezed,Object? dateFrom = freezed,Object? dateTo = freezed,Object? selectedFilterIndex = null,}) {
   return _then(_GetListTransactionState(
 flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
 as FlowState?,data: freezed == data ? _self._data : data // ignore: cast_nullable_to_non_nullable
@@ -293,7 +295,8 @@ as String,contactId: freezed == contactId ? _self.contactId : contactId // ignor
 as String?,type: freezed == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String?,dateFrom: freezed == dateFrom ? _self.dateFrom : dateFrom // ignore: cast_nullable_to_non_nullable
 as String?,dateTo: freezed == dateTo ? _self.dateTo : dateTo // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,selectedFilterIndex: null == selectedFilterIndex ? _self.selectedFilterIndex : selectedFilterIndex // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 

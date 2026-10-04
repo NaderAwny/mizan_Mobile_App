@@ -16,10 +16,7 @@ class InstallmentFilterItem {
   final String statusKey;
   final String label;
 
-  const InstallmentFilterItem({
-    required this.statusKey,
-    required this.label,
-  });
+  const InstallmentFilterItem({required this.statusKey, required this.label});
 }
 
 class InstallmentHistoryFilterTabs extends StatelessWidget {
@@ -32,7 +29,7 @@ class InstallmentHistoryFilterTabs extends StatelessWidget {
     required this.onStatusSelected,
   });
 
-  static const List<InstallmentFilterItem> _filters = [
+  static const List<InstallmentFilterItem> _filters = <InstallmentFilterItem>[
     InstallmentFilterItem(
       statusKey: InstallmentHistoryStatus.all,
       label: AppStrings.allHistoryFilter,
@@ -61,9 +58,9 @@ class InstallmentHistoryFilterTabs extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       physics: const BouncingScrollPhysics(),
       child: Row(
-        children: List.generate(_filters.length, (index) {
-          final filter = _filters[index];
-          final isSelected =
+        children: List<Widget>.generate(_filters.length, (int index) {
+          final InstallmentFilterItem filter = _filters[index];
+          final bool isSelected =
               filter.statusKey.toLowerCase() == selectedStatus.toLowerCase();
 
           return Padding(
@@ -96,17 +93,14 @@ class _FilterPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent,
+      color: ColorManager.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.r999.r),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeInOut,
-          padding: EdgeInsets.symmetric(
-            horizontal: 18.w,
-            vertical: 8.h,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 8.h),
           decoration: BoxDecoration(
             color: isSelected ? ColorManager.primary : ColorManager.surface,
             borderRadius: BorderRadius.circular(AppRadius.r999.r),
@@ -115,7 +109,7 @@ class _FilterPill extends StatelessWidget {
               width: 1.0,
             ),
             boxShadow: isSelected
-                ? const [
+                ? const <BoxShadow>[
                     BoxShadow(
                       color: Color(0x2AC57B57),
                       blurRadius: 8.0,

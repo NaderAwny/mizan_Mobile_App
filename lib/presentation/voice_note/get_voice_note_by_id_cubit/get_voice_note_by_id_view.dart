@@ -27,10 +27,7 @@ import 'package:mizan/presentation/voice_note/get_voice_note_by_id_cubit/get_voi
 class GetVoiceNoteByIdView extends StatelessWidget {
   final String id;
 
-  const GetVoiceNoteByIdView({
-    super.key,
-    required this.id,
-  });
+  const GetVoiceNoteByIdView({super.key, required this.id});
 
   @override
   Widget build(BuildContext context) {
@@ -62,11 +59,11 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
     super.initState();
     _audioPlayer = AudioPlayer();
 
-    _audioPlayer.onDurationChanged.listen((dur) {
+    _audioPlayer.onDurationChanged.listen((Duration dur) {
       if (mounted) setState(() => _totalDuration = dur);
     });
 
-    _audioPlayer.onPositionChanged.listen((pos) {
+    _audioPlayer.onPositionChanged.listen((Duration pos) {
       if (mounted) setState(() => _currentPosition = pos);
     });
 
@@ -79,7 +76,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
       }
     });
 
-    _audioPlayer.onPlayerStateChanged.listen((state) {
+    _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
       if (mounted) setState(() => _isPlaying = state == PlayerState.playing);
     });
   }
@@ -95,8 +92,8 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
       await _audioPlayer.pause();
     } else {
       if (data.audioPath.isEmpty) return;
-      final rawPath = data.audioPath;
-      final url = rawPath.startsWith('http')
+      final String rawPath = data.audioPath;
+      final String url = rawPath.startsWith('http')
           ? rawPath
           : '${Constants.baseUrl}${rawPath.startsWith('/') ? '' : '/'}$rawPath';
       if (_currentPosition > Duration.zero && !_isPlaying) {
@@ -108,29 +105,35 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
   }
 
   Future<void> _seekRelative(int seconds) async {
-    final totalMs = _totalDuration.inMilliseconds;
+    final int totalMs = _totalDuration.inMilliseconds;
     if (totalMs <= 0) return;
-    final targetMs =
-        (_currentPosition.inMilliseconds + seconds * 1000).clamp(0, totalMs);
+    final int targetMs = (_currentPosition.inMilliseconds + seconds * 1000)
+        .clamp(0, totalMs);
     await _audioPlayer.seek(Duration(milliseconds: targetMs));
   }
 
   double get _playbackPosition {
-    final total = _totalDuration.inMilliseconds;
+    final int total = _totalDuration.inMilliseconds;
     if (total <= 0) return 0.0;
     return (_currentPosition.inMilliseconds / total).clamp(0.0, 1.0);
   }
 
   String _formatDuration(Duration duration) {
-    final mins = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final secs = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    final String mins = duration.inMinutes
+        .remainder(60)
+        .toString()
+        .padLeft(2, '0');
+    final String secs = duration.inSeconds
+        .remainder(60)
+        .toString()
+        .padLeft(2, '0');
     return '$mins:$secs';
   }
 
   String _formatDate(String dateString) {
     if (dateString.isEmpty) return '';
     try {
-      final parsed = DateTime.parse(dateString);
+      final DateTime parsed = DateTime.parse(dateString);
       return intl.DateFormat('yyyy/MM/dd', 'ar').format(parsed);
     } catch (_) {
       return dateString;
@@ -140,7 +143,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
   String _formatDateTime(String dateString) {
     if (dateString.isEmpty) return '';
     try {
-      final parsed = DateTime.parse(dateString);
+      final DateTime parsed = DateTime.parse(dateString);
       return intl.DateFormat('yyyy/MM/dd - hh:mm a', 'ar').format(parsed);
     } catch (_) {
       return dateString;
@@ -149,7 +152,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
 
   // ── Convert to Registered Transaction ─────────────────────────────────────
   void _convertToTransaction(VoiceNoteModel data) {
-    final args = QuickTransactionArgs(
+    final QuickTransactionArgs args = QuickTransactionArgs(
       contactId: data.contactId.isNotEmpty ? data.contactId : null,
       contactName: data.contactName.isNotEmpty ? data.contactName : null,
       isVip: false,
@@ -160,7 +163,9 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
         Navigator.of(context).pushNamed(Routes.quickSaleRoute, arguments: args);
         break;
       case 'purchase':
-        Navigator.of(context).pushNamed(Routes.quickPurchaseRoute, arguments: args);
+        Navigator.of(
+          context,
+        ).pushNamed(Routes.quickPurchaseRoute, arguments: args);
         break;
       case 'installmentcollection':
       case 'collection':
@@ -178,9 +183,9 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
 
   // ── Show Delete Notice Dialog ─────────────────────────────────────────────
   void _showDeleteDialog() {
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (ctx) => Directionality(
+      builder: (BuildContext ctx) => Directionality(
         textDirection: TextDirection.rtl,
         child: AlertDialog(
           shape: RoundedRectangleBorder(
@@ -188,10 +193,10 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
           ),
           backgroundColor: ColorManager.surface,
           title: Row(
-            children: [
+            children: <Widget>[
               Container(
                 padding: EdgeInsets.all(8.r),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: ColorManager.errorContainer,
                   shape: BoxShape.circle,
                 ),
@@ -219,7 +224,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
               height: 1.4,
             ),
           ),
-          actions: [
+          actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
               child: Text(
@@ -244,7 +249,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
         backgroundColor: ColorManager.background,
         body: SafeArea(
           child: BlocBuilder<GetVoiceNoteByIdCubit, GetVoiceNoteByIdState>(
-            builder: (context, state) {
+            builder: (BuildContext context, GetVoiceNoteByIdState state) {
               return state.flowState?.getScreenWidget(
                     context,
                     _buildContent(context, state.data),
@@ -266,7 +271,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
     }
 
     return Column(
-      children: [
+      children: <Widget>[
         // ── Header ───────────────────────────────────────────────────────────
         _buildHeader(context, data),
 
@@ -277,7 +282,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
             padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 24.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+              children: <Widget>[
                 // 1. Hero Audio Player Card
                 _buildHeroAudioPlayerCard(data),
 
@@ -294,7 +299,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
                 SizedBox(height: 16.h),
 
                 // 4. Transcription & Notes Card
-                if (data.notes.isNotEmpty) ...[
+                if (data.notes.isNotEmpty) ...<Widget>[
                   _buildNotesCard(data),
                   SizedBox(height: 24.h),
                 ],
@@ -315,14 +320,14 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
   Widget _buildHeader(BuildContext context, VoiceNoteModel data) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: ColorManager.surface,
         border: Border(
           bottom: BorderSide(color: ColorManager.border, width: 1),
         ),
       ),
       child: Row(
-        children: [
+        children: <Widget>[
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
             style: IconButton.styleFrom(
@@ -344,7 +349,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: <Widget>[
                 Text(
                   AppStrings.voiceNoteDetails,
                   style: getBoldStyle(
@@ -393,16 +398,16 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
         color: ColorManager.surface,
         borderRadius: BorderRadius.circular(AppRadius.r20.r),
         border: Border.all(color: ColorManager.border),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
-            color: Color(0x0A000000),
+            color: ColorManager.shadowMedium,
             blurRadius: 16,
             offset: Offset(0, 4),
           ),
         ],
       ),
       child: Column(
-        children: [
+        children: <Widget>[
           // Waveform Animation Visualizer
           Container(
             height: 64.h,
@@ -414,14 +419,36 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(24, (index) {
-                final barHeights = [
-                  16, 24, 38, 20, 32, 48, 26, 42, 54, 30, 44, 22,
-                  36, 50, 28, 40, 18, 34, 46, 24, 38, 20, 28, 14,
+              children: List<Widget>.generate(24, (int index) {
+                final List<int> barHeights = <int>[
+                  16,
+                  24,
+                  38,
+                  20,
+                  32,
+                  48,
+                  26,
+                  42,
+                  54,
+                  30,
+                  44,
+                  22,
+                  36,
+                  50,
+                  28,
+                  40,
+                  18,
+                  34,
+                  46,
+                  24,
+                  38,
+                  20,
+                  28,
+                  14,
                 ];
-                final normalizedIndex = index / 24.0;
-                final isActive = normalizedIndex <= _playbackPosition;
-                final h = barHeights[index % barHeights.length];
+                final double normalizedIndex = index / 24.0;
+                final bool isActive = normalizedIndex <= _playbackPosition;
+                final int h = barHeights[index % barHeights.length];
 
                 return Container(
                   width: 3.5.w,
@@ -451,10 +478,12 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
             ),
             child: Slider(
               value: _playbackPosition,
-              onChanged: (val) {
-                final totalMs = _totalDuration.inMilliseconds;
+              onChanged: (double val) {
+                final int totalMs = _totalDuration.inMilliseconds;
                 if (totalMs > 0) {
-                  _audioPlayer.seek(Duration(milliseconds: (val * totalMs).toInt()));
+                  _audioPlayer.seek(
+                    Duration(milliseconds: (val * totalMs).toInt()),
+                  );
                 }
               },
             ),
@@ -465,7 +494,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
             padding: EdgeInsets.symmetric(horizontal: 6.w),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
+              children: <Widget>[
                 Text(
                   _formatDuration(_currentPosition),
                   style: getBoldStyle(
@@ -489,7 +518,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
           // Audio Controls (Rewind 5s, Play/Pause, Forward 5s)
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+            children: <Widget>[
               // Rewind 5s
               IconButton(
                 onPressed: () => _seekRelative(-5),
@@ -515,7 +544,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
                   decoration: BoxDecoration(
                     gradient: ColorManager.primaryGradient,
                     shape: BoxShape.circle,
-                    boxShadow: [
+                    boxShadow: <BoxShadow>[
                       BoxShadow(
                         color: ColorManager.primary.withAlpha(80),
                         blurRadius: 14,
@@ -525,7 +554,9 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
                   ),
                   child: Center(
                     child: Icon(
-                      _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                      _isPlaying
+                          ? Icons.pause_rounded
+                          : Icons.play_arrow_rounded,
                       color: ColorManager.white,
                       size: 32.r,
                     ),
@@ -580,8 +611,8 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
         break;
       case 'installmentpayment':
       case 'payment':
-        typeColor = const Color(0xFF5E48B8);
-        typeBg = const Color(0xFFF0EDFC);
+        typeColor = ColorManager.voiceNotePurple;
+        typeBg = ColorManager.voiceNoteContainer;
         typeLabel = "سداد قسط";
         break;
       default:
@@ -602,10 +633,10 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
+        children: <Widget>[
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               Text(
                 AppStrings.amountLabel,
                 style: getRegularStyle(
@@ -617,7 +648,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
-                children: [
+                children: <Widget>[
                   Text(
                     "${data.amount}",
                     style: getExtraBoldStyle(
@@ -645,10 +676,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
             ),
             child: Text(
               typeLabel,
-              style: getBoldStyle(
-                color: typeColor,
-                fontSize: FontSize.s13,
-              ),
+              style: getBoldStyle(color: typeColor, fontSize: FontSize.s13),
             ),
           ),
         ],
@@ -667,7 +695,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Text(
             "معلومات الملاحظة",
             style: getBoldStyle(
@@ -730,7 +758,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 2.h),
         child: Row(
-          children: [
+          children: <Widget>[
             Container(
               padding: EdgeInsets.all(6.r),
               decoration: BoxDecoration(
@@ -763,7 +791,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
                 fontSize: FontSize.s13,
               ),
             ),
-            if (hasNavigation) ...[
+            if (hasNavigation) ...<Widget>[
               SizedBox(width: 4.w),
               Icon(
                 Icons.chevron_left_rounded,
@@ -789,9 +817,9 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Row(
-            children: [
+            children: <Widget>[
               SvgPicture.asset(
                 IconAssets.waveform,
                 width: 16.r,
@@ -836,7 +864,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
   // ── 5. Bottom Action Buttons ──────────────────────────────────────────────
   Widget _buildActionButtons(VoiceNoteModel data) {
     return Column(
-      children: [
+      children: <Widget>[
         // Primary: Convert to transaction
         Container(
           width: double.infinity,
@@ -844,7 +872,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
           decoration: BoxDecoration(
             gradient: ColorManager.primaryGradient,
             borderRadius: BorderRadius.circular(AppRadius.r14.r),
-            boxShadow: [
+            boxShadow: <BoxShadow>[
               BoxShadow(
                 color: ColorManager.primary.withAlpha(70),
                 blurRadius: 12,
@@ -855,15 +883,15 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
           child: ElevatedButton(
             onPressed: () => _convertToTransaction(data),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
+              backgroundColor: ColorManager.transparent,
+              shadowColor: ColorManager.transparent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadius.r14.r),
               ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+              children: <Widget>[
                 SvgPicture.asset(
                   IconAssets.receiptText,
                   width: 18.r,

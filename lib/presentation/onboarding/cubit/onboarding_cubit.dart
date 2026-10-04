@@ -1,16 +1,22 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
+import 'package:mizan/app/di.dart';
+import 'package:mizan/data/local/onboarding_local_data_source.dart';
 import 'package:mizan/domain/model/onboarding_model.dart';
 import 'package:mizan/presentation/resources/assets_manager.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 import 'onboarding_state.dart';
 
+@injectable
 class OnBoardingCubit extends Cubit<OnBoardingState> {
-  OnBoardingCubit() : super(OnBoardingState());
+  OnBoardingCubit([this._localDataSource]) : super(const OnBoardingState());
+
+  final OnboardingLocalDataSource? _localDataSource;
 
   void init() {
     emit(
       state.copyWith(
-        sliders: [
+        sliders: <SliderObject>[
           SliderObject(
             ImageAssets.onBoardingLogo1,
             AppStrings.onBoardingTitle1,
@@ -31,16 +37,27 @@ class OnBoardingCubit extends Cubit<OnBoardingState> {
     );
   }
 
+  Future<void> complete() async {
+    final OnboardingLocalDataSource? ds =
+        _localDataSource ??
+        (getIt.isRegistered<OnboardingLocalDataSource>()
+            ? getIt<OnboardingLocalDataSource>()
+            : null);
+    await ds?.markOnboardingAsSeen();
+    if (isClosed) return;
+    emit(state.copyWith(completed: true));
+  }
+
   int next() {
     if (isLastPage) return state.currentIndex;
-    final nextIndex = state.currentIndex + 1;
+    final int nextIndex = state.currentIndex + 1;
     goToPage(nextIndex);
     return nextIndex;
   }
 
   int previous() {
     if (isFirstPage) return 0;
-    final prevIndex = state.currentIndex - 1;
+    final int prevIndex = state.currentIndex - 1;
     goToPage(prevIndex);
     return prevIndex;
   }
@@ -60,7 +77,7 @@ class OnBoardingCubit extends Cubit<OnBoardingState> {
 
   void skip() {
     if (state.sliders.isEmpty) return;
-    final lastIndex = state.sliders.length - 1;
+    final int lastIndex = state.sliders.length - 1;
     goToPage(lastIndex);
   }
 }

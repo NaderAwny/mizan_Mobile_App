@@ -1,12 +1,15 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/data/network/failure.dart';
+import 'package:mizan/domain/model/get_profile_model/get_profile_model.dart';
 import 'package:mizan/domain/use_case/get_profile_use_case.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
 import 'package:mizan/presentation/get_profile/cubit/get_profile_state.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 
-@injectable
+@lazySingleton
 class GetProfileCubit extends Cubit<GetProfileState> {
   final GetProfileUsecase _getProfileUsecase;
 
@@ -23,10 +26,11 @@ class GetProfileCubit extends Cubit<GetProfileState> {
       ),
     );
 
-    final result = await _getProfileUsecase.execute(null);
+    final Either<Failure, GetProfileModel> result = await _getProfileUsecase
+        .execute(null);
 
     result.fold(
-      (failure) {
+      (Failure failure) {
         if (isClosed) return;
         emit(
           state.copyWith(
@@ -38,7 +42,7 @@ class GetProfileCubit extends Cubit<GetProfileState> {
           ),
         );
       },
-      (profile) {
+      (GetProfileModel profile) {
         if (isClosed) return;
         emit(state.copyWith(data: profile, flowState: ContentState()));
       },

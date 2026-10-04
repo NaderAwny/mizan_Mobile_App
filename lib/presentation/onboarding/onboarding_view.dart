@@ -3,8 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:mizan/app/di.dart';
-import 'package:mizan/data/local/onboarding_local_data_source.dart';
 import 'package:mizan/domain/model/onboarding_model.dart';
 import 'package:mizan/presentation/onboarding/cubit/onboarding_cubit.dart';
 import 'package:mizan/presentation/onboarding/cubit/onboarding_state.dart';
@@ -42,10 +40,21 @@ class _OnBoardingViewState extends State<OnBoardingView> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
+    return BlocProvider<OnBoardingCubit>.value(
       value: _cubit,
-      child: BlocBuilder<OnBoardingCubit, OnBoardingState>(
-        builder: (context, state) {
+      child: BlocConsumer<OnBoardingCubit, OnBoardingState>(
+        listenWhen: (OnBoardingState p, OnBoardingState c) =>
+            p.completed != c.completed,
+        listener: (BuildContext context, OnBoardingState state) {
+          if (state.completed) {
+            Navigator.pushReplacementNamed(context, Routes.registerRoute);
+          }
+        },
+        buildWhen: (OnBoardingState p, OnBoardingState c) =>
+            p.flowState != c.flowState ||
+            p.currentIndex != c.currentIndex ||
+            p.sliders != c.sliders,
+        builder: (BuildContext context, OnBoardingState state) {
           return _getContentWidget(context, state);
         },
       ),
@@ -53,12 +62,12 @@ class _OnBoardingViewState extends State<OnBoardingView> {
   }
 
   Widget _getContentWidget(BuildContext context, OnBoardingState state) {
-    final sliders = state.sliders;
+    final List<SliderObject> sliders = state.sliders;
     if (sliders.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    final isLast = state.currentIndex == sliders.length - 1;
+    final bool isLast = state.currentIndex == sliders.length - 1;
 
     return Scaffold(
       backgroundColor: ColorManager.background,
@@ -71,13 +80,11 @@ class _OnBoardingViewState extends State<OnBoardingView> {
           statusBarIconBrightness: Brightness.dark,
           statusBarBrightness: Brightness.light,
         ),
-        // في آخر شاشة: تظهر صورة الشعار مكان الـ leading، ويختفي زر التخطي
-        // في الشاشات الأولى: يظهر زر التخطي كـ leading والشعار في الـ actions
         leadingWidth: isLast ? 160.w : 110.w,
         leading: isLast
             ? Padding(
                 padding: EdgeInsetsDirectional.only(start: AppPadding.p20.w),
-                child: _buildAppBarLogo(isLeading: true),
+                child: const OnBoardingAppBarLogo(isLeading: true),
               )
             : Align(
                 alignment: AlignmentDirectional.centerStart,
@@ -110,66 +117,37 @@ class _OnBoardingViewState extends State<OnBoardingView> {
                 ),
               ),
         actions: isLast
-            ? const []
-            : [
+            ? const <Widget>[]
+            : <Widget>[
                 Padding(
                   padding: EdgeInsetsDirectional.only(end: AppPadding.p20.w),
-                  child: _buildAppBarLogo(isLeading: false),
+                  child: const OnBoardingAppBarLogo(isLeading: false),
                 ),
               ],
       ),
       body: SafeArea(
         child: Column(
-          children: [
+          children: <Widget>[
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
                 itemCount: sliders.length,
-                onPageChanged: (index) {
+                onPageChanged: (int index) {
                   _cubit.goToPage(index);
                 },
-                itemBuilder: (context, index) {
+                itemBuilder: (BuildContext context, int index) {
                   return OnBoardingPage(sliders[index]);
                 },
               ),
             ),
-            _getFooterWidget(state, sliders.length),
+            OnboardingFooter(
+              currentIndex: state.currentIndex,
+              count: sliders.length,
+              onActionPressed: () =>
+                  _onActionButtonPressed(state, sliders.length),
+            ),
           ],
         ),
-      ),
-    );
-  }
-
-  /// شعار ميزان متجاوب يجمع بين أيقونة الشعار وكلمة "ميزان" بجودة عالية
-  Widget _buildAppBarLogo({required bool isLeading}) {
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      alignment: isLeading
-          ? AlignmentDirectional.centerStart
-          : AlignmentDirectional.centerEnd,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // 1. حاوية لوجو ميزان (Logo Box Icon)
-          Image.asset(
-            ImageAssets.logoBoxFigmaPng,
-            width: 80.w,
-            height: 75.w,
-            fit: BoxFit.contain,
-          ),
-          SizedBox(width: 1.w),
-          // 2. كلمة ميزان
-          Text(
-            AppStrings.appName,
-            maxLines: 1,
-            softWrap: false,
-            style: getBlackStyle(
-              color: ColorManager.textPrimary,
-              fontSize: FontSize.s17,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -187,7 +165,7 @@ class _OnBoardingViewState extends State<OnBoardingView> {
 
   void _onActionButtonPressed(OnBoardingState state, int totalPages) {
     if (state.currentIndex < totalPages - 1) {
-      final nextIndex = _cubit.next();
+      final int nextIndex = _cubit.next();
       if (_pageController.hasClients) {
         _pageController.animateToPage(
           nextIndex,
@@ -196,17 +174,63 @@ class _OnBoardingViewState extends State<OnBoardingView> {
         );
       }
     } else {
-      // حفظ أن المستخدم شاهد الـ Onboarding
-      if (getIt.isRegistered<OnboardingLocalDataSource>()) {
-        getIt<OnboardingLocalDataSource>().markOnboardingAsSeen();
-      }
-      // الانتقال إلى الشاشة التالية بعد انتهاء Onboarding
-      Navigator.pushReplacementNamed(context, Routes.registerRoute);
+      _cubit.complete();
     }
   }
+}
 
-  Widget _getFooterWidget(OnBoardingState state, int count) {
-    final isLast = state.currentIndex == count - 1;
+class OnBoardingAppBarLogo extends StatelessWidget {
+  const OnBoardingAppBarLogo({super.key, required this.isLeading});
+  final bool isLeading;
+
+  @override
+  Widget build(BuildContext context) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: isLeading
+          ? AlignmentDirectional.centerStart
+          : AlignmentDirectional.centerEnd,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Image.asset(
+            ImageAssets.logoBoxFigmaPng,
+            width: 80.w,
+            height: 75.w,
+            fit: BoxFit.contain,
+          ),
+          SizedBox(width: 1.w),
+          Text(
+            AppStrings.appName,
+            maxLines: 1,
+            softWrap: false,
+            style: getBlackStyle(
+              color: ColorManager.textPrimary,
+              fontSize: FontSize.s17,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class OnboardingFooter extends StatelessWidget {
+  const OnboardingFooter({
+    super.key,
+    required this.currentIndex,
+    required this.count,
+    required this.onActionPressed,
+  });
+
+  final int currentIndex;
+  final int count;
+  final VoidCallback onActionPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isLast = currentIndex == count - 1;
 
     return SafeArea(
       top: false,
@@ -219,24 +243,24 @@ class _OnBoardingViewState extends State<OnBoardingView> {
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            // شريط المؤشرات (Progress Dots)
+          children: <Widget>[
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
+              children: List<Widget>.generate(
                 count,
-                (index) => _buildIndicatorDot(index == state.currentIndex),
+                (int index) => OnboardingIndicatorDot(
+                  isActive: index == currentIndex,
+                ),
               ),
             ),
             SizedBox(height: AppSize.s20.h),
-            // زر الإجراء الرئيسي المتدرج (Action Button)
             Container(
               width: double.infinity,
               height: AppSize.s52.h,
               decoration: BoxDecoration(
                 gradient: ColorManager.primaryGradient,
                 borderRadius: BorderRadius.circular(AppRadius.r16.r),
-                boxShadow: const [
+                boxShadow: const <BoxShadow>[
                   BoxShadow(
                     color: Color(0x1FC57B57),
                     blurRadius: 12,
@@ -245,10 +269,10 @@ class _OnBoardingViewState extends State<OnBoardingView> {
                 ],
               ),
               child: Material(
-                color: Colors.transparent,
+                color: ColorManager.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(AppRadius.r16.r),
-                  onTap: () => _onActionButtonPressed(state, count),
+                  onTap: onActionPressed,
                   child: Center(
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
@@ -275,8 +299,14 @@ class _OnBoardingViewState extends State<OnBoardingView> {
       ),
     );
   }
+}
 
-  Widget _buildIndicatorDot(bool isActive) {
+class OnboardingIndicatorDot extends StatelessWidget {
+  const OnboardingIndicatorDot({super.key, required this.isActive});
+  final bool isActive;
+
+  @override
+  Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
@@ -298,10 +328,9 @@ class OnBoardingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final maxH = constraints.maxHeight;
-        // ارتفاع متجاوب للرسم التوضيحي يتكيف بسلاسة مع الشاشات المختلفة
-        final illustrationHeight = maxH.isFinite
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double maxH = constraints.maxHeight;
+        final double illustrationHeight = maxH.isFinite
             ? (maxH * 0.45).clamp(170.0, 280.0.h)
             : 260.0.h;
 
@@ -310,16 +339,17 @@ class OnBoardingPage extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: AppPadding.p24.w),
             child: Column(
-              children: [
+              children: <Widget>[
                 SizedBox(height: AppSize.s12.h),
-                // كارت الرسم التوضيحي المطابق لتصميم Figma
                 SizedBox(
                   height: illustrationHeight,
                   width: double.infinity,
-                  child: _buildIllustration(context, illustrationHeight),
+                  child: OnBoardingIllustration(
+                    image: sliderObject.image,
+                    height: illustrationHeight,
+                  ),
                 ),
                 SizedBox(height: AppSize.s28.h),
-                // عنوان الشاشة
                 Text(
                   sliderObject.title,
                   textAlign: TextAlign.center,
@@ -329,7 +359,6 @@ class OnBoardingPage extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: AppSize.s12.h),
-                // النص الفرعي التوضيحي
                 Text(
                   sliderObject.subTitle,
                   textAlign: TextAlign.center,
@@ -346,11 +375,23 @@ class OnBoardingPage extends StatelessWidget {
       },
     );
   }
+}
 
-  Widget _buildIllustration(BuildContext context, double illustrationHeight) {
+class OnBoardingIllustration extends StatelessWidget {
+  const OnBoardingIllustration({
+    super.key,
+    required this.image,
+    required this.height,
+  });
+
+  final String image;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
     return FittedBox(
       fit: BoxFit.contain,
-      child: SvgPicture.asset(sliderObject.image),
+      child: SvgPicture.asset(image),
     );
   }
 }

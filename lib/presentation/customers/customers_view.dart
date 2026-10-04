@@ -57,8 +57,8 @@ class _CustomersScreenState extends State<_CustomersScreen> {
 
   void _onScroll() {
     if (_scrollController.hasClients) {
-      final maxScroll = _scrollController.position.maxScrollExtent;
-      final currentScroll = _scrollController.position.pixels;
+      final double maxScroll = _scrollController.position.maxScrollExtent;
+      final double currentScroll = _scrollController.position.pixels;
       if (currentScroll >= (maxScroll * 0.8)) {
         context.read<ContactsCubit>().loadMoreContacts();
       }
@@ -75,7 +75,7 @@ class _CustomersScreenState extends State<_CustomersScreen> {
   void _onTabChanged(int index) {
     setState(() => _selectedTabIndex = index);
     _searchController.clear();
-    final isVipOnly = index == 1;
+    final bool isVipOnly = index == 1;
     context.read<ContactsCubit>().getContacts(search: '', isVipOnly: isVipOnly);
   }
 
@@ -113,126 +113,126 @@ class _CustomersScreenState extends State<_CustomersScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ContactsCubit, ContactsState>(
-      listener: (context, state) {},
-      builder: (context, state) {
+      listener: (BuildContext context, ContactsState state) {},
+      builder: (BuildContext context, ContactsState state) {
         return Scaffold(
-            backgroundColor: ColorManager.background,
-            appBar: AppBar(
-              backgroundColor: ColorManager.surface,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              centerTitle: true,
-              leading: Padding(
-                padding: EdgeInsets.all(8.r),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: ColorManager.surfaceVariant,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: ColorManager.border, width: 1),
-                  ),
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    icon: Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: ColorManager.textPrimary,
-                      size: 16.r,
-                    ),
-                    onPressed: _handleBack,
-                  ),
+          backgroundColor: ColorManager.background,
+          appBar: AppBar(
+            backgroundColor: ColorManager.surface,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            centerTitle: true,
+            leading: Padding(
+              padding: EdgeInsets.all(8.r),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: ColorManager.surfaceVariant,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: ColorManager.border, width: 1),
                 ),
-              ),
-              title: Column(
-                children: [
-                  Text(
-                    _selectedTabIndex == 1
-                        ? AppStrings.vipContacts
-                        : AppStrings.contactsDirectory,
-                    style: getBoldStyle(
-                      color: ColorManager.textPrimary,
-                      fontSize: FontSize.s16,
-                    ),
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: ColorManager.textPrimary,
+                    size: 16.r,
                   ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    _selectedTabIndex == 1
-                        ? AppStrings.vipSubtitle
-                        : AppStrings.contactsSubtitle,
-                    style: getRegularStyle(
-                      color: ColorManager.textSecondary,
-                      fontSize: FontSize.s11,
-                    ),
-                  ),
-                ],
+                  onPressed: _handleBack,
+                ),
               ),
             ),
-            body: Column(
-              children: [
-                // Pinned Search and Filter Bar (Never disappears on state changes)
-                Padding(
-                  padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 8.h),
-                  child: Column(
-                    children: [
-                      ContactsSearchBar(
-                        controller: _searchController,
-                        onChanged: (query) {
-                          context.read<ContactsCubit>().searchContacts(query);
-                        },
-                        onClear: () {
-                          context.read<ContactsCubit>().getContacts(search: '');
-                        },
-                      ),
-                      SizedBox(height: 8.h),
-                      VipFilterTabs(
-                        tabs: const [
-                          AppStrings.allContacts,
-                          AppStrings.vipContacts,
-                        ],
-                        selectedIndex: _selectedTabIndex,
-                        onTabSelected: _onTabChanged,
-                      ),
-                    ],
+            title: Column(
+              children: <Widget>[
+                Text(
+                  _selectedTabIndex == 1
+                      ? AppStrings.vipContacts
+                      : AppStrings.contactsDirectory,
+                  style: getBoldStyle(
+                    color: ColorManager.textPrimary,
+                    fontSize: FontSize.s16,
                   ),
                 ),
-
-                // Dynamic Contacts List with Loading / Error / Content states
-                Expanded(
-                  child:
-                      state.flowState?.getScreenWidget(
-                        context,
-                        _buildBody(context, state),
-                        () => context.read<ContactsCubit>().getContacts(),
-                      ) ??
-                      _buildBody(context, state),
+                SizedBox(height: 2.h),
+                Text(
+                  _selectedTabIndex == 1
+                      ? AppStrings.vipSubtitle
+                      : AppStrings.contactsSubtitle,
+                  style: getRegularStyle(
+                    color: ColorManager.textSecondary,
+                    fontSize: FontSize.s11,
+                  ),
                 ),
               ],
             ),
-            floatingActionButton: FloatingActionButton(
-              heroTag: 'customers_fab',
-              backgroundColor: ColorManager.primary,
-              elevation: 4,
-              shape: const CircleBorder(),
-              onPressed: () async {
-                await Navigator.pushNamed(context, Routes.contactFormRoute);
-                if (context.mounted) {
-                  _searchController.clear();
-                  context.read<ContactsCubit>().getContacts(search: '');
-                }
-              },
-              child: const Icon(
-                Icons.add_rounded,
-                color: ColorManager.white,
-                size: 28,
+          ),
+          body: Column(
+            children: <Widget>[
+              // Pinned Search and Filter Bar (Never disappears on state changes)
+              Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 8.h),
+                child: Column(
+                  children: <Widget>[
+                    ContactsSearchBar(
+                      controller: _searchController,
+                      onChanged: (String query) {
+                        context.read<ContactsCubit>().searchContacts(query);
+                      },
+                      onClear: () {
+                        context.read<ContactsCubit>().getContacts(search: '');
+                      },
+                    ),
+                    SizedBox(height: 8.h),
+                    VipFilterTabs(
+                      tabs: const <String>[
+                        AppStrings.allContacts,
+                        AppStrings.vipContacts,
+                      ],
+                      selectedIndex: _selectedTabIndex,
+                      onTabSelected: _onTabChanged,
+                    ),
+                  ],
+                ),
               ),
+
+              // Dynamic Contacts List with Loading / Error / Content states
+              Expanded(
+                child:
+                    state.flowState?.getScreenWidget(
+                      context,
+                      _buildBody(context, state),
+                      () => context.read<ContactsCubit>().getContacts(),
+                    ) ??
+                    _buildBody(context, state),
+              ),
+            ],
+          ),
+          floatingActionButton: FloatingActionButton(
+            heroTag: 'customers_fab',
+            backgroundColor: ColorManager.primary,
+            elevation: 4,
+            shape: const CircleBorder(),
+            onPressed: () async {
+              await Navigator.pushNamed(context, Routes.contactFormRoute);
+              if (context.mounted) {
+                _searchController.clear();
+                context.read<ContactsCubit>().getContacts(search: '');
+              }
+            },
+            child: const Icon(
+              Icons.add_rounded,
+              color: ColorManager.white,
+              size: 28,
             ),
-          );
+          ),
+        );
       },
     );
   }
 
   Widget _buildBody(BuildContext context, ContactsState state) {
-    final contacts = state.data ?? [];
-    final isVipMode = _selectedTabIndex == 1;
+    final List<Contact> contacts = state.data ?? <Contact>[];
+    final bool isVipMode = _selectedTabIndex == 1;
 
     return RefreshIndicator(
       onRefresh: () => context.read<ContactsCubit>().getContacts(),
@@ -242,7 +242,7 @@ class _CustomersScreenState extends State<_CustomersScreen> {
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        slivers: [
+        slivers: <Widget>[
           // VIP Hero Stats Banner (Figma Node #2025:647)
           if (isVipMode)
             SliverToBoxAdapter(
@@ -266,7 +266,7 @@ class _CustomersScreenState extends State<_CustomersScreen> {
                   padding: EdgeInsets.all(24.r),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
+                    children: <Widget>[
                       Container(
                         width: 72.r,
                         height: 72.r,
@@ -329,8 +329,11 @@ class _CustomersScreenState extends State<_CustomersScreen> {
       return SliverPadding(
         padding: EdgeInsets.symmetric(horizontal: 16.w),
         sliver: SliverList(
-          delegate: SliverChildBuilderDelegate((context, index) {
-            final contact = contacts[index];
+          delegate: SliverChildBuilderDelegate((
+            BuildContext context,
+            int index,
+          ) {
+            final Contact contact = contacts[index];
             return VipContactCard(
               contact: contact,
               onTap: () => _navigateToProfile(context, contact.id),
@@ -344,22 +347,22 @@ class _CustomersScreenState extends State<_CustomersScreen> {
     }
 
     // Alphabetical Grouping for All Contacts (Node #3:206)
-    final grouped = _groupByFirstLetter(contacts);
-    final sortedLetters = grouped.keys.toList()..sort();
+    final Map<String, List<Contact>> grouped = _groupByFirstLetter(contacts);
+    final List<String> sortedLetters = grouped.keys.toList()..sort();
 
     return SliverPadding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       sliver: SliverList(
-        delegate: SliverChildBuilderDelegate((context, index) {
-          final letter = sortedLetters[index];
-          final items = grouped[letter]!;
+        delegate: SliverChildBuilderDelegate((BuildContext context, int index) {
+          final String letter = sortedLetters[index];
+          final List<Contact> items = grouped[letter]!;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               AlphabetSectionHeader(letter: letter),
               ...items.map(
-                (c) => ContactCard(
+                (Contact c) => ContactCard(
                   contact: c,
                   onTap: () => _navigateToProfile(context, c.id),
                   onToggleVip: () {
@@ -376,11 +379,11 @@ class _CustomersScreenState extends State<_CustomersScreen> {
   }
 
   Map<String, List<Contact>> _groupByFirstLetter(List<Contact> contacts) {
-    final Map<String, List<Contact>> map = {};
-    for (final contact in contacts) {
-      final name = contact.name.trim();
-      final letter = name.isNotEmpty ? name.substring(0, 1) : "أ";
-      map.putIfAbsent(letter, () => []).add(contact);
+    final Map<String, List<Contact>> map = <String, List<Contact>>{};
+    for (final Contact contact in contacts) {
+      final String name = contact.name.trim();
+      final String letter = name.isNotEmpty ? name.substring(0, 1) : "أ";
+      map.putIfAbsent(letter, () => <Contact>[]).add(contact);
     }
     return map;
   }

@@ -37,8 +37,8 @@ Future<void> showPayInstallmentSheet({
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    barrierColor: Colors.black.withAlpha(90),
+    backgroundColor: ColorManager.transparent,
+    barrierColor: ColorManager.black.withAlpha(90),
     builder: (_) => BlocProvider<PayInstallmentCubit>(
       create: (_) => getIt<PayInstallmentCubit>(),
       child: _PayInstallmentSheet(
@@ -82,11 +82,11 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
 
   String _formatAmount(num? value) {
     if (value == null) return '0.00';
-    final formatter = intl.NumberFormat('#,##0.##', 'en');
+    final intl.NumberFormat formatter = intl.NumberFormat('#,##0.##', 'en');
     return formatter.format(value);
   }
 
-  static const List<String> _arabicMonths = [
+  static const List<String> _arabicMonths = <String>[
     'يناير',
     'فبراير',
     'مارس',
@@ -102,18 +102,18 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
   ];
 
   String _formatDateTime(DateTime dt) {
-    final month = _arabicMonths[(dt.month - 1).clamp(0, 11)];
-    final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
-    final minute = dt.minute.toString().padLeft(2, '0');
-    final period = dt.hour >= 12 ? 'م' : 'ص';
+    final String month = _arabicMonths[(dt.month - 1).clamp(0, 11)];
+    final int hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final String minute = dt.minute.toString().padLeft(2, '0');
+    final String period = dt.hour >= 12 ? 'م' : 'ص';
     return '${dt.day} $month ${dt.year} - $hour:$minute $period';
   }
 
   String _formatDueDate(String? raw) {
     if (raw == null || raw.isEmpty) return '—';
     try {
-      final dt = DateTime.parse(raw);
-      final month = _arabicMonths[(dt.month - 1).clamp(0, 11)];
+      final DateTime dt = DateTime.parse(raw);
+      final String month = _arabicMonths[(dt.month - 1).clamp(0, 11)];
       return '${dt.day} $month ${dt.year}';
     } catch (_) {
       return raw;
@@ -127,9 +127,9 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
       return 0;
     }
     try {
-      final due = DateTime.parse(widget.installment.dueDate!);
-      final now = DateTime.now();
-      final diff = DateTime(
+      final DateTime due = DateTime.parse(widget.installment.dueDate!);
+      final DateTime now = DateTime.now();
+      final int diff = DateTime(
         now.year,
         now.month,
         now.day,
@@ -141,9 +141,9 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
   }
 
   String _overdueLabel() {
-    final days = _overdueDays();
+    final int days = _overdueDays();
     if (days < 0) {
-      final remaining = -days;
+      final int remaining = -days;
       return 'مستحق خلال $remaining ${remaining == 1 ? 'يوم' : 'أيام'}';
     } else if (days == 0) {
       return 'مستحق اليوم';
@@ -153,19 +153,19 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
   }
 
   Color _overdueColor() {
-    final days = _overdueDays();
+    final int days = _overdueDays();
     if (days <= 0) return ColorManager.primary;
     return ColorManager.error;
   }
 
   Color _overdueContainerColor() {
-    final days = _overdueDays();
+    final int days = _overdueDays();
     if (days <= 0) return ColorManager.lightPrimary;
     return ColorManager.errorContainer;
   }
 
   String _getPartyLabel() {
-    final t = widget.transactionType?.toLowerCase() ?? '';
+    final String t = widget.transactionType?.toLowerCase() ?? '';
     if (t == 'purchase' || t == 'شراء') {
       return 'المورد';
     }
@@ -174,12 +174,12 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
 
   /// تأكيد السداد — إذا كان القسط مستقبلياً يظهر تنبيه للمستخدم
   void _handleConfirmPayment(BuildContext context) {
-    final days = _overdueDays();
+    final int days = _overdueDays();
     if (days < 0) {
-      final daysRemaining = -days;
-      showDialog(
+      final int daysRemaining = -days;
+      showDialog<void>(
         context: context,
-        builder: (dialogCtx) => Directionality(
+        builder: (BuildContext dialogCtx) => Directionality(
           textDirection: TextDirection.rtl,
           child: AlertDialog(
             backgroundColor: ColorManager.surface,
@@ -209,7 +209,7 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
               ),
             ),
             actionsAlignment: MainAxisAlignment.center,
-            actions: [
+            actions: <Widget>[
               TextButton(
                 onPressed: () => Navigator.of(dialogCtx).pop(),
                 child: Text(
@@ -263,7 +263,7 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<PayInstallmentCubit, PayInstallmentState>(
-      listener: (ctx, state) {
+      listener: (BuildContext ctx, PayInstallmentState state) {
         if (state.flowState is ErrorState) {
           state.flowState?.getScreenWidget(ctx, const SizedBox.shrink(), () {});
         }
@@ -272,7 +272,7 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
-                children: [
+                children: <Widget>[
                   const Icon(
                     Icons.check_circle_rounded,
                     color: ColorManager.white,
@@ -292,8 +292,8 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
           widget.onSuccess();
         }
       },
-      builder: (ctx, state) {
-        final isLoading = state.flowState is LoadingState;
+      builder: (BuildContext ctx, PayInstallmentState state) {
+        final bool isLoading = state.flowState is LoadingState;
 
         return Directionality(
           textDirection: TextDirection.rtl,
@@ -311,7 +311,7 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+              children: <Widget>[
                 // ── Drag Handle ──
                 Center(
                   child: Container(
@@ -386,7 +386,7 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
                     border: Border.all(color: ColorManager.border, width: 1),
                   ),
                   child: Column(
-                    children: [
+                    children: <Widget>[
                       // الطرف (العميل / المورد)
                       _buildDetailRow(
                         label: _getPartyLabel(),
@@ -404,7 +404,7 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
                           crossAxisAlignment: WrapCrossAlignment.center,
                           spacing: 8.w,
                           runSpacing: 4.h,
-                          children: [
+                          children: <Widget>[
                             // حالة الاستحقاق
                             Container(
                               padding: EdgeInsets.symmetric(
@@ -428,13 +428,13 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
                             Text(
                               widget.installment.installmentNumber != null
                                   ? (widget.totalInstallments != null &&
-                                          widget.totalInstallments! > 0
-                                      ? 'قسط ${widget.installment.installmentNumber} من ${widget.totalInstallments}'
-                                      : 'قسط ${widget.installment.installmentNumber}')
+                                            widget.totalInstallments! > 0
+                                        ? 'قسط ${widget.installment.installmentNumber} من ${widget.totalInstallments}'
+                                        : 'قسط ${widget.installment.installmentNumber}')
                                   : (widget.totalInstallments != null &&
-                                          widget.totalInstallments! > 0
-                                      ? 'قسط من ${widget.totalInstallments}'
-                                      : 'قسط مستحق'),
+                                            widget.totalInstallments! > 0
+                                        ? 'قسط من ${widget.totalInstallments}'
+                                        : 'قسط مستحق'),
                               style: getSemiBoldStyle(
                                 color: ColorManager.textPrimary,
                                 fontSize: FontSize.s13,
@@ -484,7 +484,7 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
                     border: Border.all(color: ColorManager.border, width: 1),
                   ),
                   child: Row(
-                    children: [
+                    children: <Widget>[
                       Icon(
                         Icons.access_time_filled_rounded,
                         size: 18.r,
@@ -533,16 +533,16 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
                       borderRadius: BorderRadius.circular(AppRadius.r14.r),
                       boxShadow: isLoading
                           ? null
-                          : const [AppShadows.fabShadow],
+                          : const <BoxShadow>[AppShadows.fabShadow],
                     ),
                     child: ElevatedButton(
                       onPressed: isLoading
                           ? null
                           : () => _handleConfirmPayment(context),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        disabledBackgroundColor: Colors.transparent,
+                        backgroundColor: ColorManager.transparent,
+                        shadowColor: ColorManager.transparent,
+                        disabledBackgroundColor: ColorManager.transparent,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.r14.r),
                         ),
@@ -605,7 +605,7 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
       padding: EdgeInsets.symmetric(vertical: 8.h),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
+        children: <Widget>[
           Expanded(
             flex: 3,
             child: Text(

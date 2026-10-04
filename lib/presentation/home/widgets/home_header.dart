@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mizan/presentation/resources/assets_manager.dart';
@@ -23,11 +23,11 @@ class HomeHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
+      children: <Widget>[
         // User & Shop Profile Section (Right side in RTL)
         Expanded(
           child: Row(
-            children: [
+            children: <Widget>[
               // Store / Avatar Profile Box - Tapping opens Drawer
               GestureDetector(
                 child: Container(
@@ -40,7 +40,7 @@ class HomeHeader extends StatelessWidget {
                       color: ColorManager.primary.withAlpha(40),
                       width: 1.5,
                     ),
-                    boxShadow: [
+                    boxShadow: <BoxShadow>[
                       BoxShadow(
                         color: ColorManager.primary.withAlpha(18),
                         blurRadius: 10,
@@ -69,9 +69,9 @@ class HomeHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
-                  children: [
+                  children: <Widget>[
                     Row(
-                      children: [
+                      children: <Widget>[
                         Text(
                           userName,
                           style: getMediumStyle(
@@ -110,7 +110,7 @@ class HomeHeader extends StatelessWidget {
         // Action Icons: Drawer Menu & Notifications Bell with Unread Badge
         Row(
           mainAxisSize: MainAxisSize.min,
-          children: [
+          children: <Widget>[
             // Drawer Menu Button
             _HeaderIconButton(
               iconData: Icons.menu_rounded,
@@ -148,7 +148,7 @@ class _HeaderIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent,
+      color: ColorManager.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.r12.r),
@@ -159,7 +159,7 @@ class _HeaderIconButton extends StatelessWidget {
             color: ColorManager.surface,
             borderRadius: BorderRadius.circular(AppRadius.r12.r),
             border: Border.all(color: ColorManager.border, width: 1.0),
-            boxShadow: [
+            boxShadow: <BoxShadow>[
               BoxShadow(
                 color: ColorManager.black.withAlpha(8),
                 blurRadius: 8,
@@ -169,7 +169,7 @@ class _HeaderIconButton extends StatelessWidget {
           ),
           child: Stack(
             alignment: Alignment.center,
-            children: [
+            children: <Widget>[
               if (icon != null)
                 SvgPicture.asset(
                   icon!,

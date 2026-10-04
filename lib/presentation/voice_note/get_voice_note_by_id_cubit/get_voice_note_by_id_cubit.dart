@@ -1,5 +1,8 @@
+﻿import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/data/network/failure.dart';
+import 'package:mizan/domain/model/voice_note_model/voice_note_model.dart';
 import 'package:mizan/domain/use_case/get_voice_note_by_id_use_case.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
@@ -24,10 +27,11 @@ class GetVoiceNoteByIdCubit extends Cubit<GetVoiceNoteByIdState> {
       ),
     );
 
-    final result = await _getVoiceNoteByIdUseCase.execute(id);
+    final Either<Failure, VoiceNoteModel> result =
+        await _getVoiceNoteByIdUseCase.execute(id);
 
     result.fold(
-      (failure) {
+      (Failure failure) {
         if (isClosed) return;
         emit(
           state.copyWith(
@@ -39,7 +43,7 @@ class GetVoiceNoteByIdCubit extends Cubit<GetVoiceNoteByIdState> {
           ),
         );
       },
-      (voiceNote) {
+      (VoiceNoteModel voiceNote) {
         if (isClosed) return;
         emit(state.copyWith(data: voiceNote, flowState: ContentState()));
       },

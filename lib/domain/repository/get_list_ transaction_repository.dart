@@ -1,4 +1,4 @@
-// ignore: file_names
+// ignore_for_file: file_names
 import 'package:dartz/dartz.dart';
 import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/domain/model/get_list_transactions_model.dart';

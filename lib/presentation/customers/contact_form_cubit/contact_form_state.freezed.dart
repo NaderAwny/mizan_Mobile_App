@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ContactFormState {
 
- FlowState? get flowState; Contact? get savedContact; bool get isActionSuccess; bool get isEditMode;
+ FlowState? get flowState; Contact? get savedContact; bool get isActionSuccess; bool get isEditMode; bool get isVip;
 /// Create a copy of ContactFormState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $ContactFormStateCopyWith<ContactFormState> get copyWith => _$ContactFormStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ContactFormState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.savedContact, savedContact) || other.savedContact == savedContact)&&(identical(other.isActionSuccess, isActionSuccess) || other.isActionSuccess == isActionSuccess)&&(identical(other.isEditMode, isEditMode) || other.isEditMode == isEditMode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ContactFormState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.savedContact, savedContact) || other.savedContact == savedContact)&&(identical(other.isActionSuccess, isActionSuccess) || other.isActionSuccess == isActionSuccess)&&(identical(other.isEditMode, isEditMode) || other.isEditMode == isEditMode)&&(identical(other.isVip, isVip) || other.isVip == isVip));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,flowState,savedContact,isActionSuccess,isEditMode);
+int get hashCode => Object.hash(runtimeType,flowState,savedContact,isActionSuccess,isEditMode,isVip);
 
 @override
 String toString() {
-  return 'ContactFormState(flowState: $flowState, savedContact: $savedContact, isActionSuccess: $isActionSuccess, isEditMode: $isEditMode)';
+  return 'ContactFormState(flowState: $flowState, savedContact: $savedContact, isActionSuccess: $isActionSuccess, isEditMode: $isEditMode, isVip: $isVip)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $ContactFormStateCopyWith<$Res>  {
   factory $ContactFormStateCopyWith(ContactFormState value, $Res Function(ContactFormState) _then) = _$ContactFormStateCopyWithImpl;
 @useResult
 $Res call({
- FlowState? flowState, Contact? savedContact, bool isActionSuccess, bool isEditMode
+ FlowState? flowState, Contact? savedContact, bool isActionSuccess, bool isEditMode, bool isVip
 });
 
 
@@ -62,12 +62,13 @@ class _$ContactFormStateCopyWithImpl<$Res>
 
 /// Create a copy of ContactFormState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? savedContact = freezed,Object? isActionSuccess = null,Object? isEditMode = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? savedContact = freezed,Object? isActionSuccess = null,Object? isEditMode = null,Object? isVip = null,}) {
   return _then(_self.copyWith(
 flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
 as FlowState?,savedContact: freezed == savedContact ? _self.savedContact : savedContact // ignore: cast_nullable_to_non_nullable
 as Contact?,isActionSuccess: null == isActionSuccess ? _self.isActionSuccess : isActionSuccess // ignore: cast_nullable_to_non_nullable
 as bool,isEditMode: null == isEditMode ? _self.isEditMode : isEditMode // ignore: cast_nullable_to_non_nullable
+as bool,isVip: null == isVip ? _self.isVip : isVip // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -153,10 +154,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  Contact? savedContact,  bool isActionSuccess,  bool isEditMode)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  Contact? savedContact,  bool isActionSuccess,  bool isEditMode,  bool isVip)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ContactFormState() when $default != null:
-return $default(_that.flowState,_that.savedContact,_that.isActionSuccess,_that.isEditMode);case _:
+return $default(_that.flowState,_that.savedContact,_that.isActionSuccess,_that.isEditMode,_that.isVip);case _:
   return orElse();
 
 }
@@ -174,10 +175,10 @@ return $default(_that.flowState,_that.savedContact,_that.isActionSuccess,_that.i
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  Contact? savedContact,  bool isActionSuccess,  bool isEditMode)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  Contact? savedContact,  bool isActionSuccess,  bool isEditMode,  bool isVip)  $default,) {final _that = this;
 switch (_that) {
 case _ContactFormState():
-return $default(_that.flowState,_that.savedContact,_that.isActionSuccess,_that.isEditMode);case _:
+return $default(_that.flowState,_that.savedContact,_that.isActionSuccess,_that.isEditMode,_that.isVip);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -194,10 +195,10 @@ return $default(_that.flowState,_that.savedContact,_that.isActionSuccess,_that.i
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  Contact? savedContact,  bool isActionSuccess,  bool isEditMode)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  Contact? savedContact,  bool isActionSuccess,  bool isEditMode,  bool isVip)?  $default,) {final _that = this;
 switch (_that) {
 case _ContactFormState() when $default != null:
-return $default(_that.flowState,_that.savedContact,_that.isActionSuccess,_that.isEditMode);case _:
+return $default(_that.flowState,_that.savedContact,_that.isActionSuccess,_that.isEditMode,_that.isVip);case _:
   return null;
 
 }
@@ -209,13 +210,14 @@ return $default(_that.flowState,_that.savedContact,_that.isActionSuccess,_that.i
 
 
 class _ContactFormState implements ContactFormState {
-  const _ContactFormState({this.flowState, this.savedContact, this.isActionSuccess = false, this.isEditMode = false});
+  const _ContactFormState({this.flowState, this.savedContact, this.isActionSuccess = false, this.isEditMode = false, this.isVip = false});
   
 
 @override final  FlowState? flowState;
 @override final  Contact? savedContact;
 @override@JsonKey() final  bool isActionSuccess;
 @override@JsonKey() final  bool isEditMode;
+@override@JsonKey() final  bool isVip;
 
 /// Create a copy of ContactFormState
 /// with the given fields replaced by the non-null parameter values.
@@ -227,16 +229,16 @@ _$ContactFormStateCopyWith<_ContactFormState> get copyWith => __$ContactFormStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ContactFormState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.savedContact, savedContact) || other.savedContact == savedContact)&&(identical(other.isActionSuccess, isActionSuccess) || other.isActionSuccess == isActionSuccess)&&(identical(other.isEditMode, isEditMode) || other.isEditMode == isEditMode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ContactFormState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.savedContact, savedContact) || other.savedContact == savedContact)&&(identical(other.isActionSuccess, isActionSuccess) || other.isActionSuccess == isActionSuccess)&&(identical(other.isEditMode, isEditMode) || other.isEditMode == isEditMode)&&(identical(other.isVip, isVip) || other.isVip == isVip));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,flowState,savedContact,isActionSuccess,isEditMode);
+int get hashCode => Object.hash(runtimeType,flowState,savedContact,isActionSuccess,isEditMode,isVip);
 
 @override
 String toString() {
-  return 'ContactFormState(flowState: $flowState, savedContact: $savedContact, isActionSuccess: $isActionSuccess, isEditMode: $isEditMode)';
+  return 'ContactFormState(flowState: $flowState, savedContact: $savedContact, isActionSuccess: $isActionSuccess, isEditMode: $isEditMode, isVip: $isVip)';
 }
 
 
@@ -247,7 +249,7 @@ abstract mixin class _$ContactFormStateCopyWith<$Res> implements $ContactFormSta
   factory _$ContactFormStateCopyWith(_ContactFormState value, $Res Function(_ContactFormState) _then) = __$ContactFormStateCopyWithImpl;
 @override @useResult
 $Res call({
- FlowState? flowState, Contact? savedContact, bool isActionSuccess, bool isEditMode
+ FlowState? flowState, Contact? savedContact, bool isActionSuccess, bool isEditMode, bool isVip
 });
 
 
@@ -264,12 +266,13 @@ class __$ContactFormStateCopyWithImpl<$Res>
 
 /// Create a copy of ContactFormState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? savedContact = freezed,Object? isActionSuccess = null,Object? isEditMode = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? savedContact = freezed,Object? isActionSuccess = null,Object? isEditMode = null,Object? isVip = null,}) {
   return _then(_ContactFormState(
 flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
 as FlowState?,savedContact: freezed == savedContact ? _self.savedContact : savedContact // ignore: cast_nullable_to_non_nullable
 as Contact?,isActionSuccess: null == isActionSuccess ? _self.isActionSuccess : isActionSuccess // ignore: cast_nullable_to_non_nullable
 as bool,isEditMode: null == isEditMode ? _self.isEditMode : isEditMode // ignore: cast_nullable_to_non_nullable
+as bool,isVip: null == isVip ? _self.isVip : isVip // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mizan/presentation/resources/assets_manager.dart';
@@ -38,20 +38,20 @@ class _HeroBalanceCardState extends State<HeroBalanceCard> {
 
   // Format amount with pure English digits (0-9) and comma separator
   String _formatAmount(double value) {
-    final isNegative = value < 0;
-    final absVal = value.abs();
-    final parts = absVal.toStringAsFixed(2).split('.');
-    final integerPart = parts[0];
-    final decimalPart = parts[1];
+    final bool isNegative = value < 0;
+    final double absVal = value.abs();
+    final List<String> parts = absVal.toStringAsFixed(2).split('.');
+    final String integerPart = parts[0];
+    final String decimalPart = parts[1];
 
-    final buffer = StringBuffer();
+    final StringBuffer buffer = StringBuffer();
     for (int i = 0; i < integerPart.length; i++) {
       if (i > 0 && (integerPart.length - i) % 3 == 0) {
         buffer.write(',');
       }
       buffer.write(integerPart[i]);
     }
-    final formatted = "${buffer.toString()}.$decimalPart";
+    final String formatted = "${buffer.toString()}.$decimalPart";
     return isNegative ? "- $formatted" : formatted;
   }
 
@@ -66,7 +66,7 @@ class _HeroBalanceCardState extends State<HeroBalanceCard> {
         decoration: BoxDecoration(
           gradient: ColorManager.primaryGradient,
           borderRadius: BorderRadius.circular(AppRadius.r20.r),
-          boxShadow: const [
+          boxShadow: const <BoxShadow>[
             BoxShadow(
               color: Color(0x2EC57B57),
               blurRadius: 16.0,
@@ -75,7 +75,7 @@ class _HeroBalanceCardState extends State<HeroBalanceCard> {
           ],
         ),
         child: Stack(
-          children: [
+          children: <Widget>[
             // Subtle decorative background circles
             Positioned(
               top: -30.r,
@@ -85,7 +85,7 @@ class _HeroBalanceCardState extends State<HeroBalanceCard> {
                 height: 100.r,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withAlpha(15),
+                  color: ColorManager.white.withAlpha(15),
                 ),
               ),
             ),
@@ -96,12 +96,12 @@ class _HeroBalanceCardState extends State<HeroBalanceCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
-                children: [
+                children: <Widget>[
                   // Top Row: "إجمالي الرصيد" Pill + Trend Pill + Eye Button
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
+                    children: <Widget>[
                       // Label Pill - Flexible so it shrinks on large text scale
                       Flexible(
                         child: Container(
@@ -110,16 +110,16 @@ class _HeroBalanceCardState extends State<HeroBalanceCard> {
                             vertical: 3.5.h,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(35),
+                            color: ColorManager.white.withAlpha(35),
                             borderRadius: BorderRadius.circular(12.r),
                             border: Border.all(
-                              color: Colors.white.withAlpha(30),
+                              color: ColorManager.white.withAlpha(30),
                               width: 1,
                             ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
-                            children: [
+                            children: <Widget>[
                               Flexible(
                                 child: Text(
                                   AppStrings.totalBalance,
@@ -147,7 +147,7 @@ class _HeroBalanceCardState extends State<HeroBalanceCard> {
                       SizedBox(width: 8.w),
                       Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: [
+                        children: <Widget>[
                           // Trend pill
                           SizedBox(width: 8.w),
                           // Eye button
@@ -160,7 +160,7 @@ class _HeroBalanceCardState extends State<HeroBalanceCard> {
                                 _isBalanceVisible
                                     ? Icons.visibility_outlined
                                     : Icons.visibility_off_outlined,
-                                color: Colors.white.withAlpha(220),
+                                color: ColorManager.white.withAlpha(220),
                                 size: 18.r,
                               ),
                             ),
@@ -180,7 +180,7 @@ class _HeroBalanceCardState extends State<HeroBalanceCard> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.baseline,
                       textBaseline: TextBaseline.alphabetic,
-                      children: [
+                      children: <Widget>[
                         Text(
                           _isBalanceVisible
                               ? _formatAmount(widget.totalBalance)
@@ -208,20 +208,20 @@ class _HeroBalanceCardState extends State<HeroBalanceCard> {
                   Container(
                     width: double.infinity,
                     height: 1.0,
-                    color: Colors.white.withAlpha(30),
+                    color: ColorManager.white.withAlpha(30),
                   ),
 
                   SizedBox(height: 10.h),
 
                   // Bottom Row: Debts (You receive) & Payables (You pay)
                   Row(
-                    children: [
+                    children: <Widget>[
                       // Debts
                       Expanded(
                         child: _HeroMetricItem(
                           icon: IconAssets.arrowDownLeft,
                           iconColor: const Color(0xFFE2FDE6),
-                          iconBgColor: Colors.white.withAlpha(25),
+                          iconBgColor: ColorManager.white.withAlpha(25),
                           title: AppStrings.totalDebts,
                           amount: _isBalanceVisible
                               ? "${_formatAmount(widget.totalDebts)} ${widget.currency}"
@@ -233,7 +233,7 @@ class _HeroBalanceCardState extends State<HeroBalanceCard> {
                       Container(
                         width: 1.0,
                         height: 30.h,
-                        color: Colors.white.withAlpha(30),
+                        color: ColorManager.white.withAlpha(30),
                         margin: EdgeInsets.symmetric(horizontal: 8.w),
                       ),
 
@@ -242,7 +242,7 @@ class _HeroBalanceCardState extends State<HeroBalanceCard> {
                         child: _HeroMetricItem(
                           icon: IconAssets.arrowUpRight,
                           iconColor: const Color(0xFFFFD4C8),
-                          iconBgColor: Colors.white.withAlpha(25),
+                          iconBgColor: ColorManager.white.withAlpha(25),
                           title: AppStrings.totalPayables,
                           amount: _isBalanceVisible
                               ? "${_formatAmount(widget.totalPayables)} ${widget.currency}"
@@ -280,7 +280,7 @@ class _HeroMetricItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
+      children: <Widget>[
         Container(
           width: 28.r,
           height: 28.r,
@@ -302,13 +302,13 @@ class _HeroMetricItem extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: [
+            children: <Widget>[
               Text(
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: getRegularStyle(
-                  color: Colors.white.withAlpha(210),
+                  color: ColorManager.white.withAlpha(210),
                   fontSize: FontSize.s10,
                 ),
               ),

@@ -23,7 +23,7 @@ class StatisticsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
+    final DateTime now = DateTime.now();
     return BlocProvider<StatisticsCubit>(
       create: (_) =>
           getIt<StatisticsCubit>()
@@ -34,20 +34,12 @@ class StatisticsView extends StatelessWidget {
 }
 
 // ─── Screen ───────────────────────────────────────────────────
-class _StatisticsScreen extends StatefulWidget {
+class _StatisticsScreen extends StatelessWidget {
   const _StatisticsScreen();
 
-  @override
-  State<_StatisticsScreen> createState() => _StatisticsScreenState();
-}
+  static const List<String> _tabs = <String>['يوم محدد', 'شهر محدد', 'اليوم'];
 
-class _StatisticsScreenState extends State<_StatisticsScreen> {
-  // 0: يوم محدد (Daily DatePicker), 1: شهر محدد (Monthly Picker), 2: اليوم (Today)
-  int _selectedTabIndex = 1; // Default to Month mode
-
-  static const List<String> _tabs = ['يوم محدد', 'شهر محدد', 'اليوم'];
-
-  static const List<String> _arabicMonths = [
+  static const List<String> _arabicMonths = <String>[
     'يناير',
     'فبراير',
     'مارس',
@@ -63,12 +55,12 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
   ];
 
   static String _formatMonthYearDisplay(String raw) {
-    final parts = raw.split('-');
+    final List<String> parts = raw.split('-');
     if (parts.length == 2) {
-      final year = parts[0];
-      final monthInt = int.tryParse(parts[1]) ?? 1;
+      final String year = parts[0];
+      final int monthInt = int.tryParse(parts[1]) ?? 1;
       if (monthInt >= 1 && monthInt <= 12) {
-        final monthName = _arabicMonths[monthInt - 1];
+        final String monthName = _arabicMonths[monthInt - 1];
         return '$monthName $year (شهر $monthInt)';
       }
     }
@@ -77,7 +69,7 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
 
   Future<void> _openDatePicker(BuildContext context) async {
     try {
-      final cubit = context.read<StatisticsCubit>();
+      final StatisticsCubit cubit = context.read<StatisticsCubit>();
       DateTime initial = DateTime.now();
       if (cubit.state.selectedDate != null) {
         try {
@@ -85,15 +77,15 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
         } catch (_) {}
       }
 
-      final picked = await showDatePicker(
+      final DateTime? picked = await showDatePicker(
         context: context,
         initialDate: initial,
         firstDate: DateTime(2020),
         lastDate: DateTime.now(),
         locale: const Locale('ar'),
-        builder: (ctx, child) => Theme(
+        builder: (BuildContext ctx, Widget? child) => Theme(
           data: Theme.of(ctx).copyWith(
-            colorScheme: ColorScheme.light(
+            colorScheme: const ColorScheme.light(
               primary: ColorManager.primary,
               onPrimary: ColorManager.white,
               surface: ColorManager.surface,
@@ -109,84 +101,83 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
         ),
       );
 
-      if (picked != null && mounted) {
-        setState(() => _selectedTabIndex = 0);
-        final formatted = DateFormat('yyyy-MM-dd').format(picked);
-        cubit.getDailyStatistics(formatted);
+      if (picked != null && context.mounted) {
+        final String formatted = DateFormat('yyyy-MM-dd').format(picked);
+        cubit.getDailyStatistics(formatted, tabIndex: 0);
       }
     } catch (_) {}
   }
 
   Future<void> _openMonthPicker(BuildContext context) async {
     try {
-      final cubit = context.read<StatisticsCubit>();
+      final StatisticsCubit cubit = context.read<StatisticsCubit>();
       int initialYear = DateTime.now().year;
       int initialMonth = DateTime.now().month;
 
       if (cubit.state.selectedMonthYear != null) {
-        final parts = cubit.state.selectedMonthYear!.split('-');
+        final List<String> parts = cubit.state.selectedMonthYear!.split('-');
         if (parts.length == 2) {
           initialYear = int.tryParse(parts[0]) ?? initialYear;
           initialMonth = int.tryParse(parts[1]) ?? initialMonth;
         }
       }
 
-      final result = await showDialog<Map<String, int>>(
+      final Map<String, int>? result = await showDialog<Map<String, int>>(
         context: context,
         barrierDismissible: true,
-        builder: (ctx) => _MonthYearPickerDialog(
+        builder: (BuildContext ctx) => _MonthYearPickerDialog(
           initialYear: initialYear,
           initialMonth: initialMonth,
         ),
       );
 
-      if (result != null && mounted) {
-        setState(() => _selectedTabIndex = 1);
-        final y = (result['year'] ?? initialYear).toString();
-        final m = (result['month'] ?? initialMonth).toString().padLeft(2, '0');
-        cubit.getMonthlyStatistics(y, m);
+      if (result != null && context.mounted) {
+        final String y = (result['year'] ?? initialYear).toString();
+        final String m = (result['month'] ?? initialMonth).toString().padLeft(
+          2,
+          '0',
+        );
+        cubit.getMonthlyStatistics(y, m, tabIndex: 1);
       }
     } catch (_) {}
   }
 
-  void _onTabSelected(int index) {
-    final cubit = context.read<StatisticsCubit>();
+  void _onTabSelected(BuildContext context, int index) {
+    final StatisticsCubit cubit = context.read<StatisticsCubit>();
 
     if (index == 0) {
       // "يوم محدد" -> Open DatePicker
       _openDatePicker(context);
     } else if (index == 1) {
       // "شهر محدد" -> Open Month Picker
-      setState(() => _selectedTabIndex = index);
+      cubit.selectTab(index);
       _openMonthPicker(context);
     } else {
       // "اليوم" -> Today's Daily statistics
-      setState(() => _selectedTabIndex = index);
-      final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-      cubit.getDailyStatistics(todayStr);
+      cubit.selectTab(index);
+      final String todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      cubit.getDailyStatistics(todayStr, tabIndex: index);
     }
   }
 
-
-
   Future<void> _onRefresh(BuildContext context) async {
-    final cubit = context.read<StatisticsCubit>();
+    final StatisticsCubit cubit = context.read<StatisticsCubit>();
     if (cubit.state.selectedDate != null) {
       await cubit.getDailyStatistics(cubit.state.selectedDate!);
     } else if (cubit.state.isMonthlyMode &&
         cubit.state.selectedMonthYear != null) {
-      final parts = cubit.state.selectedMonthYear!.split('-');
+      final List<String> parts = cubit.state.selectedMonthYear!.split('-');
       if (parts.length == 2) {
         await cubit.getMonthlyStatistics(parts[0], parts[1]);
       } else {
-        final now = DateTime.now();
+        final DateTime now = DateTime.now();
         await cubit.getMonthlyStatistics(
           now.year.toString(),
           now.month.toString(),
         );
       }
     } else {
-      final now = DateTime.now();
+      final DateTime now = DateTime.now();
       await cubit.getMonthlyStatistics(
         now.year.toString(),
         now.month.toString(),
@@ -197,16 +188,16 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<StatisticsCubit, StatisticsState>(
-      listener: (context, state) {},
-      builder: (context, state) {
+      listener: (BuildContext context, StatisticsState state) {},
+      builder: (BuildContext context, StatisticsState state) {
         return Scaffold(
           backgroundColor: ColorManager.background,
           appBar: _buildAppBar(context, state),
           body: SafeArea(
             child: Column(
-              children: [
+              children: <Widget>[
                 // ── Filter Segmented Tabs ─────────────────────────────
-                _buildFilterTabs(),
+                _buildFilterTabs(context, state),
 
                 // ── Selected Date Banner (if in Daily mode) ───────────
                 if (state.selectedDate != null)
@@ -249,7 +240,7 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
       subtitle = 'تقرير اليوم الحالي';
     }
 
-    final canPop = Navigator.canPop(context);
+    final bool canPop = Navigator.canPop(context);
 
     return AppBar(
       backgroundColor: ColorManager.surface,
@@ -285,7 +276,7 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
         ),
       ),
       title: Column(
-        children: [
+        children: <Widget>[
           Text(
             'التقارير والإحصائيات',
             style: getBoldStyle(
@@ -303,7 +294,7 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
           ),
         ],
       ),
-      actions: [
+      actions: <Widget>[
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 8.w),
           child: Container(
@@ -314,20 +305,20 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
             ),
             child: IconButton(
               icon: Icon(
-                _selectedTabIndex == 1
+                state.selectedTabIndex == 1
                     ? Icons.calendar_month_rounded
                     : Icons.event_available_rounded,
                 color: ColorManager.primary,
                 size: 20.r,
               ),
               onPressed: () {
-                if (_selectedTabIndex == 1) {
+                if (state.selectedTabIndex == 1) {
                   _openMonthPicker(context);
                 } else {
                   _openDatePicker(context);
                 }
               },
-              tooltip: _selectedTabIndex == 1
+              tooltip: state.selectedTabIndex == 1
                   ? 'اختيار شهر محدد'
                   : 'اختيار يوم محدد',
             ),
@@ -338,7 +329,7 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
   }
 
   // ─── Filter Tabs ────────────────────────────────────────────
-  Widget _buildFilterTabs() {
+  Widget _buildFilterTabs(BuildContext context, StatisticsState state) {
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: AppPadding.p16.w,
@@ -352,11 +343,11 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
           border: Border.all(color: ColorManager.border.withAlpha(50)),
         ),
         child: Row(
-          children: List.generate(_tabs.length, (index) {
-            final isSelected = _selectedTabIndex == index;
+          children: List<Widget>.generate(_tabs.length, (int index) {
+            final bool isSelected = state.selectedTabIndex == index;
             return Expanded(
               child: GestureDetector(
-                onTap: () => _onTabSelected(index),
+                onTap: () => _onTabSelected(context, index),
                 behavior: HitTestBehavior.opaque,
                 child: AnimatedContainer(
                   duration: AppDuration.d200,
@@ -365,10 +356,10 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? ColorManager.primary
-                        : Colors.transparent,
+                        : ColorManager.transparent,
                     borderRadius: AppBorderRadius.r12,
                     boxShadow: isSelected
-                        ? [
+                        ? <BoxShadow>[
                             BoxShadow(
                               color: ColorManager.primary.withAlpha(50),
                               blurRadius: 8,
@@ -379,8 +370,8 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (index == 0) ...[
+                    children: <Widget>[
+                      if (index == 0) ...<Widget>[
                         Icon(
                           Icons.event_available_rounded,
                           size: 14.r,
@@ -389,7 +380,7 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
                               : ColorManager.textSecondary,
                         ),
                         SizedBox(width: 4.w),
-                      ] else if (index == 1) ...[
+                      ] else if (index == 1) ...<Widget>[
                         Icon(
                           Icons.calendar_month_rounded,
                           size: 14.r,
@@ -440,7 +431,7 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
           border: Border.all(color: ColorManager.primary.withAlpha(40)),
         ),
         child: Row(
-          children: [
+          children: <Widget>[
             InkWell(
               onTap: () => _openDatePicker(context),
               borderRadius: BorderRadius.circular(AppRadius.r8.r),
@@ -452,7 +443,7 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: [
+                  children: <Widget>[
                     Icon(
                       Icons.edit_calendar_rounded,
                       size: 12.r,
@@ -507,7 +498,7 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
           border: Border.all(color: ColorManager.primary.withAlpha(40)),
         ),
         child: Row(
-          children: [
+          children: <Widget>[
             InkWell(
               onTap: () => _openMonthPicker(context),
               borderRadius: BorderRadius.circular(AppRadius.r8.r),
@@ -519,7 +510,7 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: [
+                  children: <Widget>[
                     Icon(
                       Icons.calendar_month_rounded,
                       size: 12.r,
@@ -566,7 +557,7 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
     BuildContext context,
     StatisticsState state,
   ) {
-    final data = state.data;
+    final StatisticsPageModel? data = state.data;
 
     return RefreshIndicator(
       onRefresh: () => _onRefresh(context),
@@ -579,7 +570,7 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
         padding: EdgeInsets.symmetric(horizontal: AppPadding.p16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+          children: <Widget>[
             SizedBox(height: 6.h),
 
             // 1. KPI Cards (Sales & Purchases)
@@ -609,12 +600,12 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
 
   // ─── 1. Summary KPI Cards (Figma Side-by-Side) ───────────────
   Widget _buildKpiCards(StatisticsPageModel? data) {
-    final totalSales = (data?.totalSales ?? 0).toDouble();
-    final totalPurchases = (data?.totalPurchases ?? 0).toDouble();
-    final totalTurnover = totalPurchases + totalSales;
+    final double totalSales = (data?.totalSales ?? 0).toDouble();
+    final double totalPurchases = (data?.totalPurchases ?? 0).toDouble();
+    final double totalTurnover = totalPurchases + totalSales;
 
     return Column(
-      children: [
+      children: <Widget>[
         _KpiCard(
           label: 'إجمالي التداول',
           amount: totalTurnover,
@@ -624,7 +615,7 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
 
         SizedBox(height: 10.h),
         Row(
-          children: [
+          children: <Widget>[
             // Total Sales / Revenue
             Expanded(
               child: _KpiCard(
@@ -652,34 +643,38 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
 
   // ─── 2. Net & Operations Count Banner ───────────────────────
   Widget _buildNetAndOperationsBanner(StatisticsPageModel? data) {
-    final totalSales = (data?.totalSales ?? 0).toDouble();
-    final totalPurchases = (data?.totalPurchases ?? 0).toDouble();
-    final netAmount = totalSales - totalPurchases;
-    final isSurplus = netAmount >= 0;
-    final operationsCount =
+    final double totalSales = (data?.totalSales ?? 0).toDouble();
+    final double totalPurchases = (data?.totalPurchases ?? 0).toDouble();
+    final double netAmount = totalSales - totalPurchases;
+    final bool isSurplus = netAmount >= 0;
+    final int operationsCount =
         data?.operationsCount ?? (data?.transactions?.length ?? 0);
 
-    final netColor = isSurplus ? ColorManager.success : ColorManager.error;
-    final netBg = isSurplus
+    final Color netColor = isSurplus
+        ? ColorManager.success
+        : ColorManager.error;
+    final Color netBg = isSurplus
         ? ColorManager.successContainer
         : ColorManager.errorContainer;
-    final formattedNet = NumberFormat('#,##0.##').format(netAmount.abs());
+    final String formattedNet = NumberFormat(
+      '#,##0.##',
+    ).format(netAmount.abs());
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       decoration: BoxDecoration(
         color: ColorManager.surface,
         borderRadius: AppBorderRadius.r20,
-        boxShadow: const [AppShadows.cardShadow],
+        boxShadow: const <BoxShadow>[AppShadows.cardShadow],
         border: Border.all(color: ColorManager.border),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
+        children: <Widget>[
           // Operations Count
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               Text(
                 'عدد العمليات',
                 style: getRegularStyle(
@@ -690,7 +685,7 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
               SizedBox(height: 4.h),
               Row(
                 mainAxisSize: MainAxisSize.min,
-                children: [
+                children: <Widget>[
                   Icon(
                     Icons.receipt_long_rounded,
                     size: 16.r,
@@ -715,10 +710,10 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
           // Net Balance
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
+            children: <Widget>[
               Row(
                 mainAxisSize: MainAxisSize.min,
-                children: [
+                children: <Widget>[
                   Container(
                     padding: EdgeInsets.symmetric(
                       horizontal: 6.w,
@@ -761,14 +756,14 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
 
   // ─── 3. Cost & Sales Structure Analysis ─────────────────────
   Widget _buildCostStructure(StatisticsPageModel? data) {
-    final totalPurchases = (data?.totalPurchases ?? 0).toDouble();
-    final totalSales = (data?.totalSales ?? 0).toDouble();
-    final totalTurnover = totalPurchases + totalSales;
+    final double totalPurchases = (data?.totalPurchases ?? 0).toDouble();
+    final double totalSales = (data?.totalSales ?? 0).toDouble();
+    final double totalTurnover = totalPurchases + totalSales;
 
-    final salesPct = totalTurnover > 0
+    final int salesPct = totalTurnover > 0
         ? ((totalSales / totalTurnover) * 100).round()
         : 0;
-    final purchasesPct = totalTurnover > 0
+    final int purchasesPct = totalTurnover > 0
         ? ((totalPurchases / totalTurnover) * 100).round()
         : 0;
 
@@ -777,12 +772,12 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
       decoration: BoxDecoration(
         color: ColorManager.surface,
         borderRadius: AppBorderRadius.r20,
-        boxShadow: const [AppShadows.cardShadow],
+        boxShadow: const <BoxShadow>[AppShadows.cardShadow],
         border: Border.all(color: ColorManager.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
+        children: <Widget>[
           Center(
             child: Text(
               'تحليل هيكل التكاليف',
@@ -795,7 +790,7 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
 
           SizedBox(height: 16.h),
 
-          if (totalTurnover > 0) ...[
+          if (totalTurnover > 0) ...<Widget>[
             _CostBar(
               label: 'المبيعات والإيرادات',
               pct: salesPct,
@@ -809,7 +804,7 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
               amount: totalPurchases,
               color: ColorManager.secondary,
             ),
-          ] else ...[
+          ] else ...<Widget>[
             Center(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 12.h),
@@ -830,18 +825,19 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
 
   // ─── 4. Most Active Partners / Transactions List ────────────
   Widget _buildActivePartners(BuildContext context, StatisticsPageModel? data) {
-    final txns = data?.transactions ?? [];
+    final List<TransactionStatisticsModel> txns =
+        data?.transactions ?? <TransactionStatisticsModel>[];
 
     return Container(
       decoration: BoxDecoration(
         color: ColorManager.surface,
         borderRadius: AppBorderRadius.r20,
-        boxShadow: const [AppShadows.cardShadow],
+        boxShadow: const <BoxShadow>[AppShadows.cardShadow],
         border: Border.all(color: ColorManager.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+        children: <Widget>[
           Padding(
             padding: EdgeInsets.fromLTRB(
               AppPadding.p16.w,
@@ -851,7 +847,7 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
+              children: <Widget>[
                 if (txns.isNotEmpty)
                   Container(
                     padding: EdgeInsets.symmetric(
@@ -880,7 +876,7 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
               ],
             ),
           ),
-          Divider(height: 1, color: ColorManager.border),
+          const Divider(height: 1, color: ColorManager.border),
           if (txns.isEmpty)
             _buildEmptyTransactions()
           else
@@ -888,25 +884,26 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: txns.length,
-              separatorBuilder: (context, index) => Divider(
+              separatorBuilder: (BuildContext context, int index) => Divider(
                 height: 1,
                 indent: 16.w,
                 endIndent: 16.w,
                 color: ColorManager.border.withAlpha(80),
               ),
-              itemBuilder: (ctx, index) => _TransactionPartnerRow(
-                txn: txns[index],
-                onTap: () {
-                  final id = txns[index].id;
-                  if (id != null && id.isNotEmpty) {
-                    Navigator.pushNamed(
-                      context,
-                      Routes.transactionDetailsRoute,
-                      arguments: id,
-                    );
-                  }
-                },
-              ),
+              itemBuilder: (BuildContext ctx, int index) =>
+                  _TransactionPartnerRow(
+                    txn: txns[index],
+                    onTap: () {
+                      final String? id = txns[index].id;
+                      if (id != null && id.isNotEmpty) {
+                        Navigator.pushNamed(
+                          context,
+                          Routes.transactionDetailsRoute,
+                          arguments: id,
+                        );
+                      }
+                    },
+                  ),
             ),
         ],
       ),
@@ -920,11 +917,11 @@ class _StatisticsScreenState extends State<_StatisticsScreen> {
         horizontal: AppPadding.p16.w,
       ),
       child: Column(
-        children: [
+        children: <Widget>[
           Container(
             width: 48.r,
             height: 48.r,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: ColorManager.surfaceVariant,
               shape: BoxShape.circle,
             ),
@@ -974,29 +971,31 @@ class _KpiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final valueColor = isPositive ? ColorManager.success : ColorManager.error;
-    final bgColor = isPositive
+    final Color valueColor = isPositive
+        ? ColorManager.success
+        : ColorManager.error;
+    final Color bgColor = isPositive
         ? ColorManager.successContainer
         : ColorManager.errorContainer;
-    final arrowIcon = isPositive
+    final IconData arrowIcon = isPositive
         ? Icons.north_east_rounded
         : Icons.south_west_rounded;
-    final formatted = NumberFormat('#,##0.##').format(amount);
+    final String formatted = NumberFormat('#,##0.##').format(amount);
 
     return Container(
       padding: EdgeInsets.all(AppPadding.p14.r),
       decoration: BoxDecoration(
         color: ColorManager.surface,
         borderRadius: AppBorderRadius.r20,
-        boxShadow: const [AppShadows.cardShadow],
+        boxShadow: const <BoxShadow>[AppShadows.cardShadow],
         border: Border.all(color: ColorManager.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
+        children: <Widget>[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
+            children: <Widget>[
               Container(
                 width: 32.r,
                 height: 32.r,
@@ -1030,7 +1029,7 @@ class _KpiCard extends StatelessWidget {
           SizedBox(height: 6.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
-            children: [
+            children: <Widget>[
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                 decoration: BoxDecoration(
@@ -1039,7 +1038,7 @@ class _KpiCard extends StatelessWidget {
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: [
+                  children: <Widget>[
                     Icon(
                       isPositive
                           ? Icons.arrow_upward_rounded
@@ -1082,14 +1081,14 @@ class _CostBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formattedAmount = NumberFormat('#,##0.##').format(amount);
+    final String formattedAmount = NumberFormat('#,##0.##').format(amount);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
+      children: <Widget>[
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
+          children: <Widget>[
             Flexible(
               child: Text(
                 '$pct% ($formattedAmount EGP)',
@@ -1138,16 +1137,18 @@ class _TransactionPartnerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = (txn.contactName?.isNotEmpty == true)
+    final String name = (txn.contactName?.isNotEmpty == true)
         ? txn.contactName!
         : (txn.partyName?.isNotEmpty == true ? txn.partyName! : 'غير محدد');
-    final initial = name.isNotEmpty ? name[0] : '؟';
-    final amount = NumberFormat('#,##0.##').format(txn.amount ?? 0);
-    final opType = txn.operationType?.toLowerCase() ?? '';
-    final isSale = opType.contains('sale') || opType.contains('بيع');
-    final amountColor = isSale ? ColorManager.success : ColorManager.error;
+    final String initial = name.isNotEmpty ? name[0] : '؟';
+    final String amount = NumberFormat('#,##0.##').format(txn.amount ?? 0);
+    final String opType = txn.operationType?.toLowerCase() ?? '';
+    final bool isSale = opType.contains('sale') || opType.contains('بيع');
+    final Color amountColor = isSale
+        ? ColorManager.success
+        : ColorManager.error;
 
-    final typeArabic = isSale ? 'بيع' : 'شراء';
+    final String typeArabic = isSale ? 'بيع' : 'شراء';
 
     return InkWell(
       onTap: onTap,
@@ -1157,12 +1158,12 @@ class _TransactionPartnerRow extends StatelessWidget {
           vertical: AppPadding.p12.h,
         ),
         child: Row(
-          children: [
+          children: <Widget>[
             // Amount & Type Pill
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: <Widget>[
                 Text(
                   '${isSale ? '+' : '-'}$amount EGP',
                   style: getBoldStyle(
@@ -1196,7 +1197,7 @@ class _TransactionPartnerRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 mainAxisSize: MainAxisSize.min,
-                children: [
+                children: <Widget>[
                   Text(
                     name,
                     style: getMediumStyle(
@@ -1210,8 +1211,8 @@ class _TransactionPartnerRow extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      if (txn.paymentMethod?.isNotEmpty == true) ...[
+                    children: <Widget>[
+                      if (txn.paymentMethod?.isNotEmpty == true) ...<Widget>[
                         Flexible(
                           child: Text(
                             txn.paymentMethod!,
@@ -1274,12 +1275,11 @@ class _TransactionPartnerRow extends StatelessWidget {
         ),
       ),
     );
-
   }
 }
 
 // ─── Month & Year Picker Dialog (Without Days) ───────────────
-class _MonthYearPickerDialog extends StatefulWidget {
+class _MonthYearPickerDialog extends StatelessWidget {
   final int initialYear;
   final int initialMonth;
 
@@ -1288,15 +1288,7 @@ class _MonthYearPickerDialog extends StatefulWidget {
     required this.initialMonth,
   });
 
-  @override
-  State<_MonthYearPickerDialog> createState() => _MonthYearPickerDialogState();
-}
-
-class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
-  late int _selectedYear;
-  late int _selectedMonth;
-
-  static const List<String> _months = [
+  static const List<String> _months = <String>[
     'يناير (1)',
     'فبراير (2)',
     'مارس (3)',
@@ -1312,212 +1304,218 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
   ];
 
   @override
-  void initState() {
-    super.initState();
-    _selectedYear = widget.initialYear;
-    _selectedMonth = widget.initialMonth;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.r20.r),
-      ),
-      backgroundColor: ColorManager.surface,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 18.h),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Dialog Title
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'اختيار شهر محدد',
-                  style: getBoldStyle(
-                    color: ColorManager.textPrimary,
-                    fontSize: FontSize.s16,
-                  ),
-                ),
-                Icon(
-                  Icons.calendar_month_rounded,
-                  color: ColorManager.primary,
-                  size: 22.r,
-                ),
-              ],
-            ),
+    int selectedYear = initialYear;
+    int selectedMonth = initialMonth;
 
-            SizedBox(height: 14.h),
-
-            // Year Selector Bar (< 2026 >)
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: ColorManager.surfaceVariant,
-                borderRadius: BorderRadius.circular(AppRadius.r12.r),
-                border: Border.all(color: ColorManager.border),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      Icons.chevron_left_rounded,
-                      color: ColorManager.primary,
-                      size: 24.r,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _selectedYear--;
-                      });
-                    },
-                    tooltip: 'السنة السابقة',
-                  ),
-                  Text(
-                    '$_selectedYear',
-                    style: getBoldStyle(
-                      color: ColorManager.textPrimary,
-                      fontSize: FontSize.s16,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.chevron_right_rounded,
-                      color: ColorManager.primary,
-                      size: 24.r,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _selectedYear++;
-                      });
-                    },
-                    tooltip: 'السنة التالية',
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 14.h),
-
-            // 3x4 Months Grid
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 8.w,
-                mainAxisSpacing: 8.h,
-                childAspectRatio: 2.2,
-              ),
-              itemCount: 12,
-              itemBuilder: (context, index) {
-                final monthNumber = index + 1;
-                final isSelected = monthNumber == _selectedMonth;
-
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedMonth = monthNumber;
-                    });
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? ColorManager.primary
-                          : ColorManager.surfaceVariant,
-                      borderRadius: BorderRadius.circular(AppRadius.r10.r),
-                      border: Border.all(
-                        color: isSelected
-                            ? ColorManager.primary
-                            : ColorManager.border.withAlpha(80),
-                        width: isSelected ? 1.5 : 1.0,
-                      ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: ColorManager.primary.withAlpha(60),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: Text(
-                      _months[index],
-                      textAlign: TextAlign.center,
-                      style: isSelected
-                          ? getBoldStyle(
-                              color: ColorManager.white,
-                              fontSize: FontSize.s11,
-                            )
-                          : getMediumStyle(
-                              color: ColorManager.textPrimary,
-                              fontSize: FontSize.s11,
-                            ),
-                    ),
-                  ),
-                );
-              },
-            ),
-
-            SizedBox(height: 18.h),
-
-            // Action Buttons (Cancel / Confirm)
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.r12.r),
-                      ),
-                      side: BorderSide(color: ColorManager.border),
-                      padding: EdgeInsets.symmetric(vertical: 10.h),
-                    ),
-                    child: Text(
-                      'إلغاء',
-                      style: getSemiBoldStyle(
-                        color: ColorManager.textSecondary,
-                        fontSize: FontSize.s13,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 10.w),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop<Map<String, int>>({
-                        'year': _selectedYear,
-                        'month': _selectedMonth,
-                      });
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: ColorManager.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.r12.r),
-                      ),
-                      padding: EdgeInsets.symmetric(vertical: 10.h),
-                    ),
-                    child: Text(
-                      'تأكيد',
+    return StatefulBuilder(
+      builder: (BuildContext context, StateSetter setModalState) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.r20.r),
+          ),
+          backgroundColor: ColorManager.surface,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 18.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                // Dialog Title
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text(
+                      'اختيار شهر محدد',
                       style: getBoldStyle(
-                        color: ColorManager.white,
-                        fontSize: FontSize.s13,
+                        color: ColorManager.textPrimary,
+                        fontSize: FontSize.s16,
                       ),
                     ),
+                    Icon(
+                      Icons.calendar_month_rounded,
+                      color: ColorManager.primary,
+                      size: 22.r,
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 14.h),
+
+                // Year Selector Bar (< 2026 >)
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: ColorManager.surfaceVariant,
+                    borderRadius: BorderRadius.circular(AppRadius.r12.r),
+                    border: Border.all(color: ColorManager.border),
                   ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      IconButton(
+                        icon: Icon(
+                          Icons.chevron_left_rounded,
+                          color: ColorManager.primary,
+                          size: 24.r,
+                        ),
+                        onPressed: () {
+                          setModalState(() {
+                            selectedYear--;
+                          });
+                        },
+                        tooltip: 'السنة السابقة',
+                      ),
+                      Text(
+                        '$selectedYear',
+                        style: getBoldStyle(
+                          color: ColorManager.textPrimary,
+                          fontSize: FontSize.s16,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.chevron_right_rounded,
+                          color: ColorManager.primary,
+                          size: 24.r,
+                        ),
+                        onPressed: () {
+                          setModalState(() {
+                            selectedYear++;
+                          });
+                        },
+                        tooltip: 'السنة التالية',
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: 14.h),
+
+                // 3x4 Months Grid
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 8.w,
+                    mainAxisSpacing: 8.h,
+                    childAspectRatio: 2.2,
+                  ),
+                  itemCount: 12,
+                  itemBuilder: (BuildContext context, int index) {
+                    final int monthNumber = index + 1;
+                    final bool isSelected = monthNumber == selectedMonth;
+
+                    return GestureDetector(
+                      onTap: () {
+                        setModalState(() {
+                          selectedMonth = monthNumber;
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? ColorManager.primary
+                              : ColorManager.surfaceVariant,
+                          borderRadius: BorderRadius.circular(AppRadius.r10.r),
+                          border: Border.all(
+                            color: isSelected
+                                ? ColorManager.primary
+                                : ColorManager.border.withAlpha(80),
+                            width: isSelected ? 1.5 : 1.0,
+                          ),
+                          boxShadow: isSelected
+                              ? <BoxShadow>[
+                                  BoxShadow(
+                                    color: ColorManager.primary.withAlpha(60),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Text(
+                          _months[index],
+                          textAlign: TextAlign.center,
+                          style: isSelected
+                              ? getBoldStyle(
+                                  color: ColorManager.white,
+                                  fontSize: FontSize.s11,
+                                )
+                              : getMediumStyle(
+                                  color: ColorManager.textPrimary,
+                                  fontSize: FontSize.s11,
+                                ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                SizedBox(height: 18.h),
+
+                // Action Buttons (Cancel / Confirm)
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.r12.r,
+                            ),
+                          ),
+                          side: const BorderSide(color: ColorManager.border),
+                          padding: EdgeInsets.symmetric(vertical: 10.h),
+                        ),
+                        child: Text(
+                          'إلغاء',
+                          style: getSemiBoldStyle(
+                            color: ColorManager.textSecondary,
+                            fontSize: FontSize.s13,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop<Map<String, int>>(
+                            <String, int>{
+                              'year': selectedYear,
+                              'month': selectedMonth,
+                            },
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ColorManager.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.r12.r,
+                            ),
+                          ),
+                          padding: EdgeInsets.symmetric(vertical: 10.h),
+                        ),
+                        child: Text(
+                          'تأكيد',
+                          style: getBoldStyle(
+                            color: ColorManager.white,
+                            fontSize: FontSize.s13,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

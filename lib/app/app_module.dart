@@ -10,7 +10,7 @@ abstract class AppModule {
   @lazySingleton
   InternetConnectionChecker get internetConnectionChecker =>
       InternetConnectionChecker.createInstance(
-        addresses: [
+        addresses: <AddressCheckOption>[
           AddressCheckOption(
             uri: Uri.parse('https://google.com'),
             timeout: const Duration(seconds: 5),

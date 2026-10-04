@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mizan/domain/model/contact_model.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
@@ -27,7 +27,7 @@ class ContactTransactionTile extends StatelessWidget {
   String _formatDate(String isoDate) {
     if (isoDate.isEmpty) return "—";
     try {
-      final date = DateTime.parse(isoDate).toLocal();
+      final DateTime date = DateTime.parse(isoDate).toLocal();
       return "${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}";
     } catch (_) {
       return isoDate;
@@ -36,9 +36,11 @@ class ContactTransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isSale = _isSale;
-    final amountPrefix = isSale ? "+" : "-";
-    final amountColor = isSale ? ColorManager.success : ColorManager.error;
+    final bool isSale = _isSale;
+    final String amountPrefix = isSale ? "+" : "-";
+    final Color amountColor = isSale
+        ? ColorManager.success
+        : ColorManager.error;
 
     return Container(
       margin: EdgeInsets.only(bottom: 10.h),
@@ -46,27 +48,27 @@ class ContactTransactionTile extends StatelessWidget {
         color: ColorManager.surface,
         borderRadius: BorderRadius.circular(AppRadius.r16.r),
         border: Border.all(color: ColorManager.border, width: 1.0),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
-            color: Color(0x061C1816),
+            color: ColorManager.shadowWarm,
             offset: Offset(0, 2),
             blurRadius: 6,
           ),
         ],
       ),
       child: Material(
-        color: Colors.transparent,
+        color: ColorManager.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppRadius.r16.r),
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
             child: Row(
-              children: [
+              children: <Widget>[
                 // Left Column: Amount & Badges
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  children: <Widget>[
                     Text(
                       "$amountPrefix${transaction.amount} ${AppConstants.defaultCurrency}",
                       textDirection: TextDirection.ltr,
@@ -77,15 +79,20 @@ class ContactTransactionTile extends StatelessWidget {
                     ),
                     SizedBox(height: 6.h),
                     Row(
-                      children: [
+                      children: <Widget>[
                         // Payment Method Badge
                         if (transaction.paymentMethod.isNotEmpty)
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 6.w,
+                              vertical: 2.h,
+                            ),
                             margin: EdgeInsets.only(left: 4.w),
                             decoration: BoxDecoration(
                               color: ColorManager.surfaceVariant,
-                              borderRadius: BorderRadius.circular(AppRadius.r6.r),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.r6.r,
+                              ),
                             ),
                             child: Text(
                               transaction.paymentMethod == "Cash"
@@ -100,7 +107,10 @@ class ContactTransactionTile extends StatelessWidget {
 
                         // Type Badge
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6.w,
+                            vertical: 2.h,
+                          ),
                           decoration: BoxDecoration(
                             color: isSale
                                 ? ColorManager.successContainer
@@ -108,7 +118,9 @@ class ContactTransactionTile extends StatelessWidget {
                             borderRadius: BorderRadius.circular(AppRadius.r6.r),
                           ),
                           child: Text(
-                            isSale ? AppStrings.clientCollection : AppStrings.purchaseSupplier,
+                            isSale
+                                ? AppStrings.clientCollection
+                                : AppStrings.purchaseSupplier,
                             style: getBoldStyle(
                               color: isSale
                                   ? ColorManager.success
@@ -129,11 +141,13 @@ class ContactTransactionTile extends StatelessWidget {
                   flex: 6,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
+                    children: <Widget>[
                       Text(
                         transaction.partyName.isNotEmpty
                             ? transaction.partyName
-                            : (isSale ? AppStrings.accountPayment : AppStrings.purchaseSupplier),
+                            : (isSale
+                                  ? AppStrings.accountPayment
+                                  : AppStrings.purchaseSupplier),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.right,

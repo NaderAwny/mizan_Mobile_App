@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mizan/app/di.dart';
+import 'package:mizan/domain/model/get_profile_model/get_profile_model.dart';
+import 'package:mizan/domain/model/statistics_model/statistics_model.dart';
 import 'package:mizan/presentation/analytics/analytics_view.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
 import 'package:mizan/presentation/customers/customers_view.dart';
@@ -43,11 +45,11 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
+    final DateTime now = DateTime.now();
     return MultiBlocProvider(
-      providers: [
+      providers: <BlocProvider<StateStreamableSource<Object?>>>[
         BlocProvider<GetProfileCubit>(
-          create: (_) => getIt<GetProfileCubit>()..getProfile(),
+          create: (BuildContext context) => getIt<GetProfileCubit>(),
         ),
         BlocProvider<StatisticsCubit>(
           create: (_) => getIt<StatisticsCubit>()
@@ -87,7 +89,7 @@ class _HomeScreenState extends State<_HomeScreen> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
+      onPopInvokedWithResult: (bool didPop, Object? result) {
         if (didPop) return;
         if (_currentTabIndex != 0) {
           setState(() {
@@ -96,7 +98,7 @@ class _HomeScreenState extends State<_HomeScreen> {
         }
       },
       child: NotificationListener<SwitchHomeTabNotification>(
-        onNotification: (notification) {
+        onNotification: (SwitchHomeTabNotification notification) {
           setState(() {
             _currentTabIndex = notification.targetIndex;
           });
@@ -107,7 +109,7 @@ class _HomeScreenState extends State<_HomeScreen> {
           drawer: const MizanDrawer(),
           body: IndexedStack(
             index: _currentTabIndex,
-            children: [
+            children: <Widget>[
               _buildHomeDashboardTab(),
               const TransactionsView(),
               const CustomersView(),
@@ -134,8 +136,8 @@ class _HomeScreenState extends State<_HomeScreen> {
         color: ColorManager.primary,
         backgroundColor: ColorManager.surface,
         onRefresh: () async {
-          final now = DateTime.now();
-          await Future.wait([
+          final DateTime now = DateTime.now();
+          await Future.wait(<Future<void>>[
             context.read<GetProfileCubit>().getProfile(),
             context.read<StatisticsCubit>().getMonthlyStatistics(
               now.year.toString(),
@@ -152,16 +154,17 @@ class _HomeScreenState extends State<_HomeScreen> {
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               // 1. Top Header Bar (Real Profile & Shop data)
               BlocBuilder<GetProfileCubit, GetProfileState>(
-                builder: (context, profileState) {
-                  final profile = profileState.data;
-                  final userName =
+                builder: (BuildContext context, GetProfileState profileState) {
+                  final GetProfileModel? profile = profileState.data;
+                  final String userName =
                       (profile != null && profile.firstName.isNotEmpty)
                       ? "${profile.firstName} ${profile.lastName}".trim()
                       : "مرحباً بك";
-                  final shopName = profile?.shop?.shopName?.isNotEmpty == true
+                  final String shopName =
+                      profile?.shop?.shopName?.isNotEmpty == true
                       ? profile!.shop!.shopName!
                       : "محل ميزان التجاري";
                   return HomeHeader(userName: userName, shopName: shopName);
@@ -172,22 +175,15 @@ class _HomeScreenState extends State<_HomeScreen> {
 
               // 2 & 3 & 4. Hero Card + Quick Actions + Monthly Summary Card (Real Statistics Data)
               BlocBuilder<StatisticsCubit, StatisticsState>(
-                builder: (context, statsState) {
-                  final stats = statsState.data;
-                  final totalSales = (stats?.totalSales ?? 0).toDouble();
-                  final totalPurchases = (stats?.totalPurchases ?? 0)
+                builder: (BuildContext context, StatisticsState statsState) {
+                  final StatisticsPageModel? stats = statsState.data;
+                  final double totalSales = (stats?.totalSales ?? 0).toDouble();
+                  final double totalPurchases = (stats?.totalPurchases ?? 0)
                       .toDouble();
-                  final totalBalance = totalSales - totalPurchases;
-                  final totalTurnover = totalSales + totalPurchases;
-                  final targetAmount = totalTurnover > 0
-                      ? totalTurnover
-                      : 50000.0;
-                  final percentage = targetAmount > 0
-                      ? (totalSales / targetAmount)
-                      : 0.0;
+                  final double totalBalance = totalSales - totalPurchases;
 
                   return Column(
-                    children: [
+                    children: <Widget>[
                       // Hero Financial Balance Card (Compact & Fitted)
                       HeroBalanceCard(
                         totalBalance: totalBalance,
@@ -218,12 +214,13 @@ class _HomeScreenState extends State<_HomeScreen> {
 
               // 5. Recent Activity & Transactions Section (Real Data from API)
               BlocBuilder<GetListTransactionCubit, GetListTransactionState>(
-                builder: (context, txState) {
-                  return RecentTransactionsSection(
-                    transactions: txState.data,
-                    isLoading: txState.flowState is LoadingState,
-                  );
-                },
+                builder:
+                    (BuildContext context, GetListTransactionState txState) {
+                      return RecentTransactionsSection(
+                        transactions: txState.data,
+                        isLoading: txState.flowState is LoadingState,
+                      );
+                    },
               ),
 
               SizedBox(height: 40.h),
@@ -240,7 +237,7 @@ class _HomeScreenState extends State<_HomeScreen> {
       decoration: BoxDecoration(
         gradient: ColorManager.primaryGradient,
         borderRadius: BorderRadius.circular(AppRadius.r28.r),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             color: Color(0x38C57B57),
             blurRadius: 14.0,
@@ -249,7 +246,7 @@ class _HomeScreenState extends State<_HomeScreen> {
         ],
       ),
       child: Material(
-        color: Colors.transparent,
+        color: ColorManager.transparent,
         child: InkWell(
           onTap: _openVoiceRecordDialog,
           borderRadius: BorderRadius.circular(AppRadius.r28.r),
@@ -257,7 +254,7 @@ class _HomeScreenState extends State<_HomeScreen> {
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: <Widget>[
                 SvgPicture.asset(
                   IconAssets.mic,
                   width: 18.r,

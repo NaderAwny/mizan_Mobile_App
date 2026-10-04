@@ -4,7 +4,7 @@ class CustomInstallmentItem {
 
   CustomInstallmentItem({required this.amount, required this.dueDate});
 
-  Map<String, dynamic> toJson() => {
+  Map<String, dynamic> toJson() => <String, dynamic>{
     'amount': amount,
     'dueDate': dueDate,
   };
@@ -46,7 +46,7 @@ class CreateTransactionRequest {
     this.customInstallments,
   });
 
-  Map<String, dynamic> toBody() => {
+  Map<String, dynamic> toBody() => <String, dynamic>{
     if (contactId != null) 'contactId': contactId,
     if (partyName != null) 'partyName': partyName,
     'type': type,
@@ -61,7 +61,8 @@ class CreateTransactionRequest {
     if (firstInstallmentDate != null)
       'firstInstallmentDate': firstInstallmentDate,
     if (customInstallments != null)
-      'customInstallments':
-          customInstallments!.map((e) => e.toJson()).toList(),
+      'customInstallments': customInstallments!
+          .map((CustomInstallmentItem e) => e.toJson())
+          .toList(),
   };
 }

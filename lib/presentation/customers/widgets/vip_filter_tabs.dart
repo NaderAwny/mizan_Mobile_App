@@ -24,27 +24,34 @@ class VipFilterTabs extends StatelessWidget {
       margin: EdgeInsets.symmetric(vertical: 10.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
-        children: List.generate(tabs.length, (index) {
-          final isSelected = selectedIndex == index;
+        children: List<Widget>.generate(tabs.length, (int index) {
+          final bool isSelected = selectedIndex == index;
           return Padding(
             padding: EdgeInsets.only(left: 8.w),
             child: Material(
-              color: Colors.transparent,
+              color: ColorManager.transparent,
               child: InkWell(
                 onTap: () => onTabSelected(index),
                 borderRadius: BorderRadius.circular(AppRadius.r20.r),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 8.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 18.w,
+                    vertical: 8.h,
+                  ),
                   decoration: BoxDecoration(
-                    color: isSelected ? ColorManager.primary : ColorManager.surface,
+                    color: isSelected
+                        ? ColorManager.primary
+                        : ColorManager.surface,
                     borderRadius: BorderRadius.circular(AppRadius.r20.r),
                     border: Border.all(
-                      color: isSelected ? ColorManager.primary : ColorManager.border,
+                      color: isSelected
+                          ? ColorManager.primary
+                          : ColorManager.border,
                       width: 1.2,
                     ),
                     boxShadow: isSelected
-                        ? [
+                        ? <BoxShadow>[
                             BoxShadow(
                               color: ColorManager.primary.withAlpha(40),
                               offset: const Offset(0, 3),
@@ -56,7 +63,9 @@ class VipFilterTabs extends StatelessWidget {
                   child: Text(
                     tabs[index],
                     style: getMediumStyle(
-                      color: isSelected ? ColorManager.white : ColorManager.textSecondary,
+                      color: isSelected
+                          ? ColorManager.white
+                          : ColorManager.textSecondary,
                       fontSize: FontSize.s13,
                     ),
                   ),

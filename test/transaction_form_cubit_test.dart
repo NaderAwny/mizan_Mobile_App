@@ -19,7 +19,7 @@ class FakeTransactionRepository implements TransactionRepository {
   ) async {
     lastRequest = request;
     if (shouldSucceed) {
-      return Right(
+      return Right<Failure, Transaction>(
         Transaction(
           id: 'test-id',
           contactId: request.contactId ?? '',
@@ -29,12 +29,12 @@ class FakeTransactionRepository implements TransactionRepository {
           paymentMethod: request.paymentMethod,
           transactionDate: request.transactionDate,
           isInstallment: request.isInstallment,
-          installments: const [],
+          installments: const <Installment>[],
           createdAt: DateTime.now().toIso8601String(),
         ),
       );
     } else {
-      return Left(Failure(400, 'Server error'));
+      return Left<Failure, Transaction>(Failure(400, 'Server error'));
     }
   }
 
@@ -63,7 +63,7 @@ void main() {
     test(
       'Fails validation if both contactId and partyName are missing',
       () async {
-        final request = CreateTransactionRequest(
+        final CreateTransactionRequest request = CreateTransactionRequest(
           type: 'Sale',
           amount: 500,
           paymentMethod: 'Cash',
@@ -82,7 +82,7 @@ void main() {
     );
 
     test('Fails validation if amount <= 0', () async {
-      final request = CreateTransactionRequest(
+      final CreateTransactionRequest request = CreateTransactionRequest(
         partyName: 'طرف تجريبي',
         type: 'Sale',
         amount: 0,
@@ -100,7 +100,7 @@ void main() {
     });
 
     test('4.1 Cash Sale succeeds with valid contact and amount', () async {
-      final request = CreateTransactionRequest(
+      final CreateTransactionRequest request = CreateTransactionRequest(
         contactId: 'contact-123',
         type: 'Sale',
         amount: 500,
@@ -118,7 +118,7 @@ void main() {
     });
 
     test('4.2 Cash Purchase succeeds with partyName', () async {
-      final request = CreateTransactionRequest(
+      final CreateTransactionRequest request = CreateTransactionRequest(
         partyName: 'مورد الأمل',
         type: 'Purchase',
         amount: 1500,
@@ -135,7 +135,7 @@ void main() {
     });
 
     test('4.3 & 4.4 Automatic Installment fails if count <= 0', () async {
-      final request = CreateTransactionRequest(
+      final CreateTransactionRequest request = CreateTransactionRequest(
         partyName: 'عميل تقسيط',
         type: 'Sale',
         amount: 3000,
@@ -157,7 +157,7 @@ void main() {
     });
 
     test('4.5 & 4.6 Custom Installment fails if sum != amount', () async {
-      final request = CreateTransactionRequest(
+      final CreateTransactionRequest request = CreateTransactionRequest(
         partyName: 'عميل تقسيط يدوي',
         type: 'Sale',
         amount: 3000,
@@ -165,7 +165,7 @@ void main() {
         transactionDate: DateTime.now().toIso8601String(),
         isInstallment: true,
         installmentPlanMode: 'Custom',
-        customInstallments: [
+        customInstallments: <CustomInstallmentItem>[
           CustomInstallmentItem(amount: 1000, dueDate: '2026-10-01'),
           CustomInstallmentItem(amount: 1500, dueDate: '2026-11-01'),
         ], // sum = 2500 != 3000
@@ -181,7 +181,7 @@ void main() {
     });
 
     test('4.5 & 4.6 Custom Installment succeeds when sum == amount', () async {
-      final request = CreateTransactionRequest(
+      final CreateTransactionRequest request = CreateTransactionRequest(
         partyName: 'عميل تقسيط يدوي متطابق',
         type: 'Sale',
         amount: 3000,
@@ -189,7 +189,7 @@ void main() {
         transactionDate: DateTime.now().toIso8601String(),
         isInstallment: true,
         installmentPlanMode: 'Custom',
-        customInstallments: [
+        customInstallments: <CustomInstallmentItem>[
           CustomInstallmentItem(amount: 1500, dueDate: '2026-10-01'),
           CustomInstallmentItem(amount: 1500, dueDate: '2026-11-01'),
         ], // sum = 3000 == 3000

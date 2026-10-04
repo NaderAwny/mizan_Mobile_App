@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -33,33 +32,26 @@ class SendOtp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
+    return BlocProvider<SendOtpCubit>(
       create: (_) {
-        final cubit = getIt<SendOtpCubit>();
+        final SendOtpCubit cubit = getIt<SendOtpCubit>();
         if (initialEmail != null && initialEmail!.isNotEmpty) {
           cubit.setEmail(initialEmail!);
         }
+        if (autoStartTimer) {
+          cubit.startTimer(initialTimerSeconds);
+        }
         return cubit;
       },
-      child: _SendOtpScreen(
-        initialEmail: initialEmail,
-        autoStartTimer: autoStartTimer,
-        initialTimerSeconds: initialTimerSeconds,
-      ),
+      child: _SendOtpScreen(initialEmail: initialEmail),
     );
   }
 }
 
 class _SendOtpScreen extends StatefulWidget {
   final String? initialEmail;
-  final bool autoStartTimer;
-  final int initialTimerSeconds;
 
-  const _SendOtpScreen({
-    this.initialEmail,
-    this.autoStartTimer = false,
-    this.initialTimerSeconds = 120,
-  });
+  const _SendOtpScreen({this.initialEmail});
 
   @override
   State<_SendOtpScreen> createState() => _SendOtpScreenState();
@@ -67,12 +59,8 @@ class _SendOtpScreen extends StatefulWidget {
 
 class _SendOtpScreenState extends State<_SendOtpScreen>
     with SingleTickerProviderStateMixin {
-  final _emailController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-
-  bool _emailTouched = false;
-  late final ValueNotifier<int> _secondsRemaining;
-  Timer? _timer;
+  final TextEditingController _emailController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
@@ -81,17 +69,9 @@ class _SendOtpScreenState extends State<_SendOtpScreen>
   @override
   void initState() {
     super.initState();
-    _secondsRemaining = ValueNotifier<int>(
-      widget.autoStartTimer ? widget.initialTimerSeconds : 0,
-    );
 
     if (widget.initialEmail != null && widget.initialEmail!.isNotEmpty) {
       _emailController.text = widget.initialEmail!;
-      _emailTouched = true;
-    }
-
-    if (widget.autoStartTimer) {
-      _startTimer(widget.initialTimerSeconds);
     }
 
     _animController = AnimationController(
@@ -106,27 +86,8 @@ class _SendOtpScreenState extends State<_SendOtpScreen>
     _animController.forward();
   }
 
-  void _startTimer([int seconds = 120]) {
-    _timer?.cancel();
-    _secondsRemaining.value = seconds;
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      if (_secondsRemaining.value > 1) {
-        _secondsRemaining.value -= 1;
-      } else {
-        _secondsRemaining.value = 0;
-        timer.cancel();
-      }
-    });
-  }
-
   @override
   void dispose() {
-    _timer?.cancel();
-    _secondsRemaining.dispose();
     _emailController.dispose();
     _animController.dispose();
     super.dispose();
@@ -135,15 +96,18 @@ class _SendOtpScreenState extends State<_SendOtpScreen>
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<SendOtpCubit, SendOtpState>(
-      listenWhen: (prev, curr) => curr.sendOtpSuccess && !prev.sendOtpSuccess,
-      listener: (ctx, state) {
-        // Start 120-second countdown immediately upon success
-        _startTimer(120);
+      listenWhen: (SendOtpState prev, SendOtpState curr) =>
+          curr.sendOtpSuccess && !prev.sendOtpSuccess,
+      listener: (BuildContext ctx, SendOtpState state) {
+        // Start 120-second countdown via Cubit (no more _startTimer in view)
+        ctx.read<SendOtpCubit>().startTimer(120);
 
         // Ensure loading popup is dismissed before showing success popup
-        WidgetsBinding.instance.addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((Duration _) {
           // Pop any loading dialog if currently showing
-          Navigator.of(ctx, rootNavigator: true).popUntil((route) {
+          Navigator.of(ctx, rootNavigator: true).popUntil((
+            Route<dynamic> route,
+          ) {
             return route is! PopupRoute;
           });
 
@@ -151,11 +115,14 @@ class _SendOtpScreenState extends State<_SendOtpScreen>
           _showSuccessPopDialog(ctx, state.email);
         });
       },
-      builder: (ctx, state) {
+      // The outer builder only reacts to flowState (loading / error overlay).
+      // Every widget that reads other state fields has its OWN BlocBuilder below.
+      buildWhen: (SendOtpState p, SendOtpState c) => p.flowState != c.flowState,
+      builder: (BuildContext ctx, SendOtpState state) {
         // Show loading/error overlay only when state is LoadingState or ErrorState
-        final flowState = state.flowState;
+        final FlowState? flowState = state.flowState;
         if (flowState is LoadingState || flowState is ErrorState) {
-          final overlay = flowState!.getScreenWidget(
+          final Widget? overlay = flowState!.getScreenWidget(
             ctx,
             _buildBody(ctx, state),
             () => ctx.read<SendOtpCubit>().sendOtp(),
@@ -168,10 +135,7 @@ class _SendOtpScreenState extends State<_SendOtpScreen>
   }
 
   Widget _withScaffold(Widget body) {
-    return Scaffold(
-      backgroundColor: ColorManager.background,
-      body: body,
-    );
+    return Scaffold(backgroundColor: ColorManager.background, body: body);
   }
 
   Widget _buildBody(BuildContext context, SendOtpState state) {
@@ -187,7 +151,7 @@ class _SendOtpScreenState extends State<_SendOtpScreen>
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: <Widget>[
                   SizedBox(height: 16.h),
 
                   // ── Header (Back button + Logo) ───────────────────────────
@@ -217,15 +181,23 @@ class _SendOtpScreenState extends State<_SendOtpScreen>
                   // ── Email Input Field ────────────────────────────────────
                   _buildLabel('البريد الإلكتروني'),
                   SizedBox(height: 8.h),
-                  _MizanEmailField(
-                    controller: _emailController,
-                    hintText: 'name@example.com',
-                    showError: _emailTouched && !state.isEmailValid,
-                    errorText: _emailHint(state),
-                    showSuccess: _emailTouched && state.isEmailValid,
-                    onChanged: (val) {
-                      setState(() => _emailTouched = true);
-                      context.read<SendOtpCubit>().setEmail(val);
+                  // FIX: own BlocBuilder, so showError/showSuccess update while typing
+                  BlocBuilder<SendOtpCubit, SendOtpState>(
+                    buildWhen: (SendOtpState p, SendOtpState c) =>
+                        p.emailTouched != c.emailTouched ||
+                        p.isEmailValid != c.isEmailValid,
+                    builder: (BuildContext ctx, SendOtpState s) {
+                      return _MizanEmailField(
+                        controller: _emailController,
+                        hintText: 'name@example.com',
+                        showError: s.emailTouched && !s.isEmailValid,
+                        errorText: _emailHint(s),
+                        showSuccess: s.emailTouched && s.isEmailValid,
+                        onChanged: (String val) {
+                          ctx.read<SendOtpCubit>().touchEmail();
+                          ctx.read<SendOtpCubit>().setEmail(val);
+                        },
+                      );
                     },
                   ),
 
@@ -237,15 +209,13 @@ class _SendOtpScreenState extends State<_SendOtpScreen>
                   SizedBox(height: 24.h),
 
                   // ── Countdown Timer Widget ────────────────────────────────
-                  _CountdownTimerWidget(secondsNotifier: _secondsRemaining),
+                  const _CountdownTimerWidget(),
 
                   SizedBox(height: 32.h),
 
                   // ── Send Button ("إرسال الرمز ←") ────────────────────────
+                  // FIX: the button reads everything it needs from the Cubit itself
                   _SendButton(
-                    secondsNotifier: _secondsRemaining,
-                    isEmailValid: state.isAllValid,
-                    isLoading: state.flowState is LoadingState,
                     onPressed: () {
                       FocusScope.of(context).unfocus();
                       context.read<SendOtpCubit>().sendOtp();
@@ -300,19 +270,19 @@ class _SendOtpScreenState extends State<_SendOtpScreen>
   }
 
   String? _emailHint(SendOtpState state) {
-    if (!_emailTouched) return null;
-    final v = _emailController.text.trim();
+    if (!state.emailTouched) return null;
+    final String v = _emailController.text.trim();
     if (v.isEmpty) return 'البريد الإلكتروني مطلوب';
     return 'يرجى إدخال بريد إلكتروني صالح (مثال: name@example.com)';
   }
 
   void _showSuccessPopDialog(BuildContext context, String email) {
-    showDialog(
+    showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogCtx) {
+      builder: (BuildContext dialogCtx) {
         return Dialog(
-          backgroundColor: Colors.transparent,
+          backgroundColor: ColorManager.transparent,
           insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 26.h),
@@ -320,9 +290,9 @@ class _SendOtpScreenState extends State<_SendOtpScreen>
               color: ColorManager.surface,
               borderRadius: BorderRadius.circular(AppRadius.r20.r),
               border: Border.all(color: ColorManager.border),
-              boxShadow: const [
+              boxShadow: const <BoxShadow>[
                 BoxShadow(
-                  color: Color(0x1A000000),
+                  color: ColorManager.shadowDark,
                   blurRadius: 24,
                   offset: Offset(0, 8),
                 ),
@@ -330,7 +300,7 @@ class _SendOtpScreenState extends State<_SendOtpScreen>
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: <Widget>[
                 // Lottie Success Animation
                 SizedBox(
                   width: 130.w,
@@ -339,21 +309,26 @@ class _SendOtpScreenState extends State<_SendOtpScreen>
                     JsonAssets.success,
                     fit: BoxFit.contain,
                     animate: true,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 80.r,
-                        height: 80.r,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFEBF3EC),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.check_circle_rounded,
-                          color: ColorManager.success,
-                          size: 54.r,
-                        ),
-                      );
-                    },
+                    errorBuilder:
+                        (
+                          BuildContext context,
+                          Object error,
+                          StackTrace? stackTrace,
+                        ) {
+                          return Container(
+                            width: 80.r,
+                            height: 80.r,
+                            decoration: const BoxDecoration(
+                              color: ColorManager.successBg,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.check_circle_rounded,
+                              color: ColorManager.success,
+                              size: 54.r,
+                            ),
+                          );
+                        },
                   ),
                 ),
                 SizedBox(height: 12.h),
@@ -390,7 +365,7 @@ class _SendOtpScreenState extends State<_SendOtpScreen>
                     decoration: BoxDecoration(
                       gradient: ColorManager.primaryGradient,
                       borderRadius: BorderRadius.circular(AppRadius.r14.r),
-                      boxShadow: const [AppShadows.fabShadow],
+                      boxShadow: const <BoxShadow>[AppShadows.fabShadow],
                     ),
                     child: ElevatedButton(
                       onPressed: () {
@@ -398,12 +373,14 @@ class _SendOtpScreenState extends State<_SendOtpScreen>
                         context.read<SendOtpCubit>().resetSuccess();
                         Navigator.of(context).pushNamed(
                           Routes.authVerificationRoute,
-                          arguments: email.isNotEmpty ? email : _emailController.text.trim(),
+                          arguments: email.isNotEmpty
+                              ? email
+                              : _emailController.text.trim(),
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
+                        backgroundColor: ColorManager.transparent,
+                        shadowColor: ColorManager.transparent,
                         foregroundColor: ColorManager.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.r14.r),
@@ -412,7 +389,7 @@ class _SendOtpScreenState extends State<_SendOtpScreen>
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
+                        children: <Widget>[
                           Text(
                             'إدخال رمز التحقق',
                             style: getBoldStyle(
@@ -464,7 +441,7 @@ class _HeaderSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: [
+      children: <Widget>[
         // Back button (36x36 / 40x40 rounded)
         GestureDetector(
           onTap: () {
@@ -501,7 +478,7 @@ class _HeaderSection extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
+            children: <Widget>[
               Image.asset(
                 ImageAssets.logoBoxFigmaPng,
                 width: 76.w,
@@ -548,26 +525,27 @@ class _MizanEmailField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(AppRadius.r16.r);
+    final BorderRadius borderRadius = BorderRadius.circular(AppRadius.r16.r);
 
-    final activeBorderColor = showError
+    final Color activeBorderColor = showError
         ? ColorManager.error
         : (showSuccess ? ColorManager.success : ColorManager.border);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      children: <Widget>[
         AnimatedContainer(
           duration: AppDuration.d200,
           decoration: BoxDecoration(
             borderRadius: borderRadius,
             boxShadow: showSuccess || showError
-                ? [
+                ? <BoxShadow>[
                     BoxShadow(
-                      color: (showError
-                              ? ColorManager.error
-                              : ColorManager.success)
-                          .withAlpha(20),
+                      color:
+                          (showError
+                                  ? ColorManager.error
+                                  : ColorManager.success)
+                              .withAlpha(20),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -593,8 +571,8 @@ class _MizanEmailField extends StatelessWidget {
               fillColor: showError
                   ? ColorManager.errorContainer
                   : (showSuccess
-                      ? ColorManager.successContainer.withAlpha(70)
-                      : ColorManager.surfaceVariant),
+                        ? ColorManager.successContainer.withAlpha(70)
+                        : ColorManager.surfaceVariant),
               contentPadding: EdgeInsets.symmetric(
                 horizontal: 16.w,
                 vertical: 16.h,
@@ -637,8 +615,8 @@ class _MizanEmailField extends StatelessWidget {
                     showError
                         ? ColorManager.error
                         : (showSuccess
-                            ? ColorManager.success
-                            : ColorManager.textSecondary),
+                              ? ColorManager.success
+                              : ColorManager.textSecondary),
                     BlendMode.srcIn,
                   ),
                 ),
@@ -657,19 +635,19 @@ class _MizanEmailField extends StatelessWidget {
                       ),
                     )
                   : (showError
-                      ? Padding(
-                          padding: EdgeInsets.all(12.r),
-                          child: SvgPicture.asset(
-                            IconAssets.xCircle,
-                            width: 18.r,
-                            height: 18.r,
-                            colorFilter: const ColorFilter.mode(
-                              ColorManager.error,
-                              BlendMode.srcIn,
+                        ? Padding(
+                            padding: EdgeInsets.all(12.r),
+                            child: SvgPicture.asset(
+                              IconAssets.xCircle,
+                              width: 18.r,
+                              height: 18.r,
+                              colorFilter: const ColorFilter.mode(
+                                ColorManager.error,
+                                BlendMode.srcIn,
+                              ),
                             ),
-                          ),
-                        )
-                      : null),
+                          )
+                        : null),
             ),
           ),
         ),
@@ -681,7 +659,7 @@ class _MizanEmailField extends StatelessWidget {
               ? Padding(
                   padding: EdgeInsets.only(top: 6.h, right: 4.w),
                   child: Row(
-                    children: [
+                    children: <Widget>[
                       SvgPicture.asset(
                         IconAssets.alertTriangle,
                         width: 12.r,
@@ -721,18 +699,15 @@ class _ImportantNoticeCard extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF9EE),
+        color: ColorManager.warningBg,
         borderRadius: BorderRadius.circular(AppRadius.r16.r),
-        border: Border.all(
-          color: const Color(0xFFE8D8B7),
-          width: 1.0,
-        ),
+        border: Border.all(color: ColorManager.warningBorder, width: 1.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Row(
-            children: [
+            children: <Widget>[
               Text(
                 '⚠️ تنبيه مهم',
                 style: getExtraBoldStyle(
@@ -758,40 +733,37 @@ class _ImportantNoticeCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Countdown Timer Widget — 120s timer with last 10s red alert
+// Countdown Timer Widget — reads secondsLeft from BlocBuilder
 // ─────────────────────────────────────────────────────────────────────────────
 class _CountdownTimerWidget extends StatelessWidget {
-  final ValueNotifier<int> secondsNotifier;
-
-  const _CountdownTimerWidget({required this.secondsNotifier});
+  const _CountdownTimerWidget();
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<int>(
-      valueListenable: secondsNotifier,
-      builder: (context, seconds, _) {
-        final isRunning = seconds > 0;
-        final isUrgent = seconds <= 10 && isRunning;
+    return BlocBuilder<SendOtpCubit, SendOtpState>(
+      buildWhen: (SendOtpState p, SendOtpState c) =>
+          p.secondsLeft != c.secondsLeft,
+      builder: (BuildContext context, SendOtpState state) {
+        final int seconds = state.secondsLeft;
+        final bool isRunning = seconds > 0;
+        final bool isUrgent = seconds <= 10 && isRunning;
 
         // Color shifts to red in the last 10 seconds!
-        final activeColor = isUrgent
-            ? const Color(0xFFE53935)
+        final Color activeColor = isUrgent
+            ? ColorManager.errorRedVariant
             : (isRunning ? ColorManager.textTertiary : ColorManager.primary);
 
-        final minutes = (seconds ~/ 60).toString().padLeft(2, '0');
-        final secs = (seconds % 60).toString().padLeft(2, '0');
-        final formattedTime = '$minutes:$secs';
+        final String minutes = (seconds ~/ 60).toString().padLeft(2, '0');
+        final String secs = (seconds % 60).toString().padLeft(2, '0');
+        final String formattedTime = '$minutes:$secs';
 
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
+          children: <Widget>[
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 300),
-              style: getBoldStyle(
-                color: activeColor,
-                fontSize: FontSize.s13,
-              ),
+              style: getBoldStyle(color: activeColor, fontSize: FontSize.s13),
               child: Text(
                 isRunning
                     ? 'إعادة الإرسال خلال $formattedTime'
@@ -801,11 +773,7 @@ class _CountdownTimerWidget extends StatelessWidget {
             SizedBox(width: 8.w),
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
-              child: Icon(
-                Icons.timer_outlined,
-                size: 16.r,
-                color: activeColor,
-              ),
+              child: Icon(Icons.timer_outlined, size: 16.r, color: activeColor),
             ),
           ],
         );
@@ -815,29 +783,27 @@ class _CountdownTimerWidget extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Send Button — Enforces 120s lockout against consecutive sends
+// Send Button — reads EVERYTHING it needs from the Cubit state itself.
+// buildWhen covers every field used: secondsLeft, isAllValid, loading flag.
 // ─────────────────────────────────────────────────────────────────────────────
 class _SendButton extends StatelessWidget {
-  final ValueNotifier<int> secondsNotifier;
-  final bool isEmailValid;
-  final bool isLoading;
   final VoidCallback onPressed;
 
-  const _SendButton({
-    required this.secondsNotifier,
-    required this.isEmailValid,
-    required this.isLoading,
-    required this.onPressed,
-  });
+  const _SendButton({required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<int>(
-      valueListenable: secondsNotifier,
-      builder: (context, seconds, _) {
-        final isTimerActive = seconds > 0;
+    return BlocBuilder<SendOtpCubit, SendOtpState>(
+      buildWhen: (SendOtpState p, SendOtpState c) =>
+          p.secondsLeft != c.secondsLeft ||
+          p.isAllValid != c.isAllValid ||
+          (p.flowState is LoadingState) != (c.flowState is LoadingState),
+      builder: (BuildContext context, SendOtpState state) {
+        final int seconds = state.secondsLeft;
+        final bool isTimerActive = seconds > 0;
+        final bool isLoading = state.flowState is LoadingState;
         // Button enabled ONLY if email valid, timer finished (0), and not loading
-        final isEnabled = isEmailValid && !isTimerActive && !isLoading;
+        final bool isEnabled = state.isAllValid && !isTimerActive && !isLoading;
 
         return AnimatedOpacity(
           duration: AppDuration.d300,
@@ -850,16 +816,18 @@ class _SendButton extends StatelessWidget {
                 gradient: isEnabled ? ColorManager.primaryGradient : null,
                 color: isEnabled ? null : ColorManager.surfaceVariant,
                 borderRadius: BorderRadius.circular(AppRadius.r16.r),
-                boxShadow: isEnabled ? const [AppShadows.fabShadow] : null,
+                boxShadow: isEnabled
+                    ? const <BoxShadow>[AppShadows.fabShadow]
+                    : null,
               ),
               child: ElevatedButton(
                 onPressed: isEnabled ? onPressed : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
+                  backgroundColor: ColorManager.transparent,
+                  shadowColor: ColorManager.transparent,
                   foregroundColor: ColorManager.white,
                   disabledForegroundColor: ColorManager.textTertiary,
-                  disabledBackgroundColor: Colors.transparent,
+                  disabledBackgroundColor: ColorManager.transparent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.r16.r),
                   ),
@@ -867,7 +835,7 @@ class _SendButton extends StatelessWidget {
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+                  children: <Widget>[
                     Text(
                       isTimerActive
                           ? 'إرسال الرمز (${(seconds ~/ 60).toString().padLeft(2, '0')}:${(seconds % 60).toString().padLeft(2, '0')})'

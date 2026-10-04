@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mizan/app/di.dart';
+import 'package:mizan/domain/model/installments_history_model.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
 import 'package:mizan/presentation/installments/installments_history/installments_history_cubit.dart';
 import 'package:mizan/presentation/installments/installments_history/installments_history_state.dart';
@@ -27,7 +28,8 @@ class InstallmentsHistoryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<InstallmentsHistoryCubit>(
-      create: (_) => getIt<InstallmentsHistoryCubit>()..getInstallmentsHistory(),
+      create: (_) =>
+          getIt<InstallmentsHistoryCubit>()..getInstallmentsHistory(),
       child: const _InstallmentsHistoryScreen(),
     );
   }
@@ -68,7 +70,7 @@ class _InstallmentsHistoryScreen extends StatelessWidget {
             ),
           ),
           title: Column(
-            children: [
+            children: <Widget>[
               Text(
                 AppStrings.installmentsHistoryTitle,
                 style: getBoldStyle(
@@ -88,18 +90,18 @@ class _InstallmentsHistoryScreen extends StatelessWidget {
           ),
         ),
         body: BlocBuilder<InstallmentsHistoryCubit, InstallmentsHistoryState>(
-          builder: (context, state) {
+          builder: (BuildContext context, InstallmentsHistoryState state) {
             return Column(
-              children: [
+              children: <Widget>[
                 // ── Pinned Horizontal Filters ──
                 Container(
                   color: ColorManager.surface,
                   padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 12.h),
                   child: Column(
-                    children: [
+                    children: <Widget>[
                       InstallmentHistoryFilterTabs(
                         selectedStatus: state.status,
-                        onStatusSelected: (status) {
+                        onStatusSelected: (String status) {
                           context
                               .read<InstallmentsHistoryCubit>()
                               .changeStatusFilter(status);
@@ -109,7 +111,7 @@ class _InstallmentsHistoryScreen extends StatelessWidget {
                       // Count & Date Header Row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
+                        children: <Widget>[
                           Text(
                             '${state.totalCount} ${AppStrings.installmentsCountSuffix}',
                             style: getBoldStyle(
@@ -134,7 +136,8 @@ class _InstallmentsHistoryScreen extends StatelessWidget {
 
                 // ── Main Timeline List with State Renderer ──
                 Expanded(
-                  child: state.flowState?.getScreenWidget(
+                  child:
+                      state.flowState?.getScreenWidget(
                         context,
                         _buildTimelineList(context, state),
                         () => context
@@ -151,8 +154,12 @@ class _InstallmentsHistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTimelineList(BuildContext context, InstallmentsHistoryState state) {
-    final items = state.data ?? [];
+  Widget _buildTimelineList(
+    BuildContext context,
+    InstallmentsHistoryState state,
+  ) {
+    final List<InstallmentHistoryItemModel> items =
+        state.data ?? <InstallmentHistoryItemModel>[];
 
     return RefreshIndicator(
       color: ColorManager.primary,
@@ -162,7 +169,7 @@ class _InstallmentsHistoryScreen extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        slivers: [
+        slivers: <Widget>[
           if (items.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
@@ -171,7 +178,7 @@ class _InstallmentsHistoryScreen extends StatelessWidget {
                   padding: EdgeInsets.all(24.r),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
+                    children: <Widget>[
                       Container(
                         width: 76.r,
                         height: 76.r,
@@ -201,15 +208,15 @@ class _InstallmentsHistoryScreen extends StatelessWidget {
                 ),
               ),
             )
-          else ...[
+          else ...<Widget>[
             SliverPadding(
               padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 8.h),
               sliver: SliverList.builder(
                 itemCount: items.length,
-                itemBuilder: (context, index) {
-                  final item = items[index];
+                itemBuilder: (BuildContext context, int index) {
+                  final InstallmentHistoryItemModel item = items[index];
                   return InstallmentTimelineCard(
-                    key: ValueKey(item.installmentId),
+                    key: ValueKey<String>(item.installmentId),
                     item: item,
                     isFirst: index == 0,
                     isLast: index == items.length - 1,
@@ -224,7 +231,7 @@ class _InstallmentsHistoryScreen extends StatelessWidget {
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 32.h),
                   child: Column(
-                    children: [
+                    children: <Widget>[
                       if (state.hasMore)
                         SizedBox(
                           width: double.infinity,
@@ -233,16 +240,17 @@ class _InstallmentsHistoryScreen extends StatelessWidget {
                             onPressed: state.isLoadingMore
                                 ? null
                                 : () => context
-                                    .read<InstallmentsHistoryCubit>()
-                                    .loadMoreInstallments(),
+                                      .read<InstallmentsHistoryCubit>()
+                                      .loadMoreInstallments(),
                             style: OutlinedButton.styleFrom(
                               side: const BorderSide(
                                 color: ColorManager.primary,
                                 width: 1.0,
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.r12.r),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.r12.r,
+                                ),
                               ),
                             ),
                             child: state.isLoadingMore
@@ -263,7 +271,7 @@ class _InstallmentsHistoryScreen extends StatelessWidget {
                                   ),
                           ),
                         ),
-                      if (state.totalPages > 1) ...[
+                      if (state.totalPages > 1) ...<Widget>[
                         SizedBox(height: 8.h),
                         Text(
                           '${AppStrings.pagePrefix} ${state.currentPage} ${AppStrings.ofPages} ${state.totalPages}',
@@ -278,9 +286,7 @@ class _InstallmentsHistoryScreen extends StatelessWidget {
                 ),
               )
             else
-              SliverToBoxAdapter(
-                child: SizedBox(height: 24.h),
-              ),
+              SliverToBoxAdapter(child: SizedBox(height: 24.h)),
           ],
         ],
       ),

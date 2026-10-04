@@ -6,6 +6,7 @@ import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/data/network/network_info.dart';
 import 'package:mizan/data/request/register_request.dart';
 import 'package:mizan/data/data_source/register_remote_data_source.dart';
+import 'package:mizan/data/response/register_responses/register_responses.dart';
 import 'package:mizan/domain/model/register_model.dart';
 import 'package:mizan/domain/repository/register_repository.dart';
 
@@ -22,9 +23,8 @@ class RegisterRepositoryImpl implements RegisterRepository {
   ) async {
     if (await networkInfo.isConnected) {
       try {
-        final response = await registerRemoteDataSource.register(
-          registerRequest,
-        );
+        final RegisterDataResponse response = await registerRemoteDataSource
+            .register(registerRequest);
 
         // ignore: unrelated_type_equality_checks
         if (response.success == true) {
