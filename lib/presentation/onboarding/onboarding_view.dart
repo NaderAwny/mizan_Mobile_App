@@ -248,9 +248,8 @@ class OnboardingFooter extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: List<Widget>.generate(
                 count,
-                (int index) => OnboardingIndicatorDot(
-                  isActive: index == currentIndex,
-                ),
+                (int index) =>
+                    OnboardingIndicatorDot(isActive: index == currentIndex),
               ),
             ),
             SizedBox(height: AppSize.s20.h),
@@ -389,9 +388,6 @@ class OnBoardingIllustration extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FittedBox(
-      fit: BoxFit.contain,
-      child: SvgPicture.asset(image),
-    );
+    return FittedBox(fit: BoxFit.contain, child: SvgPicture.asset(image));
   }
 }

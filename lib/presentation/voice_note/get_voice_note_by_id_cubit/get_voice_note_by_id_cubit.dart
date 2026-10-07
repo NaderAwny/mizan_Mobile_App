@@ -1,4 +1,4 @@
-﻿import 'package:dartz/dartz.dart';
+import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:mizan/data/network/failure.dart';
@@ -47,6 +47,20 @@ class GetVoiceNoteByIdCubit extends Cubit<GetVoiceNoteByIdState> {
         if (isClosed) return;
         emit(state.copyWith(data: voiceNote, flowState: ContentState()));
       },
+    );
+  }
+
+  void updatePlayback({
+    bool? isPlaying,
+    Duration? currentPosition,
+    Duration? totalDuration,
+  }) {
+    emit(
+      state.copyWith(
+        isPlaying: isPlaying ?? state.isPlaying,
+        currentPosition: currentPosition ?? state.currentPosition,
+        totalDuration: totalDuration ?? state.totalDuration,
+      ),
     );
   }
 }

@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -31,7 +30,6 @@ class _ContactsSearchBarState extends State<ContactsSearchBar> {
   TextEditingController? _internalController;
   TextEditingController get _effectiveController =>
       widget.controller ?? _internalController!;
-  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -45,22 +43,17 @@ class _ContactsSearchBarState extends State<ContactsSearchBar> {
 
   @override
   void dispose() {
-    _debounceTimer?.cancel();
     _internalController?.dispose();
     super.dispose();
   }
 
   void _onTextChange(String value) {
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
-      widget.onChanged(value.trim());
-    });
+    widget.onChanged(value.trim());
     setState(() {});
   }
 
   void _clear() {
     _effectiveController.clear();
-    _debounceTimer?.cancel();
     widget.onChanged('');
     widget.onClear?.call();
     setState(() {});

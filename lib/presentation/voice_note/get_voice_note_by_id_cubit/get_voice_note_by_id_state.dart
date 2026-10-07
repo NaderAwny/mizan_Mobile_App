@@ -9,5 +9,8 @@ abstract class GetVoiceNoteByIdState with _$GetVoiceNoteByIdState {
   const factory GetVoiceNoteByIdState({
     FlowState? flowState,
     VoiceNoteModel? data,
+    @Default(false) bool isPlaying,
+    @Default(Duration.zero) Duration currentPosition,
+    @Default(Duration.zero) Duration totalDuration,
   }) = _GetVoiceNoteByIdState;
 }

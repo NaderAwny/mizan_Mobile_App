@@ -46,7 +46,6 @@ class _CustomersScreen extends StatefulWidget {
 class _CustomersScreenState extends State<_CustomersScreen> {
   final ScrollController _scrollController = ScrollController();
   late final TextEditingController _searchController;
-  int _selectedTabIndex = 0; // 0: الكل, 1: المميزون (VIP)
 
   @override
   void initState() {
@@ -73,7 +72,6 @@ class _CustomersScreenState extends State<_CustomersScreen> {
   }
 
   void _onTabChanged(int index) {
-    setState(() => _selectedTabIndex = index);
     _searchController.clear();
     final bool isVipOnly = index == 1;
     context.read<ContactsCubit>().getContacts(search: '', isVipOnly: isVipOnly);
@@ -87,7 +85,7 @@ class _CustomersScreenState extends State<_CustomersScreen> {
       return;
     }
     // If on VIP tab, return to 'All' contacts tab
-    if (_selectedTabIndex != 0) {
+    if (context.read<ContactsCubit>().state.isVipOnly) {
       _onTabChanged(0);
       return;
     }
@@ -145,7 +143,7 @@ class _CustomersScreenState extends State<_CustomersScreen> {
             title: Column(
               children: <Widget>[
                 Text(
-                  _selectedTabIndex == 1
+                  state.isVipOnly
                       ? AppStrings.vipContacts
                       : AppStrings.contactsDirectory,
                   style: getBoldStyle(
@@ -155,7 +153,7 @@ class _CustomersScreenState extends State<_CustomersScreen> {
                 ),
                 SizedBox(height: 2.h),
                 Text(
-                  _selectedTabIndex == 1
+                  state.isVipOnly
                       ? AppStrings.vipSubtitle
                       : AppStrings.contactsSubtitle,
                   style: getRegularStyle(
@@ -188,7 +186,7 @@ class _CustomersScreenState extends State<_CustomersScreen> {
                         AppStrings.allContacts,
                         AppStrings.vipContacts,
                       ],
-                      selectedIndex: _selectedTabIndex,
+                      selectedIndex: state.isVipOnly ? 1 : 0,
                       onTabSelected: _onTabChanged,
                     ),
                   ],
@@ -232,7 +230,7 @@ class _CustomersScreenState extends State<_CustomersScreen> {
 
   Widget _buildBody(BuildContext context, ContactsState state) {
     final List<Contact> contacts = state.data ?? <Contact>[];
-    final bool isVipMode = _selectedTabIndex == 1;
+    final bool isVipMode = state.isVipOnly;
 
     return RefreshIndicator(
       onRefresh: () => context.read<ContactsCubit>().getContacts(),

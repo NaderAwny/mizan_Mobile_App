@@ -50,9 +50,6 @@ class _VoiceNoteDetailsScreen extends StatefulWidget {
 
 class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
   late final AudioPlayer _audioPlayer;
-  bool _isPlaying = false;
-  Duration _currentPosition = Duration.zero;
-  Duration _totalDuration = Duration.zero;
 
   @override
   void initState() {
@@ -60,24 +57,36 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
     _audioPlayer = AudioPlayer();
 
     _audioPlayer.onDurationChanged.listen((Duration dur) {
-      if (mounted) setState(() => _totalDuration = dur);
+      if (mounted) {
+        context.read<GetVoiceNoteByIdCubit>().updatePlayback(
+          totalDuration: dur,
+        );
+      }
     });
 
     _audioPlayer.onPositionChanged.listen((Duration pos) {
-      if (mounted) setState(() => _currentPosition = pos);
+      if (mounted) {
+        context.read<GetVoiceNoteByIdCubit>().updatePlayback(
+          currentPosition: pos,
+        );
+      }
     });
 
     _audioPlayer.onPlayerComplete.listen((_) {
       if (mounted) {
-        setState(() {
-          _isPlaying = false;
-          _currentPosition = Duration.zero;
-        });
+        context.read<GetVoiceNoteByIdCubit>().updatePlayback(
+          isPlaying: false,
+          currentPosition: Duration.zero,
+        );
       }
     });
 
     _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
-      if (mounted) setState(() => _isPlaying = state == PlayerState.playing);
+      if (mounted) {
+        context.read<GetVoiceNoteByIdCubit>().updatePlayback(
+          isPlaying: state == PlayerState.playing,
+        );
+      }
     });
   }
 
@@ -87,8 +96,11 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
     super.dispose();
   }
 
-  Future<void> _togglePlayback(VoiceNoteModel data) async {
-    if (_isPlaying) {
+  Future<void> _togglePlayback(
+    VoiceNoteModel data,
+    GetVoiceNoteByIdState state,
+  ) async {
+    if (state.isPlaying) {
       await _audioPlayer.pause();
     } else {
       if (data.audioPath.isEmpty) return;
@@ -96,7 +108,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
       final String url = rawPath.startsWith('http')
           ? rawPath
           : '${Constants.baseUrl}${rawPath.startsWith('/') ? '' : '/'}$rawPath';
-      if (_currentPosition > Duration.zero && !_isPlaying) {
+      if (state.currentPosition > Duration.zero && !state.isPlaying) {
         await _audioPlayer.resume();
       } else {
         await _audioPlayer.play(UrlSource(url));
@@ -104,18 +116,18 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
     }
   }
 
-  Future<void> _seekRelative(int seconds) async {
-    final int totalMs = _totalDuration.inMilliseconds;
+  Future<void> _seekRelative(int seconds, GetVoiceNoteByIdState state) async {
+    final int totalMs = state.totalDuration.inMilliseconds;
     if (totalMs <= 0) return;
-    final int targetMs = (_currentPosition.inMilliseconds + seconds * 1000)
+    final int targetMs = (state.currentPosition.inMilliseconds + seconds * 1000)
         .clamp(0, totalMs);
     await _audioPlayer.seek(Duration(milliseconds: targetMs));
   }
 
-  double get _playbackPosition {
-    final int total = _totalDuration.inMilliseconds;
+  double _getPlaybackPosition(GetVoiceNoteByIdState state) {
+    final int total = state.totalDuration.inMilliseconds;
     if (total <= 0) return 0.0;
-    return (_currentPosition.inMilliseconds / total).clamp(0.0, 1.0);
+    return (state.currentPosition.inMilliseconds / total).clamp(0.0, 1.0);
   }
 
   String _formatDuration(Duration duration) {
@@ -130,10 +142,30 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
     return '$mins:$secs';
   }
 
+  DateTime _parseToLocal(String raw) {
+    final String trimmed = raw.trim();
+    try {
+      if (trimmed.endsWith('Z')) {
+        return DateTime.parse(trimmed).toLocal();
+      }
+      if (trimmed.contains('+') ||
+          (trimmed.length > 19 && trimmed.substring(19).contains('-'))) {
+        return DateTime.parse(trimmed).toLocal();
+      }
+      return DateTime.parse('${trimmed}Z').toLocal();
+    } catch (_) {
+      try {
+        return DateTime.parse(trimmed).toLocal();
+      } catch (_) {
+        return DateTime.now();
+      }
+    }
+  }
+
   String _formatDate(String dateString) {
     if (dateString.isEmpty) return '';
     try {
-      final DateTime parsed = DateTime.parse(dateString);
+      final DateTime parsed = _parseToLocal(dateString);
       return intl.DateFormat('yyyy/MM/dd', 'ar').format(parsed);
     } catch (_) {
       return dateString;
@@ -143,7 +175,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
   String _formatDateTime(String dateString) {
     if (dateString.isEmpty) return '';
     try {
-      final DateTime parsed = DateTime.parse(dateString);
+      final DateTime parsed = _parseToLocal(dateString);
       return intl.DateFormat('yyyy/MM/dd - hh:mm a', 'ar').format(parsed);
     } catch (_) {
       return dateString;
@@ -391,198 +423,205 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
 
   // ── 1. Hero Audio Player Card (Figma Node #2025:811) ───────────────────────
   Widget _buildHeroAudioPlayerCard(VoiceNoteModel data) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(18.r),
-      decoration: BoxDecoration(
-        color: ColorManager.surface,
-        borderRadius: BorderRadius.circular(AppRadius.r20.r),
-        border: Border.all(color: ColorManager.border),
-        boxShadow: const <BoxShadow>[
-          BoxShadow(
-            color: ColorManager.shadowMedium,
-            blurRadius: 16,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: <Widget>[
-          // Waveform Animation Visualizer
-          Container(
-            height: 64.h,
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-            decoration: BoxDecoration(
-              color: ColorManager.surfaceVariant,
-              borderRadius: BorderRadius.circular(AppRadius.r14.r),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List<Widget>.generate(24, (int index) {
-                final List<int> barHeights = <int>[
-                  16,
-                  24,
-                  38,
-                  20,
-                  32,
-                  48,
-                  26,
-                  42,
-                  54,
-                  30,
-                  44,
-                  22,
-                  36,
-                  50,
-                  28,
-                  40,
-                  18,
-                  34,
-                  46,
-                  24,
-                  38,
-                  20,
-                  28,
-                  14,
-                ];
-                final double normalizedIndex = index / 24.0;
-                final bool isActive = normalizedIndex <= _playbackPosition;
-                final int h = barHeights[index % barHeights.length];
-
-                return Container(
-                  width: 3.5.w,
-                  height: h.h * 0.7,
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? ColorManager.primary
-                        : ColorManager.textTertiary.withAlpha(90),
-                    borderRadius: BorderRadius.circular(2.r),
-                  ),
-                );
-              }),
-            ),
-          ),
-
-          SizedBox(height: 12.h),
-
-          // Time Scrubber Slider
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: ColorManager.primary,
-              inactiveTrackColor: ColorManager.borderDark,
-              thumbColor: ColorManager.primary,
-              trackHeight: 4.h,
-              thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6.r),
-              overlayShape: RoundSliderOverlayShape(overlayRadius: 14.r),
-            ),
-            child: Slider(
-              value: _playbackPosition,
-              onChanged: (double val) {
-                final int totalMs = _totalDuration.inMilliseconds;
-                if (totalMs > 0) {
-                  _audioPlayer.seek(
-                    Duration(milliseconds: (val * totalMs).toInt()),
-                  );
-                }
-              },
-            ),
-          ),
-
-          // Duration Timestamps
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 6.w),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Text(
-                  _formatDuration(_currentPosition),
-                  style: getBoldStyle(
-                    color: ColorManager.primary,
-                    fontSize: FontSize.s11,
-                  ),
-                ),
-                Text(
-                  _formatDuration(_totalDuration),
-                  style: getRegularStyle(
-                    color: ColorManager.textSecondary,
-                    fontSize: FontSize.s11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 16.h),
-
-          // Audio Controls (Rewind 5s, Play/Pause, Forward 5s)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              // Rewind 5s
-              IconButton(
-                onPressed: () => _seekRelative(-5),
-                icon: SvgPicture.asset(
-                  IconAssets.rewind,
-                  width: 24.r,
-                  height: 24.r,
-                  colorFilter: const ColorFilter.mode(
-                    ColorManager.textSecondary,
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ),
-
-              SizedBox(width: 16.w),
-
-              // Play / Pause Circle
-              GestureDetector(
-                onTap: () => _togglePlayback(data),
-                child: Container(
-                  width: 56.r,
-                  height: 56.r,
-                  decoration: BoxDecoration(
-                    gradient: ColorManager.primaryGradient,
-                    shape: BoxShape.circle,
-                    boxShadow: <BoxShadow>[
-                      BoxShadow(
-                        color: ColorManager.primary.withAlpha(80),
-                        blurRadius: 14,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Icon(
-                      _isPlaying
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
-                      color: ColorManager.white,
-                      size: 32.r,
-                    ),
-                  ),
-                ),
-              ),
-
-              SizedBox(width: 16.w),
-
-              // Forward 5s
-              IconButton(
-                onPressed: () => _seekRelative(5),
-                icon: SvgPicture.asset(
-                  IconAssets.forward,
-                  width: 24.r,
-                  height: 24.r,
-                  colorFilter: const ColorFilter.mode(
-                    ColorManager.textSecondary,
-                    BlendMode.srcIn,
-                  ),
-                ),
+    return BlocBuilder<GetVoiceNoteByIdCubit, GetVoiceNoteByIdState>(
+      buildWhen: (GetVoiceNoteByIdState p, GetVoiceNoteByIdState c) =>
+          p.isPlaying != c.isPlaying ||
+          p.currentPosition != c.currentPosition ||
+          p.totalDuration != c.totalDuration,
+      builder: (BuildContext context, GetVoiceNoteByIdState state) {
+        final double playbackPosition = _getPlaybackPosition(state);
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(18.r),
+          decoration: BoxDecoration(
+            color: ColorManager.surface,
+            borderRadius: BorderRadius.circular(AppRadius.r20.r),
+            border: Border.all(color: ColorManager.border),
+            boxShadow: const <BoxShadow>[
+              BoxShadow(
+                color: ColorManager.shadowMedium,
+                blurRadius: 16,
+                offset: Offset(0, 4),
               ),
             ],
           ),
-        ],
-      ),
+          child: Column(
+            children: <Widget>[
+              // Waveform Animation Visualizer
+              Container(
+                height: 64.h,
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: ColorManager.surfaceVariant,
+                  borderRadius: BorderRadius.circular(AppRadius.r14.r),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: List<Widget>.generate(24, (int index) {
+                    final List<int> barHeights = <int>[
+                      16,
+                      24,
+                      38,
+                      20,
+                      32,
+                      48,
+                      26,
+                      42,
+                      54,
+                      30,
+                      44,
+                      22,
+                      36,
+                      50,
+                      28,
+                      40,
+                      18,
+                      34,
+                      46,
+                      24,
+                      38,
+                      20,
+                      28,
+                      14,
+                    ];
+                    final double normalizedIndex = index / 24.0;
+                    final bool isActive = normalizedIndex <= playbackPosition;
+                    final int h = barHeights[index % barHeights.length];
+
+                    return Container(
+                      width: 3.5.w,
+                      height: h.h * 0.7,
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? ColorManager.primary
+                            : ColorManager.textTertiary.withAlpha(90),
+                        borderRadius: BorderRadius.circular(2.r),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+
+              SizedBox(height: 12.h),
+
+              // Time Scrubber Slider
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  activeTrackColor: ColorManager.primary,
+                  inactiveTrackColor: ColorManager.borderDark,
+                  thumbColor: ColorManager.primary,
+                  trackHeight: 4.h,
+                  thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6.r),
+                  overlayShape: RoundSliderOverlayShape(overlayRadius: 14.r),
+                ),
+                child: Slider(
+                  value: playbackPosition,
+                  onChanged: (double val) {
+                    final int totalMs = state.totalDuration.inMilliseconds;
+                    if (totalMs > 0) {
+                      _audioPlayer.seek(
+                        Duration(milliseconds: (val * totalMs).toInt()),
+                      );
+                    }
+                  },
+                ),
+              ),
+
+              // Duration Timestamps
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 6.w),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text(
+                      _formatDuration(state.currentPosition),
+                      style: getBoldStyle(
+                        color: ColorManager.primary,
+                        fontSize: FontSize.s11,
+                      ),
+                    ),
+                    Text(
+                      _formatDuration(state.totalDuration),
+                      style: getRegularStyle(
+                        color: ColorManager.textSecondary,
+                        fontSize: FontSize.s11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 16.h),
+
+              // Audio Controls (Rewind 5s, Play/Pause, Forward 5s)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  // Rewind 5s
+                  IconButton(
+                    onPressed: () => _seekRelative(-5, state),
+                    icon: SvgPicture.asset(
+                      IconAssets.audioMins,
+                      width: 50.r,
+                      height: 50.r,
+                      // colorFilter: const ColorFilter.mode(
+                      //   ColorManager.primary,
+                      //   BlendMode.srcIn,
+                    ),
+                  ),
+
+                  SizedBox(width: 25.w),
+
+                  // Play / Pause Circle
+                  GestureDetector(
+                    onTap: () => _togglePlayback(data, state),
+                    child: Container(
+                      width: 60.r,
+                      height: 60.r,
+                      decoration: BoxDecoration(
+                        gradient: ColorManager.primaryGradient,
+                        shape: BoxShape.circle,
+                        boxShadow: <BoxShadow>[
+                          BoxShadow(
+                            color: ColorManager.primary.withAlpha(80),
+                            blurRadius: 14,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(
+                          state.isPlaying
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          color: ColorManager.white,
+                          size: 32.r,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(width: 25.w),
+
+                  // Forward 5s
+                  IconButton(
+                    onPressed: () => _seekRelative(5, state),
+                    icon: SvgPicture.asset(
+                      IconAssets.audioPlus,
+                      width: 50.r,
+                      height: 50.r,
+                      // colorFilter: const ColorFilter.mode(
+                      //   ColorManager.textSecondary,
+                      //   BlendMode.srcIn,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -783,12 +822,17 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
                 fontSize: FontSize.s12,
               ),
             ),
-            const Spacer(),
-            Text(
-              value,
-              style: getBoldStyle(
-                color: ColorManager.textPrimary,
-                fontSize: FontSize.s13,
+            SizedBox(width: 8.w),
+            Expanded(
+              child: Text(
+                value,
+                textAlign: TextAlign.end,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: getBoldStyle(
+                  color: ColorManager.textPrimary,
+                  fontSize: FontSize.s12,
+                ),
               ),
             ),
             if (hasNavigation) ...<Widget>[

@@ -115,4 +115,46 @@ class TransactionFormCubit extends Cubit<TransactionFormState> {
       },
     );
   }
+
+  void setSelectedContact({
+    String? contactId,
+    String? partyName,
+    bool isVip = false,
+  }) {
+    emit(
+      state.copyWith(
+        selectedContactId: contactId,
+        selectedPartyName: partyName,
+        isPartyVip: isVip,
+      ),
+    );
+  }
+
+  void setTransactionDate(DateTime date) {
+    emit(state.copyWith(transactionDate: date));
+  }
+
+  void setIsCash(bool isCash) {
+    emit(state.copyWith(isCash: isCash));
+  }
+
+  void setIsInstallment(bool isInstallment) {
+    emit(state.copyWith(isInstallment: isInstallment));
+  }
+
+  void setInstallmentPlanMode(String mode) {
+    emit(state.copyWith(installmentPlanMode: mode));
+  }
+
+  void setInstallmentCount(int count) {
+    emit(state.copyWith(installmentCount: count));
+  }
+
+  void setFrequency(String frequency) {
+    emit(state.copyWith(frequency: frequency));
+  }
+
+  void setFirstInstallmentDate(DateTime date) {
+    emit(state.copyWith(firstInstallmentDate: date));
+  }
 }

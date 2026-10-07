@@ -10,14 +10,14 @@
 - [x] onboarding
 - [x] transactions
 - [x] statistics
-- [ ] voice_note
-- [ ] operations
-- [ ] customers
-- [ ] installments
-- [ ] home_drawer
-- [ ] shared_images
+- [x] voice_note
+- [x] operations
+- [x] customers
+- [x] installments
+- [x] home_drawer
+- [x] shared_images
 - [x] data_layer_dynamic
-- [ ] build_widgets_split
+- [x] build_widgets_split
 - [x] splash_preload
 
 ---
@@ -49,5 +49,12 @@ transactions | lib/presentation/transactions/transactions_view.dart | done
 statistics | lib/presentation/statistics/cubit/statistics_state.dart | done
 statistics | lib/presentation/statistics/cubit/statistics_cubit.dart | done
 statistics | lib/presentation/statistics/statistics_view.dart | done
+voice_note | lib/presentation/voice_note/get_voice_note_cubit/* | done
+voice_note | lib/presentation/voice_note/get_voice_note_by_id_cubit/* | done
+voice_note | lib/presentation/voice_note/create_voice_note_cubit/* | done
+operations | lib/presentation/transactions/transaction_form_cubit/* | done
+customers | lib/presentation/customers/customers_view.dart + widgets | done
+home_drawer | lib/presentation/home/widgets/mizan_drawer.dart (ListView.separated) | done
+shared_images | Audited zero network images | done
 
-NEEDS_BUILD: onboarding, transactions, statistics
+NEEDS_BUILD: onboarding, transactions, statistics, voice_note, transaction_form

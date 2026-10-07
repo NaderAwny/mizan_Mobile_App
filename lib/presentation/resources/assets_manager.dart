@@ -98,6 +98,8 @@ class IconAssets {
   static const String waveform = "$iconsPath/waveform.svg";
   static const String waveformBars = "$iconsPath/waveform_bars.svg";
   static const String progressTrack = "$iconsPath/progress_track.svg";
+  static const String audioMins = "$iconsPath/audio_mins.svg";
+  static const String audioPlus = "$iconsPath/audio_plus.svg";
 
   // --- Modifiers & CRUD ---
   static const String editPen = "$iconsPath/edit_pen.svg";

@@ -49,9 +49,6 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
 
-  int _selectedFilterIndex = 0;
-  String _searchQuery = '';
-
   // Filter tab definitions
   static const List<String> _filterTabs = <String>[
     AppStrings.allTransactions,
@@ -69,12 +66,7 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
     VoiceNoteOperationType.installmentPayment,
   ];
 
-  // Global active audio player preview tracker
-  String? _currentlyPlayingId;
-  double _playbackProgress = 0.0;
   Timer? _playbackTimer;
-  Duration _currentAudioDuration = Duration.zero;
-  Duration _currentPosition = Duration.zero;
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
@@ -83,28 +75,32 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
     _scrollController.addListener(_onScroll);
 
     _audioPlayer.onDurationChanged.listen((Duration dur) {
-      if (mounted) setState(() => _currentAudioDuration = dur);
+      if (mounted) {
+        context
+            .read<GetListVoiceNotesCubit>()
+            .updatePlayback(currentAudioDuration: dur);
+      }
     });
 
     _audioPlayer.onPositionChanged.listen((Duration pos) {
       if (!mounted) return;
-      final int totalMs = _currentAudioDuration.inMilliseconds;
-      setState(() {
-        _currentPosition = pos;
-        if (totalMs > 0) {
-          _playbackProgress = (pos.inMilliseconds / totalMs).clamp(0.0, 1.0);
-        }
-      });
+      final GetListVoiceNotesCubit cubit =
+          context.read<GetListVoiceNotesCubit>();
+      final int totalMs = cubit.state.currentAudioDuration.inMilliseconds;
+      final double progress = totalMs > 0
+          ? (pos.inMilliseconds / totalMs).clamp(0.0, 1.0)
+          : 0.0;
+      cubit.updatePlayback(currentPosition: pos, playbackProgress: progress);
     });
 
     _audioPlayer.onPlayerComplete.listen((_) {
       if (!mounted) return;
-      setState(() {
-        _currentlyPlayingId = null;
-        _playbackProgress = 0.0;
-        _currentAudioDuration = Duration.zero;
-        _currentPosition = Duration.zero;
-      });
+      context.read<GetListVoiceNotesCubit>().updatePlayback(
+            clearPlayingId: true,
+            playbackProgress: 0.0,
+            currentAudioDuration: Duration.zero,
+            currentPosition: Duration.zero,
+          );
     });
   }
 
@@ -128,24 +124,26 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
   }
 
   Future<void> _toggleAudioPreview(String id, String audioUrl) async {
-    if (_currentlyPlayingId == id) {
+    final GetListVoiceNotesCubit cubit =
+        context.read<GetListVoiceNotesCubit>();
+    if (cubit.state.currentlyPlayingId == id) {
       // إيقاف التشغيل
       await _audioPlayer.stop();
-      setState(() {
-        _currentlyPlayingId = null;
-        _playbackProgress = 0.0;
-        _currentAudioDuration = Duration.zero;
-        _currentPosition = Duration.zero;
-      });
+      cubit.updatePlayback(
+        clearPlayingId: true,
+        playbackProgress: 0.0,
+        currentAudioDuration: Duration.zero,
+        currentPosition: Duration.zero,
+      );
     } else {
       // إيقاف أي تشغيل سابق
       await _audioPlayer.stop();
-      setState(() {
-        _currentlyPlayingId = id;
-        _playbackProgress = 0.0;
-        _currentAudioDuration = Duration.zero;
-        _currentPosition = Duration.zero;
-      });
+      cubit.updatePlayback(
+        currentlyPlayingId: id,
+        playbackProgress: 0.0,
+        currentAudioDuration: Duration.zero,
+        currentPosition: Duration.zero,
+      );
 
       if (audioUrl.isEmpty) {
         if (mounted) {
@@ -153,29 +151,29 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
             const SnackBar(content: Text('لا يوجد ملف صوتي لهذه الملاحظة')),
           );
         }
-        setState(() => _currentlyPlayingId = null);
+        cubit.updatePlayback(clearPlayingId: true);
         return;
       }
 
       try {
         await _audioPlayer.play(UrlSource(audioUrl));
       } catch (e) {
-        debugPrint('Audio playback error: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('تعذّر تشغيل الملف الصوتي')),
           );
-          setState(() {
-            _currentlyPlayingId = null;
-            _playbackProgress = 0.0;
-          });
+          cubit.updatePlayback(clearPlayingId: true, playbackProgress: 0.0);
         }
       }
     }
   }
 
-  List<VoiceNoteModel> _filterItems(List<VoiceNoteModel> allItems) {
-    final String? selectedType = _filterTypeValues[_selectedFilterIndex];
+  List<VoiceNoteModel> _filterItems(
+    List<VoiceNoteModel> allItems,
+    int selectedFilterIndex,
+    String searchQuery,
+  ) {
+    final String? selectedType = _filterTypeValues[selectedFilterIndex];
     return allItems.where((VoiceNoteModel item) {
       // Type match
       final bool matchesType =
@@ -183,7 +181,7 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
           item.operationType.toLowerCase() == selectedType.toLowerCase();
 
       // Search match
-      final String query = _searchQuery.trim().toLowerCase();
+      final String query = searchQuery.trim().toLowerCase();
       final bool matchesSearch =
           query.isEmpty ||
           item.contactName.toLowerCase().contains(query) ||
@@ -252,7 +250,11 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
                             final List<VoiceNoteModel> allItems =
                                 state.data ?? <VoiceNoteModel>[];
                             final List<VoiceNoteModel> filteredItems =
-                                _filterItems(allItems);
+                                _filterItems(
+                              allItems,
+                              state.selectedFilterIndex,
+                              state.searchQuery,
+                            );
 
                             if (filteredItems.isEmpty) {
                               return _buildEmptyState();
@@ -295,19 +297,19 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
                                   final VoiceNoteModel item =
                                       filteredItems[index];
                                   final bool isPlaying =
-                                      _currentlyPlayingId == item.id;
+                                      state.currentlyPlayingId == item.id;
 
                                   return _VoiceNoteCard(
                                     item: item,
                                     isPlaying: isPlaying,
                                     playbackProgress: isPlaying
-                                        ? _playbackProgress
+                                        ? state.playbackProgress
                                         : 0.0,
                                     currentPosition: isPlaying
-                                        ? _currentPosition
+                                        ? state.currentPosition
                                         : Duration.zero,
                                     totalDuration: isPlaying
-                                        ? _currentAudioDuration
+                                        ? state.currentAudioDuration
                                         : Duration.zero,
                                     onTogglePlay: () => _toggleAudioPreview(
                                       item.id,
@@ -441,9 +443,7 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
             child: TextField(
               controller: _searchController,
               onChanged: (String val) {
-                setState(() {
-                  _searchQuery = val;
-                });
+                context.read<GetListVoiceNotesCubit>().onSearchChanged(val);
               },
               style: getRegularStyle(
                 color: ColorManager.textPrimary,
@@ -472,9 +472,9 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
                         icon: const Icon(Icons.clear_rounded, size: 16),
                         onPressed: () {
                           _searchController.clear();
-                          setState(() {
-                            _searchQuery = '';
-                          });
+                          context
+                              .read<GetListVoiceNotesCubit>()
+                              .onSearchChanged('');
                         },
                       )
                     : null,
@@ -490,51 +490,61 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
           SizedBox(height: 10.h),
 
           // Filter Tabs
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            child: Row(
-              children: List<Widget>.generate(_filterTabs.length, (int index) {
-                final bool isSelected = _selectedFilterIndex == index;
-                return Padding(
-                  padding: EdgeInsets.only(left: 6.w),
-                  child: ChoiceChip(
-                    label: Text(_filterTabs[index]),
-                    selected: isSelected,
-                    onSelected: (bool selected) {
-                      if (selected) {
-                        setState(() {
-                          _selectedFilterIndex = index;
-                        });
-                      }
-                    },
-                    selectedColor: ColorManager.primary,
-                    backgroundColor: ColorManager.surfaceVariant,
-                    labelStyle: isSelected
-                        ? getBoldStyle(
-                            color: ColorManager.white,
-                            fontSize: FontSize.s12,
-                          )
-                        : getMediumStyle(
-                            color: ColorManager.textSecondary,
-                            fontSize: FontSize.s12,
+          BlocBuilder<GetListVoiceNotesCubit, GetListVoiceNotesState>(
+            buildWhen:
+                (GetListVoiceNotesState p, GetListVoiceNotesState c) =>
+                    p.selectedFilterIndex != c.selectedFilterIndex,
+            builder: (BuildContext context, GetListVoiceNotesState state) {
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  children:
+                      List<Widget>.generate(_filterTabs.length, (int index) {
+                    final bool isSelected =
+                        state.selectedFilterIndex == index;
+                    return Padding(
+                      padding: EdgeInsets.only(left: 6.w),
+                      child: ChoiceChip(
+                        label: Text(_filterTabs[index]),
+                        selected: isSelected,
+                        onSelected: (bool selected) {
+                          if (selected) {
+                            context
+                                .read<GetListVoiceNotesCubit>()
+                                .changeFilter(index);
+                          }
+                        },
+                        selectedColor: ColorManager.primary,
+                        backgroundColor: ColorManager.surfaceVariant,
+                        labelStyle: isSelected
+                            ? getBoldStyle(
+                                color: ColorManager.white,
+                                fontSize: FontSize.s12,
+                              )
+                            : getMediumStyle(
+                                color: ColorManager.textSecondary,
+                                fontSize: FontSize.s12,
+                              ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 6.h,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppRadius.r20.r),
+                          side: BorderSide(
+                            color: isSelected
+                                ? ColorManager.primary
+                                : ColorManager.border,
                           ),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 6.h,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.r20.r),
-                      side: BorderSide(
-                        color: isSelected
-                            ? ColorManager.primary
-                            : ColorManager.border,
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              }),
-            ),
+                    );
+                  }),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -826,10 +836,30 @@ class _VoiceNoteCardState extends State<_VoiceNoteCard>
     }
   }
 
+  DateTime _parseToLocal(String raw) {
+    final String trimmed = raw.trim();
+    try {
+      if (trimmed.endsWith('Z')) {
+        return DateTime.parse(trimmed).toLocal();
+      }
+      if (trimmed.contains('+') ||
+          (trimmed.length > 19 && trimmed.substring(19).contains('-'))) {
+        return DateTime.parse(trimmed).toLocal();
+      }
+      return DateTime.parse('${trimmed}Z').toLocal();
+    } catch (_) {
+      try {
+        return DateTime.parse(trimmed).toLocal();
+      } catch (_) {
+        return DateTime.now();
+      }
+    }
+  }
+
   String _formatDate(String dateString) {
     if (dateString.isEmpty) return '';
     try {
-      final DateTime parsed = DateTime.parse(dateString);
+      final DateTime parsed = _parseToLocal(dateString);
       return intl.DateFormat('yyyy/MM/dd', 'ar').format(parsed);
     } catch (_) {
       return dateString;

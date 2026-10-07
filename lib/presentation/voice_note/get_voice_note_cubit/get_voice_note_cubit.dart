@@ -1,4 +1,4 @@
-﻿import 'package:dartz/dartz.dart';
+import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:mizan/data/network/failure.dart';
@@ -101,6 +101,36 @@ class GetListVoiceNotesCubit extends Cubit<GetListVoiceNotesState> {
           ),
         );
       },
+    );
+  }
+
+  void changeFilter(int index) {
+    if (state.selectedFilterIndex == index) return;
+    emit(state.copyWith(selectedFilterIndex: index));
+  }
+
+  void onSearchChanged(String query) {
+    if (state.searchQuery == query) return;
+    emit(state.copyWith(searchQuery: query));
+  }
+
+  void updatePlayback({
+    String? currentlyPlayingId,
+    double? playbackProgress,
+    Duration? currentPosition,
+    Duration? currentAudioDuration,
+    bool clearPlayingId = false,
+  }) {
+    emit(
+      state.copyWith(
+        currentlyPlayingId: clearPlayingId
+            ? null
+            : (currentlyPlayingId ?? state.currentlyPlayingId),
+        playbackProgress: playbackProgress ?? state.playbackProgress,
+        currentPosition: currentPosition ?? state.currentPosition,
+        currentAudioDuration:
+            currentAudioDuration ?? state.currentAudioDuration,
+      ),
     );
   }
 }
