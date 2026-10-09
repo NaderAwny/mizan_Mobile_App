@@ -40,56 +40,88 @@ class CustomBottomNavBar extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              _NavBarItem(
-                index: 0,
-                currentIndex: currentIndex,
-                label: AppStrings.home,
-                icon: IconAssets.home,
-                onTap: () => onTap(0),
-              ),
-              SizedBox(width: 4.w),
-              _NavBarItem(
-                index: 1,
-                currentIndex: currentIndex,
-                label: AppStrings.transactions,
-                icon: IconAssets.receiptText,
-                onTap: () => onTap(1),
-              ),
-              SizedBox(width: 4.w),
-              _NavBarItem(
-                index: 2,
-                currentIndex: currentIndex,
-                label: AppStrings.contacts,
-                icon: IconAssets.users,
-                onTap: () => onTap(2),
-              ),
-              SizedBox(width: 4.w),
-              _NavBarItem(
-                index: 3,
-                currentIndex: currentIndex,
-                label: AppStrings.installments,
-                icon: IconAssets.walletCards,
-                onTap: () => onTap(3),
-              ),
-              SizedBox(width: 4.w),
-              _NavBarItem(
-                index: 4,
-                currentIndex: currentIndex,
-                label: AppStrings.analytics,
-                icon: IconAssets.chartNetwork,
-                onTap: () => onTap(4),
-              ),
-            ],
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              const int itemCount = 5;
+
+              // Minimum width required for each navigation item.
+              final double minItemWidth = 88.w;
+
+              // Determine whether horizontal scrolling is necessary.
+              final bool shouldScroll =
+                  constraints.maxWidth < itemCount * minItemWidth;
+
+              final List<Widget> items = <Widget>[
+                _buildItem(
+                  index: 0,
+                  label: AppStrings.home,
+                  icon: IconAssets.home,
+                ),
+                _buildItem(
+                  index: 1,
+                  label: AppStrings.transactions,
+                  icon: IconAssets.receiptText,
+                ),
+                _buildItem(
+                  index: 2,
+                  label: AppStrings.contacts,
+                  icon: IconAssets.users,
+                ),
+                _buildItem(
+                  index: 3,
+                  label: AppStrings.installments,
+                  icon: IconAssets.walletCards,
+                ),
+                _buildItem(
+                  index: 4,
+                  label: AppStrings.analytics,
+                  icon: IconAssets.chartNetwork,
+                ),
+              ];
+
+              // Small screen: allow horizontal scrolling.
+              if (shouldScroll) {
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: items
+                        .map(
+                          (Widget item) =>
+                              SizedBox(width: minItemWidth, child: item),
+                        )
+                        .toList(),
+                  ),
+                );
+              }
+
+              // Large screen: distribute items equally.
+              return Row(
+                children: items
+                    .map((Widget item) => Expanded(child: item))
+                    .toList(),
+              );
+            },
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildItem({
+    required int index,
+    required String label,
+    required String icon,
+  }) {
+    return _NavBarItem(
+      index: index,
+      currentIndex: currentIndex,
+      label: label,
+      icon: icon,
+      onTap: () => onTap(index),
     );
   }
 }
@@ -121,10 +153,12 @@ class _NavBarItemState extends State<_NavBarItem>
   @override
   void initState() {
     super.initState();
+
     _bounceController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 120),
     );
+
     _scaleAnim = Tween<double>(begin: 1.0, end: 0.90).animate(
       CurvedAnimation(parent: _bounceController, curve: Curves.easeInOut),
     );
@@ -136,9 +170,12 @@ class _NavBarItemState extends State<_NavBarItem>
     super.dispose();
   }
 
-  void _handleTap() async {
+  Future<void> _handleTap() async {
     await _bounceController.forward();
     await _bounceController.reverse();
+
+    if (!mounted) return;
+
     widget.onTap();
   }
 
@@ -155,7 +192,7 @@ class _NavBarItemState extends State<_NavBarItem>
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOutCubic,
           padding: EdgeInsets.symmetric(
-            horizontal: isSelected ? 12.w : 10.w,
+            horizontal: isSelected ? 8.w : 4.w,
             vertical: 5.h,
           ),
           decoration: BoxDecoration(
@@ -169,8 +206,9 @@ class _NavBarItemState extends State<_NavBarItem>
             children: <Widget>[
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 180),
-                transitionBuilder: (Widget child, Animation<double> anim) =>
-                    ScaleTransition(scale: anim, child: child),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return ScaleTransition(scale: animation, child: child);
+                },
                 child: SvgPicture.asset(
                   widget.icon,
                   key: ValueKey<bool>(isSelected),
@@ -184,21 +222,31 @@ class _NavBarItemState extends State<_NavBarItem>
                   ),
                 ),
               ),
+
               SizedBox(height: 2.h),
-              Text(
-                widget.label,
-                style: isSelected
-                    ? getBoldStyle(
-                        color: ColorManager.primary,
-                        fontSize: FontSize.s11,
-                      )
-                    : getMediumStyle(
-                        color: ColorManager.textSecondary,
-                        fontSize: FontSize.s11,
-                      ),
+
+              // Keep the complete label visible.
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  widget.label,
+                  maxLines: 1,
+                  softWrap: false,
+                  style: isSelected
+                      ? getBoldStyle(
+                          color: ColorManager.primary,
+                          fontSize: FontSize.s11,
+                        )
+                      : getMediumStyle(
+                          color: ColorManager.textSecondary,
+                          fontSize: FontSize.s11,
+                        ),
+                ),
               ),
-              // Tiny animated indicator dot under active tab
+
               SizedBox(height: 2.h),
+
+              // Animated indicator under the selected item.
               AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 width: isSelected ? 4.r : 0,

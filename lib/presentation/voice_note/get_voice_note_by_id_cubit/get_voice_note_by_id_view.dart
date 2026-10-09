@@ -183,6 +183,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
   }
 
   // ── Convert to Registered Transaction ─────────────────────────────────────
+  // ignore: unused_element
   void _convertToTransaction(VoiceNoteModel data) {
     final QuickTransactionArgs args = QuickTransactionArgs(
       contactId: data.contactId.isNotEmpty ? data.contactId : null,
@@ -321,8 +322,9 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
         backgroundColor: ColorManager.background,
         body: SafeArea(
           child: BlocConsumer<GetVoiceNoteByIdCubit, GetVoiceNoteByIdState>(
-            listenWhen: (GetVoiceNoteByIdState prev, GetVoiceNoteByIdState curr) =>
-                curr.isDeleted && !prev.isDeleted,
+            listenWhen:
+                (GetVoiceNoteByIdState prev, GetVoiceNoteByIdState curr) =>
+                    curr.isDeleted && !prev.isDeleted,
             listener: (BuildContext context, GetVoiceNoteByIdState state) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (context.mounted) {
@@ -386,8 +388,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
                 ],
 
                 // 5. Action Buttons
-                _buildActionButtons(data),
-
+                //  _buildActionButtons(data),
                 SizedBox(height: 16.h),
               ],
             ),
@@ -955,58 +956,58 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
   }
 
   // ── 5. Bottom Action Buttons ──────────────────────────────────────────────
-  Widget _buildActionButtons(VoiceNoteModel data) {
-    return Column(
-      children: <Widget>[
-        // Primary: Convert to transaction
-        Container(
-          width: double.infinity,
-          height: 52.h,
-          decoration: BoxDecoration(
-            gradient: ColorManager.primaryGradient,
-            borderRadius: BorderRadius.circular(AppRadius.r14.r),
-            boxShadow: <BoxShadow>[
-              BoxShadow(
-                color: ColorManager.primary.withAlpha(70),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: ElevatedButton(
-            onPressed: () => _convertToTransaction(data),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: ColorManager.transparent,
-              shadowColor: ColorManager.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.r14.r),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                SvgPicture.asset(
-                  IconAssets.receiptText,
-                  width: 18.r,
-                  height: 18.r,
-                  colorFilter: const ColorFilter.mode(
-                    ColorManager.white,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                SizedBox(width: 8.w),
-                Text(
-                  AppStrings.convertToTransaction,
-                  style: getBoldStyle(
-                    color: ColorManager.white,
-                    fontSize: FontSize.s14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  // Widget _buildActionButtons(VoiceNoteModel data) {
+  //   return Column(
+  //     children: <Widget>[
+  //       // Primary: Convert to transaction
+  //       Container(
+  //         width: double.infinity,
+  //         height: 52.h,
+  //         decoration: BoxDecoration(
+  //           gradient: ColorManager.primaryGradient,
+  //           borderRadius: BorderRadius.circular(AppRadius.r14.r),
+  //           boxShadow: <BoxShadow>[
+  //             BoxShadow(
+  //               color: ColorManager.primary.withAlpha(70),
+  //               blurRadius: 12,
+  //               offset: const Offset(0, 4),
+  //             ),
+  //           ],
+  //         ),
+  //         child: ElevatedButton(
+  //           onPressed: () => _convertToTransaction(data),
+  //           style: ElevatedButton.styleFrom(
+  //             backgroundColor: ColorManager.transparent,
+  //             shadowColor: ColorManager.transparent,
+  //             shape: RoundedRectangleBorder(
+  //               borderRadius: BorderRadius.circular(AppRadius.r14.r),
+  //             ),
+  //           ),
+  //           child: Row(
+  //             mainAxisAlignment: MainAxisAlignment.center,
+  //             children: <Widget>[
+  //               SvgPicture.asset(
+  //                 IconAssets.receiptText,
+  //                 width: 18.r,
+  //                 height: 18.r,
+  //                 colorFilter: const ColorFilter.mode(
+  //                   ColorManager.white,
+  //                   BlendMode.srcIn,
+  //                 ),
+  //               ),
+  //               SizedBox(width: 8.w),
+  //               Text(
+  //                 AppStrings.convertToTransaction,
+  //                 style: getBoldStyle(
+  //                   color: ColorManager.white,
+  //                   fontSize: FontSize.s14,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 }
