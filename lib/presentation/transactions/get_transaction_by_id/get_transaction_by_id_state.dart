@@ -9,5 +9,6 @@ abstract class GetTransactionByIdState with _$GetTransactionByIdState {
   const factory GetTransactionByIdState({
     FlowState? flowState,
     TransactionbyidModel? data,
+    @Default(false) bool isDeleted,
   }) = _GetTransactionByIdState;
 }

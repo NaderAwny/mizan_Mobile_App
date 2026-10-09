@@ -96,7 +96,10 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
       context.read<GetListTransactionCubit>().searchTransactions('');
       return;
     }
-    final int currentFilter = context.read<GetListTransactionCubit>().state.selectedFilterIndex;
+    final int currentFilter = context
+        .read<GetListTransactionCubit>()
+        .state
+        .selectedFilterIndex;
     if (currentFilter != 0) {
       _onFilterTabChanged(0);
       return;
@@ -664,16 +667,19 @@ class _TransactionCardItem extends StatelessWidget {
       child: Material(
         color: ColorManager.transparent,
         child: InkWell(
-          onTap: () {
-            Navigator.push(
+          onTap: () async {
+            final Object? result = await Navigator.push(
               context,
-              MaterialPageRoute<void>(
+              MaterialPageRoute<Object>(
                 builder: (BuildContext context) => TransactionDetailsView(
                   transactionId: transaction.id,
                   id: transaction.id,
                 ),
               ),
             );
+            if (result == true && context.mounted) {
+              context.read<GetListTransactionCubit>().getListTransactions();
+            }
           },
           borderRadius: BorderRadius.circular(AppRadius.r14.r),
           child: Padding(

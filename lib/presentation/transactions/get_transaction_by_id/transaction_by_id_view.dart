@@ -52,7 +52,16 @@ class _TransactionDetailsScreen extends StatelessWidget {
       child: Scaffold(
         backgroundColor: ColorManager.background,
         body: SafeArea(
-          child: BlocBuilder<GetTransactionByIdCubit, GetTransactionByIdState>(
+          child: BlocConsumer<GetTransactionByIdCubit, GetTransactionByIdState>(
+            listenWhen: (GetTransactionByIdState prev, GetTransactionByIdState curr) =>
+                curr.isDeleted && !prev.isDeleted,
+            listener: (BuildContext context, GetTransactionByIdState state) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (context.mounted) {
+                  Navigator.of(context).pop(true);
+                }
+              });
+            },
             builder: (BuildContext context, GetTransactionByIdState state) {
               return state.flowState?.getScreenWidget(
                     context,
@@ -1009,51 +1018,98 @@ class _TransactionDetailsScreen extends StatelessWidget {
     showDialog<void>(
       context: context,
       builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          backgroundColor: ColorManager.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.r20.r),
-          ),
-          title: Text(
-            AppStrings.delete,
-            textAlign: TextAlign.right,
-            style: getBoldStyle(
-              color: ColorManager.textPrimary,
-              fontSize: FontSize.s16.sp,
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            backgroundColor: ColorManager.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.r20.r),
             ),
-          ),
-          content: Text(
-            "هل أنت متأكد من رغبتك في حذف هذه المعاملة؟",
-            textAlign: TextAlign.right,
-            style: getMediumStyle(
-              color: ColorManager.textSecondary,
-              fontSize: FontSize.s14.sp,
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(
-                AppStrings.cancel,
-                style: getMediumStyle(
-                  color: ColorManager.textSecondary,
-                  fontSize: FontSize.s14.sp,
+            title: Row(
+              children: <Widget>[
+                Container(
+                  padding: EdgeInsets.all(8.r),
+                  decoration: const BoxDecoration(
+                    color: ColorManager.errorContainer,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: ColorManager.error,
+                    size: 20,
+                  ),
                 ),
+                SizedBox(width: 10.w),
+                Text(
+                  AppStrings.txDetailsDelete,
+                  style: getBoldStyle(
+                    color: ColorManager.textPrimary,
+                    fontSize: FontSize.s16.sp,
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              "هل أنت متأكد من رغبتك في حذف هذه المعاملة نهائياً؟ لا يمكن التراجع عن هذا الإجراء.",
+              style: getRegularStyle(
+                color: ColorManager.textSecondary,
+                fontSize: FontSize.s13.sp,
+                height: 1.5,
               ),
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-              },
-              child: Text(
-                AppStrings.delete,
-                style: getBoldStyle(
-                  color: ColorManager.error,
-                  fontSize: FontSize.s14.sp,
-                ),
+            actionsAlignment: MainAxisAlignment.center,
+            actions: <Widget>[
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: ColorManager.textSecondary,
+                        side: const BorderSide(color: ColorManager.border),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.r12.r),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                      ),
+                      child: Text(
+                        AppStrings.cancel,
+                        style: getSemiBoldStyle(
+                          color: ColorManager.textSecondary,
+                          fontSize: FontSize.s14.sp,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 14.w),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(dialogContext).pop();
+                        context.read<GetTransactionByIdCubit>().deleteTransaction();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: ColorManager.error,
+                        foregroundColor: ColorManager.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.r12.r),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                      ),
+                      child: Text(
+                        AppStrings.delete,
+                        style: getBoldStyle(
+                          color: ColorManager.white,
+                          fontSize: FontSize.s14.sp,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );

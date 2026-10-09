@@ -72,4 +72,18 @@ class TransactionRepositoryImpl implements TransactionRepository {
       return Left(DataSource.NO_INTERNET_CONNECTION.getFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, void>> deleteTransaction(String transactionid) async {
+    if (await _networkInfo.isConnected) {
+      try {
+        await _remote.deleteTransaction(transactionid);
+        return const Right(null);
+      } catch (e) {
+        return Left(ErrorHandler.handle(e).failure);
+      }
+    } else {
+      return Left(DataSource.NO_INTERNET_CONNECTION.getFailure());
+    }
+  }
 }

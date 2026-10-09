@@ -14,4 +14,5 @@ abstract class VoiceNoteRepository {
   });
 
   Future<Either<Failure, VoiceNoteModel>> getVoiceNoteById(String id);
+  Future<Either<Failure, void>> deleteVoiceNote(String voiceNoteId);
 }

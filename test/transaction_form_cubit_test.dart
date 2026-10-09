@@ -42,6 +42,11 @@ class FakeTransactionRepository implements TransactionRepository {
   Future<Either<Failure, TransactionbyidModel>> getTransactionById(String id) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<Either<Failure, void>> deleteTransaction(String transactionid) {
+    return Future.value(const Right(null));
+  }
 }
 
 void main() {

@@ -202,10 +202,13 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
     }
   }
 
-  void _navigateToDetails(String id) {
-    Navigator.of(
+  void _navigateToDetails(String id) async {
+    final bool? result = await Navigator.of(
       context,
-    ).push(MaterialPageRoute<void>(builder: (_) => GetVoiceNoteByIdView(id: id)));
+    ).push<bool>(MaterialPageRoute<bool>(builder: (_) => GetVoiceNoteByIdView(id: id)));
+    if (result == true && mounted) {
+      context.read<GetListVoiceNotesCubit>().getListVoiceNotes();
+    }
   }
 
   @override

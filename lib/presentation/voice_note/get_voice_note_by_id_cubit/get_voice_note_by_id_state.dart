@@ -12,5 +12,6 @@ abstract class GetVoiceNoteByIdState with _$GetVoiceNoteByIdState {
     @Default(false) bool isPlaying,
     @Default(Duration.zero) Duration currentPosition,
     @Default(Duration.zero) Duration totalDuration,
+    @Default(false) bool isDeleted,
   }) = _GetVoiceNoteByIdState;
 }

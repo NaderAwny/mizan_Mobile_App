@@ -95,4 +95,18 @@ class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       return Left(DataSource.NO_INTERNET_CONNECTION.getFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, void>> deleteVoiceNote(String voiceNoteId) async {
+    if (await _networkInfo.isConnected) {
+      try {
+        await _remote.deleteVoiceNote(voiceNoteId);
+        return const Right(null);
+      } catch (e) {
+        return Left(ErrorHandler.handle(e).failure);
+      }
+    } else {
+      return Left(DataSource.NO_INTERNET_CONNECTION.getFailure());
+    }
+  }
 }

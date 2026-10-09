@@ -12,6 +12,8 @@ abstract class VoiceNoteRemoteDataSource {
   });
 
   Future<VoiceNoteResponse> getVoiceNoteById(String id);
+
+  Future<void> deleteVoiceNote(String voiceNoteId);
 }
 
 @LazySingleton(as: VoiceNoteRemoteDataSource)
@@ -44,5 +46,10 @@ class VoiceNoteRemoteDataSourceImpl implements VoiceNoteRemoteDataSource {
   @override
   Future<VoiceNoteResponse> getVoiceNoteById(String id) {
     return _appServiceClient.getVoiceNoteById(id);
+  }
+
+  @override
+  Future<void> deleteVoiceNote(String voiceNoteId) {
+    return _appServiceClient.deleteVoiceNote(voiceNoteId);
   }
 }

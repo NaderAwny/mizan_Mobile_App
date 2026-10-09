@@ -111,6 +111,10 @@ abstract class AppServiceClient {
   // ======================== get Transaction By Id Endpoint ========================
   @GET("/api/transactions/{id}")
   Future<TransactionResponseById> getTransactionById(@Path("id") String id);
+  //Delete transaction
+  @DELETE("/api/transactions/{transaction_id}")
+  // ignore: non_constant_identifier_names
+  Future<void> deleteTransaction(@Path("transaction_id") String transaction_id);
 
   // ======================== Installments Endpoints ========================
   /// POST /api/installments/{id}/pay — تسجيل سداد قسط
@@ -150,6 +154,10 @@ abstract class AppServiceClient {
 
   @GET("/api/voice-notes/{id}")
   Future<VoiceNoteResponse> getVoiceNoteById(@Path("id") String id);
+  //Delete voice note
+  @DELETE("/api/voice-notes/{voice_note_id}")
+  // ignore: non_constant_identifier_names
+  Future<void> deleteVoiceNote(@Path("voice_note_id") String voice_note_id);
 
   /// GET /api/installments/dashboard — لوحة متابعة الأقساط والديون
   @GET("/api/installments/dashboard")

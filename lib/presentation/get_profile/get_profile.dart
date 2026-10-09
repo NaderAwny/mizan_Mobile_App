@@ -627,21 +627,20 @@ class _LogoutButton extends StatelessWidget {
         actions: <Widget>[
           Row(
             children: <Widget>[
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(dialogCtx).pop(),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: ColorManager.textSecondary,
-                    side: const BorderSide(color: ColorManager.border),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.r12.r),
-                    ),
-                    padding: EdgeInsets.symmetric(vertical: 12.h),
+              OutlinedButton(
+                onPressed: () => Navigator.of(dialogCtx).pop(),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: ColorManager.textSecondary,
+                  side: const BorderSide(color: ColorManager.border),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.r12.r),
                   ),
-                  child: const Text(AppStrings.cancel),
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
                 ),
+                child: const Text(AppStrings.cancel),
               ),
-              SizedBox(width: 12.w),
+
+              SizedBox(width: 20.w),
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
@@ -657,6 +656,7 @@ class _LogoutButton extends StatelessWidget {
                     padding: EdgeInsets.symmetric(vertical: 12.h),
                     elevation: 0,
                   ),
+
                   child: Text(
                     AppStrings.profileLogout,
                     style: getBoldStyle(

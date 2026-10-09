@@ -61,6 +61,8 @@ import '../domain/use_case/create_contact_use_case.dart' as _i770;
 import '../domain/use_case/create_transaction_use_case.dart' as _i807;
 import '../domain/use_case/create_voice_note_use_case.dart' as _i618;
 import '../domain/use_case/delete_contact_use_case.dart' as _i1053;
+import '../domain/use_case/delete_transaction_use_case.dart' as _i312;
+import '../domain/use_case/delete_voice_note_use_case.dart' as _i544;
 import '../domain/use_case/get_contact_by_id_use_case.dart' as _i804;
 import '../domain/use_case/get_contact_profile_use_case.dart' as _i307;
 import '../domain/use_case/get_contacts_use_case.dart' as _i646;
@@ -328,6 +330,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i807.CreateTransactionUseCase>(
       () => _i807.CreateTransactionUseCase(gh<_i132.TransactionRepository>()),
     );
+    gh.factory<_i312.DeleteTransactionUseCase>(
+      () => _i312.DeleteTransactionUseCase(gh<_i132.TransactionRepository>()),
+    );
     gh.factory<_i1060.GetTransactionByIdUseCase>(
       () => _i1060.GetTransactionByIdUseCase(gh<_i132.TransactionRepository>()),
     );
@@ -336,6 +341,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i618.CreateVoiceNoteUseCase>(
       () => _i618.CreateVoiceNoteUseCase(gh<_i402.VoiceNoteRepository>()),
+    );
+    gh.factory<_i544.DeleteVoiceNoteUseCase>(
+      () => _i544.DeleteVoiceNoteUseCase(gh<_i402.VoiceNoteRepository>()),
     );
     gh.factory<_i131.GetVoiceNoteByIdUseCase>(
       () => _i131.GetVoiceNoteByIdUseCase(gh<_i402.VoiceNoteRepository>()),
@@ -394,10 +402,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i437.VoiceNoteFormCubit>(
       () => _i437.VoiceNoteFormCubit(gh<_i618.CreateVoiceNoteUseCase>()),
     );
-    gh.factory<_i212.GetTransactionByIdCubit>(
-      () =>
-          _i212.GetTransactionByIdCubit(gh<_i1060.GetTransactionByIdUseCase>()),
-    );
     gh.factory<_i1000.StatisticsCubit>(
       () => _i1000.StatisticsCubit(
         gh<_i242.StatisticsUseCase>(),
@@ -408,11 +412,20 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i955.GetListVoiceNotesCubit>(
       () => _i955.GetListVoiceNotesCubit(gh<_i474.GetListVoiceNotesUseCase>()),
     );
-    gh.factory<_i1040.GetVoiceNoteByIdCubit>(
-      () => _i1040.GetVoiceNoteByIdCubit(gh<_i131.GetVoiceNoteByIdUseCase>()),
+    gh.factory<_i212.GetTransactionByIdCubit>(
+      () => _i212.GetTransactionByIdCubit(
+        gh<_i1060.GetTransactionByIdUseCase>(),
+        gh<_i312.DeleteTransactionUseCase>(),
+      ),
     );
     gh.factory<_i995.LogoutCubit>(
       () => _i995.LogoutCubit(gh<_i235.LogoutUseCase>()),
+    );
+    gh.factory<_i1040.GetVoiceNoteByIdCubit>(
+      () => _i1040.GetVoiceNoteByIdCubit(
+        gh<_i131.GetVoiceNoteByIdUseCase>(),
+        gh<_i544.DeleteVoiceNoteUseCase>(),
+      ),
     );
     gh.factory<_i710.SelectUserTypeCubit>(
       () => _i710.SelectUserTypeCubit(gh<_i684.SelectUserTypeUseCase>()),

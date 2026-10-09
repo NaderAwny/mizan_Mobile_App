@@ -213,15 +213,15 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
     }
   }
 
-  // ── Show Delete Notice Dialog ─────────────────────────────────────────────
-  void _showDeleteDialog() {
+  // ── Show Delete Dialog ───────────────────────────────────────────────────
+  void _showDeleteDialog(BuildContext context, VoiceNoteModel data) {
     showDialog<void>(
       context: context,
       builder: (BuildContext ctx) => Directionality(
         textDirection: TextDirection.rtl,
         child: AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.r16.r),
+            borderRadius: BorderRadius.circular(AppRadius.r20.r),
           ),
           backgroundColor: ColorManager.surface,
           title: Row(
@@ -243,29 +243,69 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
                 AppStrings.deleteVoiceNote,
                 style: getBoldStyle(
                   color: ColorManager.textPrimary,
-                  fontSize: FontSize.s15,
+                  fontSize: FontSize.s16.sp,
                 ),
               ),
             ],
           ),
           content: Text(
-            "سيتم تفعيل ميزة حذف الملاحظات الصوتية في التحديث القادم بمجرد توفير نقطة الاتصال بالخادم.",
+            "هل أنت متأكد من رغبتك في حذف هذه الملاحظة الصوتية نهائياً؟ لا يمكن التراجع عن هذا الإجراء.",
             style: getRegularStyle(
               color: ColorManager.textSecondary,
-              fontSize: FontSize.s13,
-              height: 1.4,
+              fontSize: FontSize.s13.sp,
+              height: 1.5,
             ),
           ),
+          actionsAlignment: MainAxisAlignment.center,
           actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(
-                AppStrings.ok,
-                style: getBoldStyle(
-                  color: ColorManager.primary,
-                  fontSize: FontSize.s13,
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: ColorManager.textSecondary,
+                      side: const BorderSide(color: ColorManager.border),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.r12.r),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                    ),
+                    child: Text(
+                      AppStrings.cancel,
+                      style: getSemiBoldStyle(
+                        color: ColorManager.textSecondary,
+                        fontSize: FontSize.s14.sp,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                SizedBox(width: 14.w),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      context.read<GetVoiceNoteByIdCubit>().deleteVoiceNote();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ColorManager.error,
+                      foregroundColor: ColorManager.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.r12.r),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                    ),
+                    child: Text(
+                      AppStrings.delete,
+                      style: getBoldStyle(
+                        color: ColorManager.white,
+                        fontSize: FontSize.s14.sp,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -280,7 +320,16 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
       child: Scaffold(
         backgroundColor: ColorManager.background,
         body: SafeArea(
-          child: BlocBuilder<GetVoiceNoteByIdCubit, GetVoiceNoteByIdState>(
+          child: BlocConsumer<GetVoiceNoteByIdCubit, GetVoiceNoteByIdState>(
+            listenWhen: (GetVoiceNoteByIdState prev, GetVoiceNoteByIdState curr) =>
+                curr.isDeleted && !prev.isDeleted,
+            listener: (BuildContext context, GetVoiceNoteByIdState state) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (context.mounted) {
+                  Navigator.of(context).pop(true);
+                }
+              });
+            },
             builder: (BuildContext context, GetVoiceNoteByIdState state) {
               return state.flowState?.getScreenWidget(
                     context,
@@ -401,7 +450,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
             ),
           ),
           IconButton(
-            onPressed: _showDeleteDialog,
+            onPressed: () => _showDeleteDialog(context, data),
             style: IconButton.styleFrom(
               backgroundColor: ColorManager.errorContainer,
               shape: const CircleBorder(),
