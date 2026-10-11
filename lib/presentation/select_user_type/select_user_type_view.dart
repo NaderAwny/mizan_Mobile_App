@@ -219,50 +219,48 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
 
   /// Header Bar with Step Indicator ("الخطوة ٣ من ٣") and Skip Action ("تخطي")
   Widget _buildHeaderBar(BuildContext context) {
+    // return Row(
+    //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    //   crossAxisAlignment: CrossAxisAlignment.center,
+    //   children: <Widget>[
+    //     // Skip Button (تخطي)
+    //     GestureDetector(
+    //       onTap: () => _onSkip(context),
+    //       behavior: HitTestBehavior.opaque,
+    //       child: Padding(
+    //         padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 2.w),
+    //         child: Text(
+    //           AppStrings.skip,
+    //           style: getBoldStyle(
+    //             color: ColorManager.primary,
+    //             fontSize: FontSize.s14,
+    //           ),
+    //         ),
+    //       ),
+    //     ),
+
+    // Step Indicator (الخطوة ٣ من ٣ + 3 Dots)
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
-        // Skip Button (تخطي)
-        GestureDetector(
-          onTap: () => _onSkip(context),
-          behavior: HitTestBehavior.opaque,
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 2.w),
-            child: Text(
-              AppStrings.skip,
-              style: getBoldStyle(
-                color: ColorManager.primary,
-                fontSize: FontSize.s14,
-              ),
-            ),
+        Text(
+          AppStrings.step3Of3,
+          style: getBoldStyle(
+            color: ColorManager.textTertiary,
+            fontSize: FontSize.s12,
           ),
         ),
-
-        // Step Indicator (الخطوة ٣ من ٣ + 3 Dots)
+        SizedBox(width: 8.w),
+        // Dots: 2 dots + 1 active pill
         Row(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            Text(
-              AppStrings.step3Of3,
-              style: getBoldStyle(
-                color: ColorManager.textTertiary,
-                fontSize: FontSize.s12,
-              ),
-            ),
-            SizedBox(width: 8.w),
-            // Dots: 2 dots + 1 active pill
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                _buildDot(isPill: false),
-                SizedBox(width: 4.w),
-                _buildDot(isPill: false),
-                SizedBox(width: 4.w),
-                _buildDot(isPill: true),
-              ],
-            ),
+            _buildDot(isPill: false),
+            SizedBox(width: 4.w),
+            _buildDot(isPill: false),
+            SizedBox(width: 4.w),
+            _buildDot(isPill: true),
           ],
         ),
       ],

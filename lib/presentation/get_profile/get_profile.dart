@@ -28,14 +28,14 @@ class GetProfileView extends StatelessWidget {
     return MultiBlocProvider(
       providers: <BlocProvider<StateStreamableSource<Object?>>>[
         BlocProvider<GetProfileCubit>(
-          create: (BuildContext context) => getIt<GetProfileCubit>(),
+          create: (BuildContext context) =>
+              getIt<GetProfileCubit>()..getProfile(),
         ),
         BlocProvider<LogoutCubit>(
-          // ← تأكد إنه موجود
           create: (BuildContext context) => getIt<LogoutCubit>(),
         ),
       ],
-      child: const _GetProfileScreen(),
+      child: const _GetProfileScreen(),                                              
     );
   }
 }
