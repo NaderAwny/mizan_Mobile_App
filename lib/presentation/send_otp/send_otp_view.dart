@@ -228,10 +228,7 @@ class _SendOtpScreenState extends State<_SendOtpScreen>
                   Center(
                     child: TextButton(
                       onPressed: () {
-                        Navigator.of(context).pushNamed(
-                          Routes.authVerificationRoute,
-                          arguments: _emailController.text.trim(),
-                        );
+                        Navigator.of(context).pushNamed(Routes.registerRoute);
                       },
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.symmetric(
@@ -240,7 +237,7 @@ class _SendOtpScreenState extends State<_SendOtpScreen>
                         ),
                       ),
                       child: Text(
-                        'العودة إلى التسجيل',
+                        "العودة إلى إنشاء حساب ؟",
                         style: getBoldStyle(
                           color: ColorManager.primary,
                           fontSize: FontSize.s14,
