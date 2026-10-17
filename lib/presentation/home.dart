@@ -223,7 +223,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                     },
               ),
 
-              SizedBox(height: 40.h),
+              SizedBox(height: 64.h),
             ],
           ),
         ),
