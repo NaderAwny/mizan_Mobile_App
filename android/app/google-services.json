@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "124869923305",
+    "project_id": "mizanapp-37e1c",
+    "storage_bucket": "mizanapp-37e1c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:124869923305:android:d6831a484245f2ec257b78",
+        "android_client_info": {
+          "package_name": "com.example.mizan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAOipv9q2y5Yv28HwMSOxsHyPXMqg-L41E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

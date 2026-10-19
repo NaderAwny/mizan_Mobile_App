@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/app/notification_service.dart';
 import 'package:mizan/data/data_source/auth_remote_data_source.dart';
 import 'package:mizan/data/local/token_local_data_source.dart';
 import 'package:mizan/data/mapper/auth_session_mappr.dart';
@@ -16,11 +19,13 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _remote;
   final NetworkInfo _networkInfo;
   final TokenLocalDataSource _tokenLocalDataSource;
+  final NotificationService _notificationService;
 
   AuthRepositoryImpl(
     this._remote,
     this._networkInfo,
     this._tokenLocalDataSource,
+    this._notificationService,
   );
 
   Future<Either<Failure, T>> _guard<T>(Future<T> Function() call) async {
@@ -51,6 +56,7 @@ class AuthRepositoryImpl implements AuthRepository {
       refreshToken: session.refreshToken,
       expiresInSeconds: session.expiresInSeconds,
     );
+    unawaited(_notificationService.registerDeviceToken());
     return session;
   });
 
@@ -76,6 +82,7 @@ class AuthRepositoryImpl implements AuthRepository {
       refreshToken: session.refreshToken,
       expiresInSeconds: session.expiresInSeconds,
     );
+    unawaited(_notificationService.registerDeviceToken());
     return session;
   });
 
@@ -84,13 +91,20 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final String? refreshToken = await _tokenLocalDataSource
           .getRefreshToken();
+      final String? fcmToken = await _notificationService.getDeviceToken();
+      // إلغاء تسجيل الجهاز من الـ backend قبل مسح الـ session
+      await _notificationService.unregisterDeviceToken();
       if (refreshToken != null) {
-        await _remote.logout(LogoutRequest(refreshToken: refreshToken));
+        await _remote.logout(LogoutRequest(
+          refreshToken: refreshToken,
+          deviceToken: fcmToken,
+        ));
       }
     } catch (_) {
-      // حتى لو السيرفر رفض، لازم نمسح محليًا عشان المستخدم يعرف يخرج فعليًا.
+      // حتى لو السيرفر رفض، لا نمنع عملية الخروج
     } finally {
       await _tokenLocalDataSource.clear();
+      await _notificationService.deleteLocalDeviceToken();
     }
     return const Right<Failure, void>(null);
   }

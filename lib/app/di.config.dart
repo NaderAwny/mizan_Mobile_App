@@ -20,6 +20,7 @@ import 'package:shared_preferences/shared_preferences.dart' as _i460;
 
 import '../data/data_source/auth_remote_data_source.dart' as _i1010;
 import '../data/data_source/contact_remote_data_source.dart' as _i1006;
+import '../data/data_source/device_remote_data_source.dart' as _i838;
 import '../data/data_source/get_list_transaction_remote_data_source.dart'
     as _i696;
 import '../data/data_source/get_profile_data_source.dart' as _i197;
@@ -38,6 +39,7 @@ import '../data/network/dio_client.dart' as _i765;
 import '../data/network/network_info.dart' as _i371;
 import '../data/repository_impl/auth_repository_impl.dart' as _i970;
 import '../data/repository_impl/contact_repository_impl.dart' as _i956;
+import '../data/repository_impl/device_repository_impl.dart' as _i131;
 import '../data/repository_impl/get_list_transaction_repository_impl.dart'
     as _i543;
 import '../data/repository_impl/get_profile_repository_impl.dart' as _i379;
@@ -49,6 +51,7 @@ import '../data/repository_impl/transaction_repository_impl.dart' as _i905;
 import '../data/repository_impl/voice_note_repository_impl.dart' as _i856;
 import '../domain/repository/auth_repository.dart' as _i306;
 import '../domain/repository/contact_repository.dart' as _i621;
+import '../domain/repository/device_repository.dart' as _i1057;
 import '../domain/repository/get_list_%20transaction_repository.dart' as _i92;
 import '../domain/repository/get_profile_repository.dart' as _i770;
 import '../domain/repository/installment_repository.dart' as _i182;
@@ -79,10 +82,12 @@ import '../domain/use_case/get_voice_note_by_id_use_case.dart' as _i131;
 import '../domain/use_case/logout_use_case.dart' as _i235;
 import '../domain/use_case/monthly_statistics_use_case.dart' as _i588;
 import '../domain/use_case/pay_installment_use_case.dart' as _i529;
+import '../domain/use_case/register_device_use_case.dart' as _i830;
 import '../domain/use_case/register_use_case.dart' as _i224;
 import '../domain/use_case/select_user_type_use_case.dart' as _i684;
 import '../domain/use_case/send_otp_use_case.dart' as _i508;
 import '../domain/use_case/toggle_vip_contact_use_case.dart' as _i493;
+import '../domain/use_case/unregister_device_use_case.dart' as _i929;
 import '../domain/use_case/update_contact_use_case.dart' as _i52;
 import '../domain/use_case/verify_otp_use_case.dart' as _i484;
 import '../presentation/auth_verification/verify_otp_cubit/verify_otp_cubit.dart'
@@ -121,6 +126,7 @@ import '../presentation/voice_note/get_voice_note_by_id_cubit/get_voice_note_by_
 import '../presentation/voice_note/get_voice_note_cubit/get_voice_note_cubit.dart'
     as _i955;
 import 'app_module.dart' as _i460;
+import 'notification_service.dart' as _i459;
 import 'session_manager.dart' as _i989;
 
 extension GetItInjectableX on _i174.GetIt {
@@ -182,6 +188,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i93.TransactionRemoteDataSource>(
       () => _i93.TransactionRemoteDataSourceImpl(gh<_i563.AppServiceClient>()),
     );
+    gh.lazySingleton<_i838.DeviceRemoteDataSource>(
+      () => _i838.DeviceRemoteDataSourceImpl(gh<_i563.AppServiceClient>()),
+    );
     gh.lazySingleton<_i371.SendOtpRemoteDataSource>(
       () => _i371.SendOtpRemoteDataSourceImpl(gh<_i563.AppServiceClient>()),
     );
@@ -205,6 +214,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1006.ContactRemoteDataSource>(
       () => _i1006.ContactRemoteDataSourceImpl(gh<_i563.AppServiceClient>()),
     );
+    gh.lazySingleton<_i1057.DeviceRepository>(
+      () => _i131.DeviceRepositoryImpl(
+        gh<_i838.DeviceRemoteDataSource>(),
+        gh<_i371.NetworkInfo>(),
+      ),
+    );
     gh.lazySingleton<_i775.StatisticsRemoteDataSource>(
       () => _i775.StatisticsRemoteDataSourceImpl(gh<_i563.AppServiceClient>()),
     );
@@ -219,6 +234,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i673.GetProfileUsecase>(
       () => _i673.GetProfileUsecase(gh<_i770.GetProfileRepository>()),
+    );
+    gh.factory<_i830.RegisterDeviceUseCase>(
+      () => _i830.RegisterDeviceUseCase(gh<_i1057.DeviceRepository>()),
+    );
+    gh.factory<_i929.UnregisterDeviceUseCase>(
+      () => _i929.UnregisterDeviceUseCase(gh<_i1057.DeviceRepository>()),
     );
     gh.factory<_i770.CreateContactUseCase>(
       () => _i770.CreateContactUseCase(gh<_i621.ContactRepository>()),
@@ -304,11 +325,11 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i52.UpdateContactUseCase>(),
       ),
     );
-    gh.lazySingleton<_i306.AuthRepository>(
-      () => _i970.AuthRepositoryImpl(
-        gh<_i1010.AuthRemoteDataSource>(),
-        gh<_i371.NetworkInfo>(),
+    gh.lazySingleton<_i459.NotificationService>(
+      () => _i459.NotificationService(
         gh<_i1028.TokenLocalDataSource>(),
+        gh<_i830.RegisterDeviceUseCase>(),
+        gh<_i929.UnregisterDeviceUseCase>(),
       ),
     );
     gh.factory<_i1063.GetInstallmentsDashboardUseCase>(
@@ -350,6 +371,14 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i531.SendOtpCubit>(
       () => _i531.SendOtpCubit(gh<_i508.SendOtpUseCase>()),
+    );
+    gh.lazySingleton<_i306.AuthRepository>(
+      () => _i970.AuthRepositoryImpl(
+        gh<_i1010.AuthRemoteDataSource>(),
+        gh<_i371.NetworkInfo>(),
+        gh<_i1028.TokenLocalDataSource>(),
+        gh<_i459.NotificationService>(),
+      ),
     );
     gh.factory<_i235.LogoutUseCase>(
       () => _i235.LogoutUseCase(gh<_i306.AuthRepository>()),
@@ -441,6 +470,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1007.GetProfileCubit>(),
         gh<_i1000.StatisticsCubit>(),
         gh<_i877.GetListTransactionCubit>(),
+        gh<_i459.NotificationService>(),
       ),
     );
     return this;

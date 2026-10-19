@@ -12,6 +12,7 @@ import 'package:mizan/presentation/resources/strings_manager.dart';
 import 'package:mizan/presentation/resources/values_manager.dart';
 import 'package:mizan/presentation/splash/splash_cubit/splash_state.dart';
 import 'package:mizan/presentation/statistics/cubit/statistics_cubit.dart';
+import 'package:mizan/app/notification_service.dart';
 import 'package:mizan/presentation/transactions/get_list_transaction/get_list_transaction_cubit.dart';
 
 @injectable
@@ -22,6 +23,7 @@ class SplashCubit extends Cubit<SplashState> {
     this._getProfileCubit,
     this._statisticsCubit,
     this._getListTransactionCubit,
+    this._notificationService,
   ) : super(const SplashState());
 
   final TokenLocalDataSource _tokenLocalDataSource;
@@ -29,6 +31,7 @@ class SplashCubit extends Cubit<SplashState> {
   final GetProfileCubit _getProfileCubit;
   final StatisticsCubit _statisticsCubit;
   final GetListTransactionCubit _getListTransactionCubit;
+  final NotificationService _notificationService;
 
   Future<void> preload() async {
     emit(
@@ -82,6 +85,8 @@ class SplashCubit extends Cubit<SplashState> {
     final bool hasSession =
         await _tokenLocalDataSource.hasValidSession();
     if (!hasSession) return SplashDestination.login;
+
+    unawaited(_notificationService.registerDeviceToken());
 
     // بيجيب الداتا بالتوازي — Home يحتاج: Profile + Statistics + Transactions
     final DateTime now = DateTime.now();

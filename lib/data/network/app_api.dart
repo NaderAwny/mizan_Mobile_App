@@ -45,6 +45,13 @@ abstract class AppServiceClient {
   @POST("/api/auth/logout")
   Future<BaseResponse> logout(@Body() Map<String, dynamic> body);
 
+  // ======================== Devices Endpoints ========================
+  @POST("/api/devices/register")
+  Future<BaseResponse> registerDevice(@Body() Map<String, dynamic> body);
+
+  @POST("/api/devices/unregister")
+  Future<BaseResponse> unregisterDevice(@Body() Map<String, dynamic> body);
+
   // ======================== Contacts Endpoints ========================
   @POST("/api/contacts")
   Future<ContactResponse> createContact(

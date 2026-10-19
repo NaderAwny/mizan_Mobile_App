@@ -33,12 +33,15 @@ class SelectUserTypeRequest {
 
 class LogoutRequest {
   final String refreshToken;
+  final String? deviceToken;
 
   const LogoutRequest({
     required this.refreshToken,
+    this.deviceToken,
   });
 
   Map<String, dynamic> toJson() => <String, dynamic>{
     'refreshToken': refreshToken,
+    if (deviceToken != null) 'deviceToken': deviceToken,
   };
 }
