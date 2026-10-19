@@ -17,6 +17,7 @@ import 'package:mizan/presentation/home/widgets/home_header.dart';
 import 'package:mizan/presentation/home/widgets/quick_actions_bar.dart';
 import 'package:mizan/presentation/home/widgets/recent_transactions_section.dart';
 import 'package:mizan/presentation/installments/installments_view.dart';
+import 'package:mizan/presentation/notifications/notifications_cubit/notifications_cubit.dart';
 import 'package:mizan/presentation/resources/assets_manager.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
 import 'package:mizan/presentation/resources/font_manager.dart';
@@ -40,8 +41,38 @@ class SwitchHomeTabNotification extends Notification {
   const SwitchHomeTabNotification(this.targetIndex);
 }
 
-class HomeView extends StatelessWidget {
+class HomeView extends StatefulWidget {
   const HomeView({super.key});
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
+  late final NotificationsCubit _notificationsCubit;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _notificationsCubit = getIt<NotificationsCubit>();
+    // جلب العدد فور بناء الصفحة
+    _notificationsCubit.fetchUnreadCount();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // عند العودة للتطبيق من الخلفية → أعد مزامنة العدد فوراً
+    if (state == AppLifecycleState.resumed) {
+      _notificationsCubit.fetchUnreadCount();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,11 +90,15 @@ class HomeView extends StatelessWidget {
           create: (_) =>
               getIt<GetListTransactionCubit>()..getListTransactions(),
         ),
+        BlocProvider<NotificationsCubit>.value(
+          value: _notificationsCubit,
+        ),
       ],
       child: const _HomeScreen(),
     );
   }
 }
+
 
 class _HomeScreen extends StatefulWidget {
   const _HomeScreen();

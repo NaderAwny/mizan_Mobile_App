@@ -5,15 +5,23 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/app/app_badge_service.dart';
 import 'package:mizan/app/app_logger.dart';
+import 'package:mizan/app/di.dart';
 import 'package:mizan/data/local/token_local_data_source.dart';
 import 'package:mizan/domain/use_case/register_device_use_case.dart';
 import 'package:mizan/domain/use_case/unregister_device_use_case.dart';
+import 'package:mizan/presentation/notifications/notifications_cubit/notifications_cubit.dart';
 import 'package:mizan/presentation/resources/routes_manager.dart';
+
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
+  // تحديث الـ badge في الخلفية عند وصول إشعار جديد
+  try {
+    await AppBadgeService.incrementBadge();
+  } catch (_) {}
 }
 
 @lazySingleton
@@ -139,8 +147,7 @@ class NotificationService {
     const NotificationDetails notificationDetails =
         NotificationDetails(android: androidDetails);
 
-    final int notificationId =
-        message.messageId.hashCode;
+    final int notificationId = message.messageId.hashCode;
 
     await _localNotifications.show(
       notificationId,
@@ -149,6 +156,25 @@ class NotificationService {
       notificationDetails,
       payload: message.data['screen'] as String? ?? 'notifications',
     );
+
+    // تحديث عدد الإشعارات والـ badge فوراً عند وصول إشعار جديد (foreground)
+    _refreshNotificationCount();
+  }
+
+  /// يُحدّث عدد الإشعارات غير المقروءة في الـ cubit والـ badge الخارجي
+  void _refreshNotificationCount() {
+    try {
+      if (getIt.isRegistered<NotificationsCubit>()) {
+        getIt<NotificationsCubit>().fetchUnreadCount();
+      }
+    } catch (e) {
+      AppLogger.e('Failed to refresh notification count', error: e);
+    }
+  }
+
+  /// يُستدعى عند العودة للتطبيق (resume) لإعادة مزامنة العدد
+  Future<void> refreshOnAppResume() async {
+    _refreshNotificationCount();
   }
 
   /// Registers device token ONLY if authenticated.

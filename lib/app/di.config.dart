@@ -25,6 +25,7 @@ import '../data/data_source/get_list_transaction_remote_data_source.dart'
     as _i696;
 import '../data/data_source/get_profile_data_source.dart' as _i197;
 import '../data/data_source/installment_remote_data_source.dart' as _i367;
+import '../data/data_source/notification_remote_data_source.dart' as _i215;
 import '../data/data_source/register_remote_data_source.dart' as _i1006;
 import '../data/data_source/send_otp_remote_data_source.dart' as _i371;
 import '../data/data_source/statistics_remote_data_source.dart' as _i775;
@@ -44,6 +45,7 @@ import '../data/repository_impl/get_list_transaction_repository_impl.dart'
     as _i543;
 import '../data/repository_impl/get_profile_repository_impl.dart' as _i379;
 import '../data/repository_impl/installment_repository_impl.dart' as _i351;
+import '../data/repository_impl/notification_repository_impl.dart' as _i267;
 import '../data/repository_impl/register_repository_impl.dart' as _i432;
 import '../data/repository_impl/send_otp_repository_impl.dart' as _i1060;
 import '../data/repository_impl/statistics_repository_impl.dart' as _i1006;
@@ -55,6 +57,7 @@ import '../domain/repository/device_repository.dart' as _i1057;
 import '../domain/repository/get_list_%20transaction_repository.dart' as _i92;
 import '../domain/repository/get_profile_repository.dart' as _i770;
 import '../domain/repository/installment_repository.dart' as _i182;
+import '../domain/repository/notification_repository.dart' as _i821;
 import '../domain/repository/register_repository.dart' as _i582;
 import '../domain/repository/send_otp_repository.dart' as _i943;
 import '../domain/repository/statistics_repository.dart' as _i413;
@@ -74,16 +77,20 @@ import '../domain/use_case/get_installments_dashboard_use_case.dart' as _i1063;
 import '../domain/use_case/get_installments_history_use_case.dart' as _i200;
 import '../domain/use_case/get_list_transaction_use_case.dart' as _i463;
 import '../domain/use_case/get_list_voice_notes_use_case.dart' as _i474;
+import '../domain/use_case/get_notifications_use_case.dart' as _i745;
 import '../domain/use_case/get_profile_use_case.dart' as _i673;
 import '../domain/use_case/get_statistics_use_case.dart' as _i242;
 import '../domain/use_case/get_transaction_by_id_use_case.dart' as _i1060;
 import '../domain/use_case/get_vip_contacts_use_case.dart' as _i1063;
 import '../domain/use_case/get_voice_note_by_id_use_case.dart' as _i131;
 import '../domain/use_case/logout_use_case.dart' as _i235;
+import '../domain/use_case/mark_all_notifications_read_use_case.dart' as _i180;
+import '../domain/use_case/mark_notification_read_use_case.dart' as _i495;
 import '../domain/use_case/monthly_statistics_use_case.dart' as _i588;
 import '../domain/use_case/pay_installment_use_case.dart' as _i529;
 import '../domain/use_case/register_device_use_case.dart' as _i830;
 import '../domain/use_case/register_use_case.dart' as _i224;
+import '../domain/use_case/run_reminders_scan_use_case.dart' as _i454;
 import '../domain/use_case/select_user_type_use_case.dart' as _i684;
 import '../domain/use_case/send_otp_use_case.dart' as _i508;
 import '../domain/use_case/toggle_vip_contact_use_case.dart' as _i493;
@@ -103,6 +110,10 @@ import '../presentation/installments/installments_dashboard/installments_dashboa
 import '../presentation/installments/installments_history/installments_history_cubit.dart'
     as _i783;
 import '../presentation/logout/logout_cubit/logout_cubit.dart' as _i995;
+import '../presentation/notifications/notifications_cubit/notifications_cubit.dart'
+    as _i701;
+import '../presentation/notifications/run_reminders_scan/run_reminders_scan_cubit.dart'
+    as _i400;
 import '../presentation/onboarding/cubit/onboarding_cubit.dart' as _i171;
 import '../presentation/register/cubit/register_cubit.dart' as _i298;
 import '../presentation/select_user_type/select_user_type_cubit/select_user_type_cubit.dart'
@@ -166,6 +177,16 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i361.Dio>(() => appModule.dio(gh<_i765.DioFactory>()));
     gh.lazySingleton<_i563.AppServiceClient>(
       () => appModule.appServiceClient(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i215.NotificationRemoteDataSource>(
+      () =>
+          _i215.NotificationRemoteDataSourceImpl(gh<_i563.AppServiceClient>()),
+    );
+    gh.lazySingleton<_i821.NotificationRepository>(
+      () => _i267.NotificationRepositoryImpl(
+        gh<_i215.NotificationRemoteDataSource>(),
+        gh<_i371.NetworkInfo>(),
+      ),
     );
     gh.lazySingleton<_i1006.RegisterRemoteDataSource>(
       () => _i1006.RegisterRemoteDataSourceImpl(gh<_i563.AppServiceClient>()),
@@ -234,6 +255,28 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i673.GetProfileUsecase>(
       () => _i673.GetProfileUsecase(gh<_i770.GetProfileRepository>()),
+    );
+    gh.factory<_i180.MarkAllNotificationsReadUseCase>(
+      () => _i180.MarkAllNotificationsReadUseCase(
+        gh<_i821.NotificationRepository>(),
+      ),
+    );
+    gh.factory<_i495.MarkNotificationReadUseCase>(
+      () =>
+          _i495.MarkNotificationReadUseCase(gh<_i821.NotificationRepository>()),
+    );
+    gh.factory<_i454.RunRemindersScanUseCase>(
+      () => _i454.RunRemindersScanUseCase(gh<_i821.NotificationRepository>()),
+    );
+    gh.lazySingleton<_i745.GetNotificationsUseCase>(
+      () => _i745.GetNotificationsUseCase(gh<_i821.NotificationRepository>()),
+    );
+    gh.lazySingleton<_i701.NotificationsCubit>(
+      () => _i701.NotificationsCubit(
+        gh<_i745.GetNotificationsUseCase>(),
+        gh<_i495.MarkNotificationReadUseCase>(),
+        gh<_i180.MarkAllNotificationsReadUseCase>(),
+      ),
     );
     gh.factory<_i830.RegisterDeviceUseCase>(
       () => _i830.RegisterDeviceUseCase(gh<_i1057.DeviceRepository>()),
@@ -371,6 +414,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i531.SendOtpCubit>(
       () => _i531.SendOtpCubit(gh<_i508.SendOtpUseCase>()),
+    );
+    gh.factory<_i400.RunRemindersScanCubit>(
+      () => _i400.RunRemindersScanCubit(gh<_i454.RunRemindersScanUseCase>()),
     );
     gh.lazySingleton<_i306.AuthRepository>(
       () => _i970.AuthRepositoryImpl(

@@ -25,6 +25,37 @@ class AppStrings {
   static const String startNow = "ابدأ الآن";
   static const String submit = "إرسال";
   static const String loading = "جاري التحميل...";
+  // --- Notifications Feature ---
+  static const String notificationsSubtitle =
+      "تذكيرات الأقساط وتنبيهات العملاء";
+  static const String notificationsFilterAll = "الكل";
+  static const String notificationsFilterUnread = "غير مقروءة";
+  static const String markAllAsRead = "تعليم الكل كمقروء";
+  static const String notificationsLoading = "جاري جلب الإشعارات...";
+  static const String notificationsLoadError = "تعذر تحميل الإشعارات";
+  static const String notificationsEmpty = "لا توجد إشعارات حتى الآن";
+  static const String notificationsUnreadEmpty = "لا توجد إشعارات غير مقروءة";
+  static const String markReadFailed = "فشل تحديث حالة الإشعار";
+  static const String markAllLoading = "جاري تعليم الإشعارات كمقروءة...";
+  static const String markAllFailed = "تعذر تعليم الإشعارات كمقروءة";
+  static const String notificationsToday = "اليوم";
+  static const String notificationsYesterday = "أمس";
+  static const String notificationsOlder = "أقدم";
+  // reminders sheet (7.4)
+  static const String runRemindersTitle = "إرسال التذكيرات الآن";
+  static const String runRemindersDescription =
+      "سيفحص النظام الأقساط المستحقة بعد 3 أيام، وبعد يوم، وفي نفس اليوم.";
+  static const String runRemindersInApp = "إشعار داخل التطبيق لك";
+  static const String runRemindersEmail =
+      "إيميل تذكير للعميل (لو مسجّل له بريد إلكتروني)";
+  static const String runRemindersNoEmailNote =
+      "العميل المسجّل بالاسم فقط ولا يملك بريداً إلكترونياً لن يصله إيميل. أضف بريده من بيانات الطرف.";
+  static const String runRemindersConfirm = "إرسال الآن";
+  static const String runRemindersLoading =
+      "جاري فحص الأقساط وإرسال التذكيرات...";
+  static const String runRemindersFailed = "تعذر تشغيل التذكيرات";
+  static const String runRemindersDone = "تم تشغيل التذكيرات";
+  static const String runRemindersProcessedSuffix = "تذكير تمت معالجته";
 
   // --- Navigation Tabs ---
   static const String home = "الرئيسية";

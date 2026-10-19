@@ -10,6 +10,7 @@ import 'package:mizan/data/response/get_profile_responses/get_profile_responses.
 import 'package:mizan/data/response/installments_dashboard_responses/installments_dashboard_responses.dart';
 import 'package:mizan/data/response/installments_history_responses/installments_history_responses.dart';
 import 'package:mizan/data/response/register_responses/register_responses.dart';
+import 'package:mizan/data/response/notifications_responses/notifications_responses.dart';
 import 'package:mizan/data/response/pay_installment_responses/pay_installment_responses.dart';
 import 'package:mizan/data/response/statistics_response/statistic_response.dart';
 import 'package:mizan/data/response/transaction_by_id_responses/transaction_by_id_responses.dart';
@@ -177,4 +178,27 @@ abstract class AppServiceClient {
     @Query("page") int page,
     @Query("pageSize") int pageSize,
   );
+
+  // ======================== Notifications Endpoints ========================
+  /// GET /api/notifications — قائمة الإشعارات
+  @GET("/api/notifications")
+  Future<NotificationsPageResponse> getNotifications(
+    @Query("page") int page,
+    @Query("pageSize") int pageSize,
+    @Query("unreadOnly") bool unreadOnly,
+  );
+
+  /// PATCH /api/notifications/read-all — تعليم الكل كمقروء
+  @PATCH("/api/notifications/read-all")
+  Future<BaseResponse> markAllNotificationsRead();
+
+  /// PATCH /api/notifications/{id}/read — تعليم إشعار كمقروء
+  @PATCH("/api/notifications/{id}/read")
+  Future<MarkNotificationReadResponse> markNotificationRead(
+    @Path("id") String id,
+  );
+
+  /// POST /api/notifications/run-reminders-scan — تشغيل فحص التذكيرات
+  @POST("/api/notifications/run-reminders-scan")
+  Future<RunRemindersScanResponse> runRemindersScan();
 }
