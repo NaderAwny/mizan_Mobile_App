@@ -17,14 +17,18 @@ class NotificationCard extends StatelessWidget {
 
   const NotificationCard({super.key, required this.item});
 
-  void _onTap(BuildContext context) {
-    // Mark as read first (optimistic — no await needed)
+  Future<void> _onTap(BuildContext context) async {
+    // Await markAsRead so any error popup shows BEFORE navigation,
+    // not when the user returns from transaction details.
     if (!item.isRead) {
-      context.read<NotificationsCubit>().markAsRead(item.id);
+      await context.read<NotificationsCubit>().markAsRead(item.id);
     }
-    // Navigate to the linked transaction details
+
+    // Navigate only if the widget is still mounted after the async gap.
+    if (!context.mounted) return;
+
     if (item.transactionId.isNotEmpty) {
-      Navigator.pushNamed(
+      await Navigator.pushNamed(
         context,
         Routes.transactionDetailsRoute,
         arguments: item.transactionId,

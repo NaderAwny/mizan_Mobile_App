@@ -12,7 +12,8 @@ abstract class NotificationRemoteDataSource {
   });
 
   /// PATCH /api/notifications/{id}/read
-  Future<MarkNotificationReadResponse> markNotificationRead(String id);
+  /// الـ API بيرجع 204 No Content (من غير body)
+  Future<void> markNotificationRead(String id);
 
   /// PATCH /api/notifications/read-all
   Future<BaseResponse> markAllNotificationsRead();
@@ -37,7 +38,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
   }
 
   @override
-  Future<MarkNotificationReadResponse> markNotificationRead(String id) {
+  Future<void> markNotificationRead(String id) {
     return _appServiceClient.markNotificationRead(id);
   }
 

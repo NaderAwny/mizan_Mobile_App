@@ -1,0 +1,127 @@
+diff --git a/lib/data/data_source/notification_remote_data_source.dart b/lib/data/data_source/notification_remote_data_source.dart
+index 09caa31..8bcb260 100644
+--- a/lib/data/data_source/notification_remote_data_source.dart
++++ b/lib/data/data_source/notification_remote_data_source.dart
+@@ -12,7 +12,8 @@ abstract class NotificationRemoteDataSource {
+   });
+ 
+   /// PATCH /api/notifications/{id}/read
+-  Future<MarkNotificationReadResponse> markNotificationRead(String id);
++  /// الـ API بيرجع 204 No Content (من غير body)
++  Future<void> markNotificationRead(String id);
+ 
+   /// PATCH /api/notifications/read-all
+   Future<BaseResponse> markAllNotificationsRead();
+@@ -37,7 +38,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
+   }
+ 
+   @override
+-  Future<MarkNotificationReadResponse> markNotificationRead(String id) {
++  Future<void> markNotificationRead(String id) {
+     return _appServiceClient.markNotificationRead(id);
+   }
+ 
+diff --git a/lib/data/network/app_api.dart b/lib/data/network/app_api.dart
+index a0cb6ef..e9710f3 100644
+--- a/lib/data/network/app_api.dart
++++ b/lib/data/network/app_api.dart
+@@ -194,9 +194,7 @@ abstract class AppServiceClient {
+ 
+   /// PATCH /api/notifications/{id}/read — تعليم إشعار كمقروء
+   @PATCH("/api/notifications/{id}/read")
+-  Future<MarkNotificationReadResponse> markNotificationRead(
+-    @Path("id") String id,
+-  );
++  Future<void> markNotificationRead(@Path("id") String id);
+ 
+   /// POST /api/notifications/run-reminders-scan — تشغيل فحص التذكيرات
+   @POST("/api/notifications/run-reminders-scan")
+diff --git a/lib/data/network/app_api.g.dart b/lib/data/network/app_api.g.dart
+index 5a3be26..090d404 100644
+--- a/lib/data/network/app_api.g.dart
++++ b/lib/data/network/app_api.g.dart
+@@ -983,12 +983,12 @@ class _AppServiceClient implements AppServiceClient {
+   }
+ 
+   @override
+-  Future<MarkNotificationReadResponse> markNotificationRead(String id) async {
++  Future<void> markNotificationRead(String id) async {
+     final _extra = <String, dynamic>{};
+     final queryParameters = <String, dynamic>{};
+     final _headers = <String, dynamic>{};
+     const Map<String, dynamic>? _data = null;
+-    final _options = _setStreamType<MarkNotificationReadResponse>(
++    final _options = _setStreamType<void>(
+       Options(method: 'PATCH', headers: _headers, extra: _extra)
+           .compose(
+             _dio.options,
+@@ -998,15 +998,7 @@ class _AppServiceClient implements AppServiceClient {
+           )
+           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+     );
+-    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+-    late MarkNotificationReadResponse _value;
+-    try {
+-      _value = MarkNotificationReadResponse.fromJson(_result.data!);
+-    } on Object catch (e, s) {
+-      errorLogger?.logError(e, s, _options, response: _result);
+-      rethrow;
+-    }
+-    return _value;
++    await _dio.fetch<void>(_options);
+   }
+ 
+   @override
+diff --git a/lib/data/repository_impl/notification_repository_impl.dart b/lib/data/repository_impl/notification_repository_impl.dart
+index c12c597..2926ebd 100644
+--- a/lib/data/repository_impl/notification_repository_impl.dart
++++ b/lib/data/repository_impl/notification_repository_impl.dart
+@@ -55,18 +55,9 @@ class NotificationRepositoryImpl implements NotificationRepository {
+   ) async {
+     if (await _networkInfo.isConnected) {
+       try {
+-        final MarkNotificationReadResponse response = await _remoteDataSource
+-            .markNotificationRead(id);
+-        if (response.success == true) {
+-          return Right(response.data.toDomain());
+-        } else {
+-          return Left(
+-            Failure(
+-              ApiInternalStatus.FAILURE,
+-              response.message ?? ResponseMessage.DEAFULT,
+-            ),
+-          );
+-        }
++        // 204 No Content → أي رد ناجح (من غير exception) معناه إن الإشعار اتقرأ
++        await _remoteDataSource.markNotificationRead(id);
++        return Right(NotificationReadStatus(id: id, isRead: true));
+       } catch (error) {
+         return Left(ErrorHandler.handle(error).failure);
+       }
+diff --git a/lib/presentation/notifications/notifications_cubit/notifications_cubit.dart b/lib/presentation/notifications/notifications_cubit/notifications_cubit.dart
+index a662b09..5dce5b7 100644
+--- a/lib/presentation/notifications/notifications_cubit/notifications_cubit.dart
++++ b/lib/presentation/notifications/notifications_cubit/notifications_cubit.dart
+@@ -210,17 +210,16 @@ class NotificationsCubit extends Cubit<NotificationsState> {
+           (NotificationModel n) => n.id == notificationId,
+         );
+         if (revIndex != -1) revertedList[revIndex] = original;
++        // رجوع هادي من غير dialog — دي عملية خلفية
++        final int revertedUnread = state.unreadCount + 1;
+         emit(
+           state.copyWith(
+             data: revertedList,
+-            unreadCount: state.unreadCount + 1,
+-            flowState: ErrorState(
+-              StateRendererType.popupErrorStatete,
+-              failure.message,
+-              title: AppStrings.markReadFailed,
+-            ),
++            unreadCount: revertedUnread,
++            flowState: null,
+           ),
+         );
++        _syncBadge(revertedUnread);
+       },
+       (NotificationReadStatus status) {
+         if (isClosed) return;

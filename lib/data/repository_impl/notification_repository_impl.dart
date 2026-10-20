@@ -55,18 +55,9 @@ class NotificationRepositoryImpl implements NotificationRepository {
   ) async {
     if (await _networkInfo.isConnected) {
       try {
-        final MarkNotificationReadResponse response = await _remoteDataSource
-            .markNotificationRead(id);
-        if (response.success == true) {
-          return Right(response.data.toDomain());
-        } else {
-          return Left(
-            Failure(
-              ApiInternalStatus.FAILURE,
-              response.message ?? ResponseMessage.DEAFULT,
-            ),
-          );
-        }
+        // 204 No Content → أي رد ناجح (من غير exception) معناه إن الإشعار اتقرأ
+        await _remoteDataSource.markNotificationRead(id);
+        return Right(NotificationReadStatus(id: id, isRead: true));
       } catch (error) {
         return Left(ErrorHandler.handle(error).failure);
       }

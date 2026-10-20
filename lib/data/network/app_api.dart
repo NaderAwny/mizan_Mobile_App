@@ -194,9 +194,7 @@ abstract class AppServiceClient {
 
   /// PATCH /api/notifications/{id}/read — تعليم إشعار كمقروء
   @PATCH("/api/notifications/{id}/read")
-  Future<MarkNotificationReadResponse> markNotificationRead(
-    @Path("id") String id,
-  );
+  Future<void> markNotificationRead(@Path("id") String id);
 
   /// POST /api/notifications/run-reminders-scan — تشغيل فحص التذكيرات
   @POST("/api/notifications/run-reminders-scan")

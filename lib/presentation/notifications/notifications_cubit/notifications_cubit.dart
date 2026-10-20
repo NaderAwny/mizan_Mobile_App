@@ -210,17 +210,16 @@ class NotificationsCubit extends Cubit<NotificationsState> {
           (NotificationModel n) => n.id == notificationId,
         );
         if (revIndex != -1) revertedList[revIndex] = original;
+        // رجوع هادي من غير dialog — دي عملية خلفية
+        final int revertedUnread = state.unreadCount + 1;
         emit(
           state.copyWith(
             data: revertedList,
-            unreadCount: state.unreadCount + 1,
-            flowState: ErrorState(
-              StateRendererType.popupErrorStatete,
-              failure.message,
-              title: AppStrings.markReadFailed,
-            ),
+            unreadCount: revertedUnread,
+            flowState: null,
           ),
         );
+        _syncBadge(revertedUnread);
       },
       (NotificationReadStatus status) {
         if (isClosed) return;
