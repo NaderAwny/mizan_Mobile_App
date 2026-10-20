@@ -18,19 +18,21 @@ class NotificationCard extends StatelessWidget {
   const NotificationCard({super.key, required this.item});
 
   void _onTap(BuildContext context) {
+    // Mark as read first (optimistic — no await needed)
     if (!item.isRead) {
       context.read<NotificationsCubit>().markAsRead(item.id);
     }
+    // Navigate to the linked transaction details
     if (item.transactionId.isNotEmpty) {
       Navigator.pushNamed(
         context,
         Routes.transactionDetailsRoute,
         arguments: item.transactionId,
-      ).then((_) {
-        if (context.mounted) {
-          context.read<NotificationsCubit>().getNotifications();
-        }
-      });
+      );
+      // Note: no getNotifications() on return — the optimistic update
+      // in markAsRead() already reflects the read state. A full reload
+      // would unnecessarily trigger ContentState → dismissDialog() and
+      // could flash stale popup contexts.
     }
   }
 

@@ -91,45 +91,41 @@ class _NotificationsScreen extends StatelessWidget {
                     if (hasItems)
                       Tooltip(
                         message: AppStrings.markAllAsRead,
-                        child: GestureDetector(
-                          onTap: () => context
-                              .read<NotificationsCubit>()
-                              .markAllAsRead(),
-                          child: Container(
-                            width: 40.r,
-                            height: 40.r,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: <Color>[
-                                  Color(0xFFD4865E),
-                                  ColorManager.primary,
-                                  ColorManager.darkPrimary,
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(12.r),
-                              boxShadow: <BoxShadow>[
-                                BoxShadow(
-                                  color: ColorManager.primary.withValues(
-                                    alpha: 0.40,
-                                  ),
-                                  blurRadius: 10.r,
-                                  spreadRadius: 0,
-                                  offset: const Offset(0, 4),
-                                ),
+                        child: Container(
+                          width: 40.r,
+                          height: 40.r,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: <Color>[
+                                Color(0xFFD4865E),
+                                ColorManager.primary,
+                                ColorManager.darkPrimary,
                               ],
                             ),
-                            child: Center(
-                              child: Icon(
-                                Icons.done_all_rounded,
-                                color: Colors.white,
-                                size: 20.r,
+                            borderRadius: BorderRadius.circular(12.r),
+                            boxShadow: <BoxShadow>[
+                              BoxShadow(
+                                color: ColorManager.primary.withValues(
+                                  alpha: 0.40,
+                                ),
+                                blurRadius: 10.r,
+                                spreadRadius: 0,
+                                offset: const Offset(0, 4),
                               ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.notifications_rounded,
+                              color: Colors.white,
+                              size: 20.r,
                             ),
                           ),
                         ),
                       ),
+
                     SizedBox(width: 12.w),
                   ],
                 );

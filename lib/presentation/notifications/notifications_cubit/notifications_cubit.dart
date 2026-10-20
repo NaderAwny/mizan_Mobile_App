@@ -182,12 +182,19 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     final NotificationModel original = currentList[index];
     if (original.isRead) return; // already read → no API call
 
+    // Optimistic update: mark as read immediately in UI
     final List<NotificationModel> optimisticList = List<NotificationModel>.from(
       currentList,
     );
     optimisticList[index] = _withReadFlag(original, true);
     final int newUnread = state.unreadCount > 0 ? state.unreadCount - 1 : 0;
-    emit(state.copyWith(data: optimisticList, unreadCount: newUnread));
+    emit(
+      state.copyWith(
+        data: optimisticList,
+        unreadCount: newUnread,
+        flowState: null, // clear any stale flowState before API call
+      ),
+    );
     _syncBadge(newUnread);
 
     final Either<Failure, NotificationReadStatus> result =
@@ -196,6 +203,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     result.fold(
       (Failure failure) {
         if (isClosed) return;
+        // Revert optimistic update on failure
         final List<NotificationModel> revertedList =
             List<NotificationModel>.from(state.data ?? optimisticList);
         final int revIndex = revertedList.indexWhere(
@@ -216,6 +224,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       },
       (NotificationReadStatus status) {
         if (isClosed) return;
+        // Confirm with server's actual isRead value
         final List<NotificationModel> confirmedList =
             List<NotificationModel>.from(state.data ?? optimisticList);
         final int confirmedIndex = confirmedList.indexWhere(
@@ -227,7 +236,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
             status.isRead,
           );
         }
-        emit(state.copyWith(data: confirmedList));
+        emit(state.copyWith(data: confirmedList, flowState: null));
       },
     );
   }
@@ -235,6 +244,10 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   // ── 7.3 mark all as read — popup states (action), then refresh from server ──
   Future<void> markAllAsRead() async {
     final List<NotificationModel>? currentList = state.data;
+    // Capture a deep copy of the original list so the revert is independent
+    // of any future optimistic mutations applied to state.data.
+    final List<NotificationModel>? originalList =
+        currentList?.map((NotificationModel n) => n).toList();
     final int previousUnreadCount = state.unreadCount;
 
     // Optimistically mark all current items as read and set unreadCount to 0
@@ -264,15 +277,18 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       );
     }
 
-    final Either<Failure, void> result = await _markAllNotificationsReadUseCase
-        .execute(null);
+    final Either<Failure, void> result =
+        await _markAllNotificationsReadUseCase.execute(null);
 
     await result.fold(
       (Failure failure) async {
         if (isClosed) return;
+        // Revert optimistic changes and show error popup.
+        // After the user dismisses the popup the flowState is reset to null
+        // so no stale ErrorState lingers in subsequent rebuilds.
         emit(
           state.copyWith(
-            data: currentList,
+            data: originalList,
             unreadCount: previousUnreadCount,
             flowState: ErrorState(
               StateRendererType.popupErrorStatete,
@@ -281,12 +297,17 @@ class NotificationsCubit extends Cubit<NotificationsState> {
             ),
           ),
         );
+        // Give the popup time to render, then clear the flowState so that
+        // the next BlocBuilder rebuild does not re-trigger dismissDialog.
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        if (!isClosed) emit(state.copyWith(flowState: null));
       },
       (void _) async {
         if (isClosed) return;
-        emit(state.copyWith(unreadCount: 0));
         _syncBadge(0);
-        await getNotifications(); // silent refresh (data != null) → sets Content/Empty → closes popup
+        // Silent refresh — since data != null, getNotifications() skips the
+        // full-screen loader and just sets ContentState which closes the popup.
+        await getNotifications();
       },
     );
   }

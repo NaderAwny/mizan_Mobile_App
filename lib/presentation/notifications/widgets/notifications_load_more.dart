@@ -35,7 +35,7 @@ class NotificationsLoadMore extends StatelessWidget {
           if (hasMore)
             SizedBox(
               width: double.infinity,
-              height: 44.h,
+              height: 60.h,
               child: OutlinedButton(
                 onPressed: isLoadingMore ? null : onLoadMore,
                 style: OutlinedButton.styleFrom(
