@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:mizan/app/di.dart';
+import 'package:mizan/core/utils/date_utils.dart';
 import 'package:mizan/domain/model/statistics_model/statistics_model.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
@@ -1208,42 +1209,65 @@ class _TransactionPartnerRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 2.h),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: <Widget>[
-                      if (txn.paymentMethod?.isNotEmpty == true) ...<Widget>[
-                        Flexible(
-                          child: Text(
-                            txn.paymentMethod!,
-                            style: getRegularStyle(
-                              color: ColorManager.textTertiary,
-                              fontSize: FontSize.s10,
+                  Builder(
+                    builder: (BuildContext context) {
+                      final String paymentMethodStr =
+                          translatePaymentMethod(txn.paymentMethod);
+                      final String dateStr;
+                      if (txn.operationDate != null &&
+                          txn.operationDate!.isNotEmpty) {
+                        dateStr = formatDate(
+                          parseBusinessDate(txn.operationDate!),
+                        );
+                      } else if (txn.createdAt != null &&
+                          txn.createdAt!.isNotEmpty) {
+                        dateStr = formatDate(
+                          parseServerTime(txn.createdAt!),
+                        );
+                      } else {
+                        dateStr = '';
+                      }
+
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: <Widget>[
+                          if (paymentMethodStr.isNotEmpty) ...<Widget>[
+                            Flexible(
+                              child: Text(
+                                paymentMethodStr,
+                                style: getRegularStyle(
+                                  color: ColorManager.textTertiary,
+                                  fontSize: FontSize.s10,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Text(
-                          ' • ',
-                          style: getRegularStyle(
-                            color: ColorManager.textTertiary,
-                            fontSize: FontSize.s10,
-                          ),
-                        ),
-                      ],
-                      Flexible(
-                        child: Text(
-                          txn.operationDate ?? '',
-                          style: getRegularStyle(
-                            color: ColorManager.textTertiary,
-                            fontSize: FontSize.s10,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
+                            if (dateStr.isNotEmpty)
+                              Text(
+                                ' • ',
+                                style: getRegularStyle(
+                                  color: ColorManager.textTertiary,
+                                  fontSize: FontSize.s10,
+                                ),
+                              ),
+                          ],
+                          if (dateStr.isNotEmpty)
+                            Flexible(
+                              child: Text(
+                                dateStr,
+                                style: getRegularStyle(
+                                  color: ColorManager.textTertiary,
+                                  fontSize: FontSize.s10,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),

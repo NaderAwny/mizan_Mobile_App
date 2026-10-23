@@ -12,6 +12,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:mizan/app/di.dart';
+import 'package:mizan/core/utils/date_utils.dart';
 import 'package:mizan/data/request/voice_note_request.dart';
 import 'package:mizan/domain/model/voice_note_model/voice_note_model.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
@@ -839,25 +840,7 @@ class _VoiceNoteCardState extends State<_VoiceNoteCard>
     }
   }
 
-  DateTime _parseToLocal(String raw) {
-    final String trimmed = raw.trim();
-    try {
-      if (trimmed.endsWith('Z')) {
-        return DateTime.parse(trimmed).toLocal();
-      }
-      if (trimmed.contains('+') ||
-          (trimmed.length > 19 && trimmed.substring(19).contains('-'))) {
-        return DateTime.parse(trimmed).toLocal();
-      }
-      return DateTime.parse('${trimmed}Z').toLocal();
-    } catch (_) {
-      try {
-        return DateTime.parse(trimmed).toLocal();
-      } catch (_) {
-        return DateTime.now();
-      }
-    }
-  }
+  DateTime _parseToLocal(String raw) => parseServerTime(raw);
 
   String _formatDate(String dateString) {
     if (dateString.isEmpty) return '';

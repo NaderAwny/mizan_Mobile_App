@@ -9,6 +9,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'package:mizan/app/di.dart';
+import 'package:mizan/core/utils/date_utils.dart';
 import 'package:mizan/domain/model/transaction_by_id_mode/transaction_by_id_mode.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
@@ -827,7 +828,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
         inst.dueDate != null &&
         inst.dueDate!.isNotEmpty) {
       try {
-        final DateTime due = DateTime.parse(inst.dueDate!);
+        final DateTime due = parseBusinessDate(inst.dueDate!);
         if (due.isBefore(DateTime.now())) {
           isOverdue = true;
         }
@@ -1193,30 +1194,12 @@ class _TransactionDetailsScreen extends StatelessWidget {
     'ديسمبر',
   ];
 
-  DateTime _parseToLocal(String raw) {
-    final String trimmed = raw.trim();
-    try {
-      if (trimmed.endsWith('Z')) {
-        return DateTime.parse(trimmed).toLocal();
-      }
-      if (trimmed.contains('+') ||
-          (trimmed.length > 19 && trimmed.substring(19).contains('-'))) {
-        return DateTime.parse(trimmed).toLocal();
-      }
-      return DateTime.parse('${trimmed}Z').toLocal();
-    } catch (_) {
-      try {
-        return DateTime.parse(trimmed).toLocal();
-      } catch (_) {
-        return DateTime.now();
-      }
-    }
-  }
+  DateTime _parseToLocal(String raw) => parseServerTime(raw);
 
   String _formatDate(String? raw) {
     if (raw == null || raw.isEmpty) return "—";
     try {
-      final DateTime dt = DateTime.parse(raw);
+      final DateTime dt = parseBusinessDate(raw);
       final String month = _arabicMonths[(dt.month - 1).clamp(0, 11)];
       return '${dt.day} $month ${dt.year}';
     } catch (_) {

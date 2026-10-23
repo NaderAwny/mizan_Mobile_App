@@ -11,6 +11,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'package:mizan/app/di.dart';
+import 'package:mizan/core/utils/date_utils.dart';
 import 'package:mizan/domain/model/transaction_by_id_mode/transaction_by_id_mode.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
@@ -112,7 +113,7 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
   String _formatDueDate(String? raw) {
     if (raw == null || raw.isEmpty) return '—';
     try {
-      final DateTime dt = DateTime.parse(raw);
+      final DateTime dt = parseBusinessDate(raw);
       final String month = _arabicMonths[(dt.month - 1).clamp(0, 11)];
       return '${dt.day} $month ${dt.year}';
     } catch (_) {
@@ -127,7 +128,7 @@ class _PayInstallmentSheetState extends State<_PayInstallmentSheet> {
       return 0;
     }
     try {
-      final DateTime due = DateTime.parse(widget.installment.dueDate!);
+      final DateTime due = parseBusinessDate(widget.installment.dueDate!);
       final DateTime now = DateTime.now();
       final int diff = DateTime(
         now.year,

@@ -10,6 +10,7 @@ import 'package:mizan/presentation/resources/routes_manager.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 import 'package:mizan/presentation/resources/styles_manager.dart';
 import 'package:mizan/presentation/resources/values_manager.dart';
+import 'package:mizan/core/utils/date_utils.dart';
 import 'package:mizan/presentation/transactions/get_transaction_by_id/transaction_by_id_view.dart';
 
 class RecentTransactionsSection extends StatelessWidget {
@@ -180,7 +181,7 @@ class _TransactionItemTile extends StatelessWidget {
   String _formatDate(String rawDate) {
     if (rawDate.isEmpty) return "";
     try {
-      final DateTime dt = DateTime.parse(rawDate).toLocal();
+      final DateTime dt = parseServerTime(rawDate);
       final DateTime now = DateTime.now();
       final DateTime today = DateTime(now.year, now.month, now.day);
       final DateTime txDay = DateTime(dt.year, dt.month, dt.day);

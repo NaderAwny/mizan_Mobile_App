@@ -17,6 +17,7 @@ import 'package:mizan/presentation/resources/font_manager.dart';
 import 'package:mizan/presentation/resources/routes_manager.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 import 'package:mizan/presentation/resources/styles_manager.dart';
+import 'package:mizan/core/utils/date_utils.dart';
 import 'package:mizan/presentation/resources/values_manager.dart';
 import 'package:mizan/presentation/transactions/get_list_transaction/get_list_transaction_cubit.dart';
 import 'package:mizan/presentation/transactions/get_list_transaction/get_list_transaction_state.dart';
@@ -540,7 +541,7 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
   String _getDateGroupKey(String rawDate) {
     if (rawDate.isEmpty) return "معاملات سابقة";
     try {
-      final DateTime dt = DateTime.parse(rawDate).toLocal();
+      final DateTime dt = parseServerTime(rawDate);
       final DateTime now = DateTime.now();
       final DateTime today = DateTime(now.year, now.month, now.day);
       final DateTime txDay = DateTime(dt.year, dt.month, dt.day);
@@ -605,7 +606,7 @@ class _TransactionCardItem extends StatelessWidget {
   String _formatTime(String rawDate) {
     if (rawDate.isEmpty) return "";
     try {
-      final DateTime dt = DateTime.parse(rawDate).toLocal();
+      final DateTime dt = parseServerTime(rawDate);
       final int hour = dt.hour > 12
           ? dt.hour - 12
           : dt.hour == 0

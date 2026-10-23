@@ -5,6 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:mizan/core/utils/date_utils.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 
@@ -120,18 +121,20 @@ class InstallmentFormatters {
   }
 
   /// Formatted date in Arabic format (e.g. "15 أكتوبر 2024")
+  /// Uses [tryParseBusinessDate] so user-chosen due dates are never timezone-shifted.
   static String formatArabicDate(String? raw) {
     if (raw == null || raw.isEmpty) return '—';
-    final DateTime? dt = DateTime.tryParse(raw);
+    final DateTime? dt = tryParseBusinessDate(raw);
     if (dt == null) return raw;
     final String month = _arabicMonths[(dt.month - 1).clamp(0, 11)];
     return '${dt.day} $month ${dt.year}';
   }
 
   /// Formatted date in short format (e.g. "15/10/2024")
+  /// Uses [tryParseBusinessDate] so user-chosen due dates are never timezone-shifted.
   static String formatShortDate(String? raw) {
     if (raw == null || raw.isEmpty) return '—';
-    final DateTime? dt = DateTime.tryParse(raw);
+    final DateTime? dt = tryParseBusinessDate(raw);
     if (dt == null) return raw;
     return _timelineDateFormat.format(dt);
   }
