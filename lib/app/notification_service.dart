@@ -14,7 +14,6 @@ import 'package:mizan/domain/use_case/unregister_device_use_case.dart';
 import 'package:mizan/presentation/notifications/notifications_cubit/notifications_cubit.dart';
 import 'package:mizan/presentation/resources/routes_manager.dart';
 
-
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -62,8 +61,9 @@ class NotificationService {
 
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    const InitializationSettings initSettings =
-        InitializationSettings(android: androidSettings);
+    const InitializationSettings initSettings = InitializationSettings(
+      android: androidSettings,
+    );
 
     await _localNotifications.initialize(
       initSettings,
@@ -72,7 +72,8 @@ class NotificationService {
 
     await _localNotifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
 
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -83,25 +84,28 @@ class NotificationService {
       sound: true,
     );
 
-    _foregroundMessageSubscription =
-        FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+    _foregroundMessageSubscription = FirebaseMessaging.onMessage.listen(
+      _handleForegroundMessage,
+    );
 
-    _messageOpenedAppSubscription =
-        FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
+    _messageOpenedAppSubscription = FirebaseMessaging.onMessageOpenedApp.listen(
+      _handleNotificationTap,
+    );
 
     final RemoteMessage? initialMessage = await _fcm.getInitialMessage();
     if (initialMessage != null) {
       _handleNotificationTap(initialMessage);
     }
 
-    _tokenRefreshSubscription =
-        _fcm.onTokenRefresh.listen((String newToken) async {
+    _tokenRefreshSubscription = _fcm.onTokenRefresh.listen((
+      String newToken,
+    ) async {
       _cachedToken = newToken;
       if (kDebugMode) {
         debugPrint('FCM Token Refreshed: $newToken');
       }
-      final bool isAuthenticated =
-          await _tokenLocalDataSource.hasValidSession();
+      final bool isAuthenticated = await _tokenLocalDataSource
+          .hasValidSession();
       if (isAuthenticated) {
         await _registerDeviceUseCase.execute(
           RegisterDeviceInput(token: newToken, platform: 'Android'),
@@ -134,20 +138,23 @@ class NotificationService {
 
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
-      channelId,
-      channelName,
-      channelDescription: channelDescription,
-      importance: Importance.max,
-      priority: Priority.high,
-      playSound: true,
-      enableVibration: true,
-      icon: '@mipmap/ic_launcher',
+          channelId,
+          channelName,
+          channelDescription: channelDescription,
+          importance: Importance.max,
+          priority: Priority.high,
+          playSound: true,
+          enableVibration: true,
+          icon: '@mipmap/ic_launcher',
+        );
+
+    const NotificationDetails notificationDetails = NotificationDetails(
+      android: androidDetails,
     );
 
-    const NotificationDetails notificationDetails =
-        NotificationDetails(android: androidDetails);
-
-    final int notificationId = message.messageId.hashCode;
+    final int notificationId =
+        (message.messageId ?? DateTime.now().microsecondsSinceEpoch.toString())
+            .hashCode;
 
     await _localNotifications.show(
       notificationId,
