@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mizan/core/utils/date_utils.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -244,7 +245,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
       paymentMethod: _isInstallment
           ? "Deferred"
           : (_isCash ? "Cash" : "Credit"),
-      transactionDate: _transactionDate.toIso8601String(),
+      transactionDate: transactionDateForRequest(_transactionDate),
       noteText: _noteController.text.trim().isEmpty
           ? null
           : _noteController.text.trim(),

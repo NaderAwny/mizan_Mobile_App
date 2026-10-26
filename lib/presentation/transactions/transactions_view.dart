@@ -494,7 +494,16 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
     // Group transactions by date string
     final Map<String, List<GetListTransactionsModel>> grouped =
         <String, List<GetListTransactionsModel>>{};
-    for (GetListTransactionsModel tx in transactions) {
+    final List<GetListTransactionsModel> sortedTx =
+        List<GetListTransactionsModel>.from(transactions)
+          ..sort(
+            (GetListTransactionsModel a, GetListTransactionsModel b) =>
+                effectiveTransactionTime(b.transactionDate, b.createdAt)
+                    .compareTo(
+                      effectiveTransactionTime(a.transactionDate, a.createdAt),
+                    ),
+          );
+    for (GetListTransactionsModel tx in sortedTx) {
       final String headerKey = _getDateGroupKey(
         tx.transactionDate.isNotEmpty ? tx.transactionDate : tx.createdAt,
       );
@@ -646,9 +655,10 @@ class _TransactionCardItem extends StatelessWidget {
         ? ColorManager.success
         : ColorManager.error;
     final String timeStr = _formatTime(
-      transaction.transactionDate.isNotEmpty
-          ? transaction.transactionDate
-          : transaction.createdAt,
+      effectiveTransactionTime(
+        transaction.transactionDate,
+        transaction.createdAt,
+      ).toUtc().toIso8601String(),
     );
 
     return Container(

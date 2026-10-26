@@ -1,0 +1,177 @@
+diff --git a/lib/app/notification_service.dart b/lib/app/notification_service.dart
+index 025ac3f..55576dc 100644
+--- a/lib/app/notification_service.dart
++++ b/lib/app/notification_service.dart
+@@ -76,6 +76,27 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+         notificationDetails,
+         payload: message.data['screen'] as String? ?? 'notifications',
+       );
++
++      // النظام ممكن يعرض نسخته الخاصة من إشعار FCM (بوقت غلط). نشيل أي نسخة
++      // بنفس العنوان والنص ومش بتاعتنا، ونسيب النسخة المحلية بوقت الموبايل.
++      final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
++          localNotifications
++              .resolvePlatformSpecificImplementation<
++                AndroidFlutterLocalNotificationsPlugin
++              >();
++      for (final int delayMs in <int>[0, 400, 1200]) {
++        if (delayMs > 0) {
++          await Future<void>.delayed(Duration(milliseconds: delayMs));
++        }
++        final List<ActiveNotification> active =
++            await androidPlugin?.getActiveNotifications() ??
++            <ActiveNotification>[];
++        for (final ActiveNotification n in active) {
++          if (n.id != notificationId && n.title == title && n.body == body) {
++            await localNotifications.cancel(n.id ?? 0, tag: n.tag);
++          }
++        }
++      }
+     }
+   } catch (e) {
+     debugPrint('Background notification display error: $e');
+diff --git a/lib/core/utils/date_utils.dart b/lib/core/utils/date_utils.dart
+index 36fd56b..c4b63e2 100644
+--- a/lib/core/utils/date_utils.dart
++++ b/lib/core/utils/date_utils.dart
+@@ -188,3 +188,18 @@ String translatePaymentMethod(String? method) {
+       return method.trim();
+   }
+ }
++
++
++/// The moment a transaction actually happened, used for DISPLAY and SORTING.
++/// If the business date is the same calendar day as [createdAt], the creation
++/// time is used (it carries the real time of day); otherwise the business date.
++DateTime effectiveTransactionTime(String transactionDate, String createdAt) {
++  final DateTime? tx = tryParseServerTime(transactionDate);
++  final DateTime? created = tryParseServerTime(createdAt);
++  if (tx == null && created == null) return DateTime.fromMillisecondsSinceEpoch(0);
++  if (tx == null) return created!;
++  if (created == null) return tx;
++  final bool sameDay =
++      tx.year == created.year && tx.month == created.month && tx.day == created.day;
++  return sameDay ? created : tx;
++}
+diff --git a/lib/presentation/customers/contact_profile_view.dart b/lib/presentation/customers/contact_profile_view.dart
+index 1ac25eb..b9b65bb 100644
+--- a/lib/presentation/customers/contact_profile_view.dart
++++ b/lib/presentation/customers/contact_profile_view.dart
+@@ -3,6 +3,7 @@
+ // ─────────────────────────────────────────────────────────────
+ 
+ import 'package:flutter/material.dart';
++import 'package:mizan/core/utils/date_utils.dart';
+ import 'package:flutter_bloc/flutter_bloc.dart';
+ import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import 'package:mizan/app/di.dart';
+@@ -562,7 +563,17 @@ class _ContactProfileScreen extends StatelessWidget {
+                     ),
+                   )
+                 else
+-                  ...profile.transactions.map(
++                  ...(List<ContactTransaction>.from(profile.transactions)
++                        ..sort(
++                          (ContactTransaction a, ContactTransaction b) =>
++                              (tryParseServerTime(b.transactionDate) ??
++                                      DateTime.fromMillisecondsSinceEpoch(0))
++                                  .compareTo(
++                                    tryParseServerTime(a.transactionDate) ??
++                                        DateTime.fromMillisecondsSinceEpoch(0),
++                                  ),
++                        ))
++                      .map(
+                     (ContactTransaction tx) => ContactTransactionTile(
+                       transaction: tx,
+                       onTap: () {
+diff --git a/lib/presentation/customers/widgets/contact_transaction_tile.dart b/lib/presentation/customers/widgets/contact_transaction_tile.dart
+index b184ad0..2cde6fe 100644
+--- a/lib/presentation/customers/widgets/contact_transaction_tile.dart
++++ b/lib/presentation/customers/widgets/contact_transaction_tile.dart
+@@ -1,4 +1,5 @@
+-﻿import 'package:flutter/material.dart';
++import 'package:flutter/material.dart';
++import 'package:mizan/core/utils/date_utils.dart';
+ import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import 'package:mizan/domain/model/contact_model.dart';
+ import 'package:mizan/presentation/resources/color_manager.dart';
+@@ -27,7 +28,7 @@ class ContactTransactionTile extends StatelessWidget {
+   String _formatDate(String isoDate) {
+     if (isoDate.isEmpty) return "—";
+     try {
+-      final DateTime date = DateTime.parse(isoDate).toLocal();
++      final DateTime date = parseServerTime(isoDate);
+       return "${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}";
+     } catch (_) {
+       return isoDate;
+diff --git a/lib/presentation/home/widgets/recent_transactions_section.dart b/lib/presentation/home/widgets/recent_transactions_section.dart
+index 5c944c9..78150b5 100644
+--- a/lib/presentation/home/widgets/recent_transactions_section.dart
++++ b/lib/presentation/home/widgets/recent_transactions_section.dart
+@@ -26,7 +26,15 @@ class RecentTransactionsSection extends StatelessWidget {
+   @override
+   Widget build(BuildContext context) {
+     final List<GetListTransactionsModel> list =
+-        transactions ?? <GetListTransactionsModel>[];
++        List<GetListTransactionsModel>.from(
++          transactions ?? <GetListTransactionsModel>[],
++        )..sort(
++            (GetListTransactionsModel a, GetListTransactionsModel b) =>
++                effectiveTransactionTime(b.transactionDate, b.createdAt)
++                    .compareTo(
++                      effectiveTransactionTime(a.transactionDate, a.createdAt),
++                    ),
++          );
+ 
+     return Column(
+       crossAxisAlignment: CrossAxisAlignment.start,
+@@ -245,9 +253,10 @@ class _TransactionItemTile extends StatelessWidget {
+         : "معاملة بدون اسم";
+ 
+     final String dateStr = _formatDate(
+-      transaction.transactionDate.isNotEmpty
+-          ? transaction.transactionDate
+-          : transaction.createdAt,
++      effectiveTransactionTime(
++        transaction.transactionDate,
++        transaction.createdAt,
++      ).toUtc().toIso8601String(),
+     );
+ 
+     return Container(
+diff --git a/lib/presentation/transactions/transactions_view.dart b/lib/presentation/transactions/transactions_view.dart
+index cdbe388..50d3d49 100644
+--- a/lib/presentation/transactions/transactions_view.dart
++++ b/lib/presentation/transactions/transactions_view.dart
+@@ -494,7 +494,16 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
+     // Group transactions by date string
+     final Map<String, List<GetListTransactionsModel>> grouped =
+         <String, List<GetListTransactionsModel>>{};
+-    for (GetListTransactionsModel tx in transactions) {
++    final List<GetListTransactionsModel> sortedTx =
++        List<GetListTransactionsModel>.from(transactions)
++          ..sort(
++            (GetListTransactionsModel a, GetListTransactionsModel b) =>
++                effectiveTransactionTime(b.transactionDate, b.createdAt)
++                    .compareTo(
++                      effectiveTransactionTime(a.transactionDate, a.createdAt),
++                    ),
++          );
++    for (GetListTransactionsModel tx in sortedTx) {
+       final String headerKey = _getDateGroupKey(
+         tx.transactionDate.isNotEmpty ? tx.transactionDate : tx.createdAt,
+       );
+@@ -646,9 +655,10 @@ class _TransactionCardItem extends StatelessWidget {
+         ? ColorManager.success
+         : ColorManager.error;
+     final String timeStr = _formatTime(
+-      transaction.transactionDate.isNotEmpty
+-          ? transaction.transactionDate
+-          : transaction.createdAt,
++      effectiveTransactionTime(
++        transaction.transactionDate,
++        transaction.createdAt,
++      ).toUtc().toIso8601String(),
+     );
+ 
+     return Container(

@@ -76,6 +76,27 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
         notificationDetails,
         payload: message.data['screen'] as String? ?? 'notifications',
       );
+
+      // النظام ممكن يعرض نسخته الخاصة من إشعار FCM (بوقت غلط). نشيل أي نسخة
+      // بنفس العنوان والنص ومش بتاعتنا، ونسيب النسخة المحلية بوقت الموبايل.
+      final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
+          localNotifications
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >();
+      for (final int delayMs in <int>[0, 400, 1200]) {
+        if (delayMs > 0) {
+          await Future<void>.delayed(Duration(milliseconds: delayMs));
+        }
+        final List<ActiveNotification> active =
+            await androidPlugin?.getActiveNotifications() ??
+            <ActiveNotification>[];
+        for (final ActiveNotification n in active) {
+          if (n.id != notificationId && n.title == title && n.body == body) {
+            await localNotifications.cancel(n.id ?? 0, tag: n.tag);
+          }
+        }
+      }
     }
   } catch (e) {
     debugPrint('Background notification display error: $e');

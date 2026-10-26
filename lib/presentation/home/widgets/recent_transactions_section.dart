@@ -26,7 +26,15 @@ class RecentTransactionsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<GetListTransactionsModel> list =
-        transactions ?? <GetListTransactionsModel>[];
+        List<GetListTransactionsModel>.from(
+          transactions ?? <GetListTransactionsModel>[],
+        )..sort(
+            (GetListTransactionsModel a, GetListTransactionsModel b) =>
+                effectiveTransactionTime(b.transactionDate, b.createdAt)
+                    .compareTo(
+                      effectiveTransactionTime(a.transactionDate, a.createdAt),
+                    ),
+          );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,9 +253,10 @@ class _TransactionItemTile extends StatelessWidget {
         : "معاملة بدون اسم";
 
     final String dateStr = _formatDate(
-      transaction.transactionDate.isNotEmpty
-          ? transaction.transactionDate
-          : transaction.createdAt,
+      effectiveTransactionTime(
+        transaction.transactionDate,
+        transaction.createdAt,
+      ).toUtc().toIso8601String(),
     );
 
     return Container(

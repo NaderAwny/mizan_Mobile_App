@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:mizan/core/utils/date_utils.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mizan/domain/model/contact_model.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
@@ -27,7 +28,7 @@ class ContactTransactionTile extends StatelessWidget {
   String _formatDate(String isoDate) {
     if (isoDate.isEmpty) return "—";
     try {
-      final DateTime date = DateTime.parse(isoDate).toLocal();
+      final DateTime date = parseServerTime(isoDate);
       return "${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}";
     } catch (_) {
       return isoDate;

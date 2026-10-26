@@ -188,3 +188,39 @@ String translatePaymentMethod(String? method) {
       return method.trim();
   }
 }
+
+
+/// The moment a transaction actually happened, used for DISPLAY and SORTING.
+/// If the business date is the same calendar day as [createdAt], the creation
+/// time is used (it carries the real time of day); otherwise the business date.
+DateTime effectiveTransactionTime(String transactionDate, String createdAt) {
+  final DateTime? tx = tryParseServerTime(transactionDate);
+  final DateTime? created = tryParseServerTime(createdAt);
+  if (tx == null && created == null) return DateTime.fromMillisecondsSinceEpoch(0);
+  if (tx == null) return created!;
+  if (created == null) return tx;
+  // A business date in the future (bad/legacy data) can't be a real time of
+  // an already-created transaction; fall back to the creation time.
+  if (tx.isAfter(DateTime.now().add(const Duration(minutes: 5)))) return created;
+  final bool sameDay =
+      tx.year == created.year && tx.month == created.month && tx.day == created.day;
+  return sameDay ? created : tx;
+}
+
+
+/// Builds the transactionDate sent to the API: the picked calendar day combined
+/// with the CURRENT time of day, as an explicit UTC instant (with 'Z').
+/// Sending a local time without an offset makes the server assume UTC and
+/// shifts the displayed time by the device's UTC offset.
+String transactionDateForRequest(DateTime picked) {
+  final DateTime now = DateTime.now();
+  final DateTime local = DateTime(
+    picked.year,
+    picked.month,
+    picked.day,
+    now.hour,
+    now.minute,
+    now.second,
+  );
+  return local.toUtc().toIso8601String();
+}

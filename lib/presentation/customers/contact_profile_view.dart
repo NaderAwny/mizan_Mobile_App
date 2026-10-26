@@ -3,6 +3,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import 'package:flutter/material.dart';
+import 'package:mizan/core/utils/date_utils.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mizan/app/di.dart';
@@ -562,7 +563,17 @@ class _ContactProfileScreen extends StatelessWidget {
                     ),
                   )
                 else
-                  ...profile.transactions.map(
+                  ...(List<ContactTransaction>.from(profile.transactions)
+                        ..sort(
+                          (ContactTransaction a, ContactTransaction b) =>
+                              (tryParseServerTime(b.transactionDate) ??
+                                      DateTime.fromMillisecondsSinceEpoch(0))
+                                  .compareTo(
+                                    tryParseServerTime(a.transactionDate) ??
+                                        DateTime.fromMillisecondsSinceEpoch(0),
+                                  ),
+                        ))
+                      .map(
                     (ContactTransaction tx) => ContactTransactionTile(
                       transaction: tx,
                       onTap: () {
