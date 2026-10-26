@@ -9,9 +9,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart' as intl;
-import 'package:mizan/app/constants.dart';
 import 'package:mizan/app/di.dart';
 import 'package:mizan/core/utils/date_utils.dart';
+import 'package:mizan/core/utils/voice_note_audio_service.dart';
 import 'package:mizan/domain/model/voice_note_model/voice_note_model.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
 import 'package:mizan/presentation/operations/quick_transaction_args.dart';
@@ -104,15 +104,36 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
     if (state.isPlaying) {
       await _audioPlayer.pause();
     } else {
-      if (data.audioPath.isEmpty) return;
-      final String rawPath = data.audioPath;
-      final String url = rawPath.startsWith('http')
-          ? rawPath
-          : '${Constants.baseUrl}${rawPath.startsWith('/') ? '' : '/'}$rawPath';
-      if (state.currentPosition > Duration.zero && !state.isPlaying) {
-        await _audioPlayer.resume();
-      } else {
-        await _audioPlayer.play(UrlSource(url));
+      if (data.audioPath.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('لا يوجد ملف صوتي لهذه الملاحظة')),
+          );
+        }
+        return;
+      }
+      try {
+        if (state.currentPosition > Duration.zero && !state.isPlaying) {
+          await _audioPlayer.resume();
+        } else {
+          final Source source = await VoiceNoteAudioService.resolveSource(
+            voiceNoteId: data.id,
+            audioPath: data.audioPath,
+            audioUrl: data.audioUrl,
+          );
+          await _audioPlayer.play(source);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تعذّر تشغيل الملف الصوتي (الملف غير متاح على السيرفر حالياً)'),
+            ),
+          );
+          context.read<GetVoiceNoteByIdCubit>().updatePlayback(
+            isPlaying: false,
+          );
+        }
       }
     }
   }

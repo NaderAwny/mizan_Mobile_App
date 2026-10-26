@@ -24,6 +24,7 @@ import 'package:mizan/presentation/resources/styles_manager.dart';
 import 'package:mizan/presentation/resources/values_manager.dart';
 import 'package:mizan/presentation/voice_note/create_voice_note_cubit/create_voice_note_cubit.dart';
 import 'package:mizan/presentation/voice_note/create_voice_note_cubit/create_voice_note_state.dart';
+import 'package:mizan/core/utils/voice_note_audio_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
@@ -340,6 +341,15 @@ class _CreateVoiceNoteScreenState extends State<_CreateVoiceNoteScreen>
     return BlocConsumer<VoiceNoteFormCubit, VoiceNoteFormState>(
       listener: (BuildContext context, VoiceNoteFormState state) {
         if (state.isActionSuccess && state.savedVoiceNote != null) {
+          if (state.recordedAudioPath != null) {
+            unawaited(
+              VoiceNoteAudioService.cacheLocalRecording(
+                voiceNoteId: state.savedVoiceNote!.id,
+                audioPath: state.savedVoiceNote!.audioPath,
+                recordedFilePath: state.recordedAudioPath!,
+              ),
+            );
+          }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(

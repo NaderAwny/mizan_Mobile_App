@@ -29,7 +29,8 @@ class VoiceNoteModel {
   String get audioUrl {
     if (audioPath.isEmpty) return '';
     if (audioPath.startsWith('http')) return audioPath;
-    return '${Constants.baseUrl}$audioPath';
+    final String normalized = audioPath.replaceAll('\\', '/');
+    return '${Constants.baseUrl}${normalized.startsWith('/') ? '' : '/'}$normalized';
   }
 }
 

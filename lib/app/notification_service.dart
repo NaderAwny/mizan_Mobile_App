@@ -21,6 +21,65 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
     await AppBadgeService.incrementBadge();
   } catch (_) {}
+
+  // عرض الإشعار بالوقت الحالي عند وصوله والهاتف مغلق أو التطبيق في الخلفية
+  try {
+    final String title = message.notification?.title ??
+        message.data['title'] as String? ??
+        'تنبيه ميزان';
+    final String body = message.notification?.body ??
+        message.data['body'] as String? ??
+        '';
+
+    if (title.isNotEmpty || body.isNotEmpty) {
+      final FlutterLocalNotificationsPlugin localNotifications =
+          FlutterLocalNotificationsPlugin();
+
+      const AndroidInitializationSettings androidSettings =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const InitializationSettings initSettings = InitializationSettings(
+        android: androidSettings,
+      );
+      await localNotifications.initialize(initSettings);
+
+      const AndroidNotificationChannel channel = AndroidNotificationChannel(
+        NotificationService.channelId,
+        NotificationService.channelName,
+        description: NotificationService.channelDescription,
+        importance: Importance.max,
+        playSound: true,
+        enableVibration: true,
+      );
+
+      await localNotifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.createNotificationChannel(channel);
+
+      final int now = DateTime.now().millisecondsSinceEpoch;
+
+      final AndroidNotificationDetails androidDetails =
+          NotificationService.createAndroidDetails(when: now);
+
+      final NotificationDetails notificationDetails = NotificationDetails(
+        android: androidDetails,
+      );
+
+      final int notificationId =
+          (message.messageId ?? now.toString()).hashCode;
+
+      await localNotifications.show(
+        notificationId,
+        title,
+        body,
+        notificationDetails,
+        payload: message.data['screen'] as String? ?? 'notifications',
+      );
+    }
+  } catch (e) {
+    debugPrint('Background notification display error: $e');
+  }
 }
 
 @lazySingleton
@@ -95,6 +154,12 @@ class NotificationService {
     final RemoteMessage? initialMessage = await _fcm.getInitialMessage();
     if (initialMessage != null) {
       _handleNotificationTap(initialMessage);
+    } else {
+      final NotificationAppLaunchDetails? launchDetails =
+          await _localNotifications.getNotificationAppLaunchDetails();
+      if (launchDetails != null && launchDetails.didNotificationLaunchApp) {
+        _navigateToNotificationsScreen();
+      }
     }
 
     _tokenRefreshSubscription = _fcm.onTokenRefresh.listen((
@@ -112,6 +177,21 @@ class NotificationService {
         );
       }
     });
+  }
+
+  static AndroidNotificationDetails createAndroidDetails({int? when}) {
+    return AndroidNotificationDetails(
+      channelId,
+      channelName,
+      channelDescription: channelDescription,
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
+      icon: '@mipmap/ic_launcher',
+      showWhen: true,
+      when: when ?? DateTime.now().millisecondsSinceEpoch,
+    );
   }
 
   void _onNotificationTapped(NotificationResponse response) {
@@ -133,27 +213,19 @@ class NotificationService {
 
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
     final RemoteNotification? notification = message.notification;
-    final String title = notification?.title ?? 'تنبيه ميزان';
-    final String body = notification?.body ?? '';
+    final String title = notification?.title ??
+        message.data['title'] as String? ??
+        'تنبيه ميزان';
+    final String body = notification?.body ??
+        message.data['body'] as String? ??
+        '';
 
-    const AndroidNotificationDetails androidDetails =
-        AndroidNotificationDetails(
-          channelId,
-          channelName,
-          channelDescription: channelDescription,
-          importance: Importance.max,
-          priority: Priority.high,
-          playSound: true,
-          enableVibration: true,
-          icon: '@mipmap/ic_launcher',
-        );
-
-    const NotificationDetails notificationDetails = NotificationDetails(
-      android: androidDetails,
+    final NotificationDetails notificationDetails = NotificationDetails(
+      android: createAndroidDetails(),
     );
 
     final int notificationId =
-        (message.messageId ?? DateTime.now().microsecondsSinceEpoch.toString())
+        (message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString())
             .hashCode;
 
     await _localNotifications.show(

@@ -13,6 +13,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:mizan/app/di.dart';
 import 'package:mizan/core/utils/date_utils.dart';
+import 'package:mizan/core/utils/voice_note_audio_service.dart';
 import 'package:mizan/data/request/voice_note_request.dart';
 import 'package:mizan/domain/model/voice_note_model/voice_note_model.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
@@ -124,10 +125,10 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
     super.dispose();
   }
 
-  Future<void> _toggleAudioPreview(String id, String audioUrl) async {
+  Future<void> _toggleAudioPreview(VoiceNoteModel item) async {
     final GetListVoiceNotesCubit cubit =
         context.read<GetListVoiceNotesCubit>();
-    if (cubit.state.currentlyPlayingId == id) {
+    if (cubit.state.currentlyPlayingId == item.id) {
       // إيقاف التشغيل
       await _audioPlayer.stop();
       cubit.updatePlayback(
@@ -140,13 +141,13 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
       // إيقاف أي تشغيل سابق
       await _audioPlayer.stop();
       cubit.updatePlayback(
-        currentlyPlayingId: id,
+        currentlyPlayingId: item.id,
         playbackProgress: 0.0,
         currentAudioDuration: Duration.zero,
         currentPosition: Duration.zero,
       );
 
-      if (audioUrl.isEmpty) {
+      if (item.audioPath.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('لا يوجد ملف صوتي لهذه الملاحظة')),
@@ -157,11 +158,18 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
       }
 
       try {
-        await _audioPlayer.play(UrlSource(audioUrl));
+        final Source source = await VoiceNoteAudioService.resolveSource(
+          voiceNoteId: item.id,
+          audioPath: item.audioPath,
+          audioUrl: item.audioUrl,
+        );
+        await _audioPlayer.play(source);
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تعذّر تشغيل الملف الصوتي')),
+            const SnackBar(
+              content: Text('تعذّر تشغيل الملف الصوتي (الملف غير متاح على السيرفر حالياً)'),
+            ),
           );
           cubit.updatePlayback(clearPlayingId: true, playbackProgress: 0.0);
         }
@@ -315,10 +323,7 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
                                     totalDuration: isPlaying
                                         ? state.currentAudioDuration
                                         : Duration.zero,
-                                    onTogglePlay: () => _toggleAudioPreview(
-                                      item.id,
-                                      item.audioUrl,
-                                    ),
+                                    onTogglePlay: () => _toggleAudioPreview(item),
                                     onTap: () => _navigateToDetails(item.id),
                                   );
                                 },
