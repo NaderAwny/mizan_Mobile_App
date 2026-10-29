@@ -27,9 +27,8 @@ class GetProfileView extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: <BlocProvider<StateStreamableSource<Object?>>>[
-        BlocProvider<GetProfileCubit>(
-          create: (BuildContext context) =>
-              getIt<GetProfileCubit>()..getProfile(),
+        BlocProvider<GetProfileCubit>.value(
+          value: getIt<GetProfileCubit>()..getProfile(),
         ),
         BlocProvider<LogoutCubit>(
           create: (BuildContext context) => getIt<LogoutCubit>(),

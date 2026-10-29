@@ -5,7 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
-import 'package:mizan/core/utils/date_utils.dart';
+import 'package:mizan/app/date_utils.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 

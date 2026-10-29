@@ -28,8 +28,13 @@ class SplashCubit extends Cubit<SplashState> {
 
   final TokenLocalDataSource _tokenLocalDataSource;
   final OnboardingLocalDataSource _onboardingLocalDataSource;
+  // ignore: unused_field
   final GetProfileCubit _getProfileCubit;
+  // TODO: شيل الاتنين من الـ constructor وشغّل build_runner. الـ Home بيعمل
+  // instances خاصة بيه (factory) فتحميلهم هنا كان طلب ضايع ومكرر.
+  // ignore: unused_field
   final StatisticsCubit _statisticsCubit;
+  // ignore: unused_field
   final GetListTransactionCubit _getListTransactionCubit;
   final NotificationService _notificationService;
 
@@ -88,16 +93,9 @@ class SplashCubit extends Cubit<SplashState> {
 
     unawaited(_notificationService.registerDeviceToken());
 
-    // بيجيب الداتا بالتوازي — Home يحتاج: Profile + Statistics + Transactions
-    final DateTime now = DateTime.now();
-    await Future.wait<void>(<Future<void>>[
-      _getProfileCubit.getProfile(),
-      _statisticsCubit.getMonthlyStatistics(
-        now.year.toString(),
-        now.month.toString(),
-      ),
-      _getListTransactionCubit.getListTransactions(),
-    ]);
+    // مفيش انتظار للشبكة هنا: الـ splash بيقرر الوجهة من البيانات المحلية بس،
+    // والـ Home بيحمّل بياناته بنفسه (وبيعرض loading). كده الـ splash مبيتأخرش
+    // لو السيرفر بيصحى (cold start) أو التوكن محتاج refresh.
 
     return SplashDestination.home;
   }

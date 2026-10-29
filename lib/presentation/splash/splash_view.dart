@@ -149,7 +149,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
     // 4. إعداد أنيميشن شريط التحميل المتدرج (ديناميكي وواقعي يستغرق AppDuration.d2200)
     _progressController = AnimationController(
       vsync: this,
-      duration: AppDuration.d2200,
+      duration: AppDuration.d1000,
     );
 
     // استخدام منحنى Cubic يعطي إحساساً واقعياً بالتحميل (انطلاق سريع ثم تثاقل ذكي ثم إكمال سريع)
@@ -159,15 +159,6 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
         curve: Curves.easeInOutCubic,
       ),
     );
-
-    // عند اكتمال حركة دخول الشعار، نبدأ مباشرة تشغيل قسم التحميل والـ Spinner والتقدم
-    _logoController.addStatusListener((AnimationStatus status) {
-      if (status == AnimationStatus.completed) {
-        _loadingFadeController.forward();
-        _spinnerController.repeat();
-        _progressController.forward();
-      }
-    });
 
     // مراقبة انتهاء شريط التحميل للانتقال التلقائي للوجهة المقررة في عقد التنقل
     _progressController.addStatusListener((AnimationStatus status) {
@@ -182,8 +173,12 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
 
   // تسلسل تشغيل الحركات
   void _startSplashFlow() {
-    // تشغيل أنيميشن دخول الشعار
+    // الشعار وقسم التحميل بيبدأوا مع بعض (قبل كده التحميل كان بيستنى الشعار يخلص
+    // فكان الحد الأدنى للـ splash حوالي 3 ثواني مهما كانت الداتا جاهزة).
     _logoController.forward();
+    _loadingFadeController.forward();
+    _spinnerController.repeat();
+    _progressController.forward();
   }
 
   // دالة الانتقال للوجهة المقررة حسب حالة الحساب والـ Onboarding

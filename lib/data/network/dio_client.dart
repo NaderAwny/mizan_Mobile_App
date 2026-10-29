@@ -10,6 +10,8 @@ import 'package:mizan/app/constants.dart';
 import 'package:mizan/app/session_manager.dart';
 import 'package:mizan/data/local/token_local_data_source.dart';
 import 'package:mizan/data/network/auth_interceptor.dart';
+import 'package:mizan/data/network/retry_interceptor.dart';
+import 'package:mizan/data/network/timing_interceptor.dart';
 
 const String APPLICATION_JSON = "application/json";
 const String CONTENT_TYPE = "content-type";
@@ -100,6 +102,9 @@ class DioFactory {
         ),
       );
     }
+
+    if (!kReleaseMode) dio.interceptors.add(TimingInterceptor());
+    dio.interceptors.add(RetryInterceptor(dio));
 
     // AuthInterceptor على الـ dio الرئيسي فقط
     dio.interceptors.add(

@@ -11,6 +11,10 @@ class SecureTokenLocalDataSource implements TokenLocalDataSource {
   static const String _kRefresh = 'refresh_token';
   static const String _kExpiresAt = 'expires_at';
 
+  // كاش في الذاكرة للـ access token: بدل قراءة الـ Keystore/Keychain مع كل request.
+  String? _accessCache;
+  bool _accessLoaded = false;
+
   @override
   Future<void> saveSession({
     required String accessToken,
@@ -25,10 +29,18 @@ class SecureTokenLocalDataSource implements TokenLocalDataSource {
       _storage.write(key: _kRefresh, value: refreshToken),
       _storage.write(key: _kExpiresAt, value: expiry.toIso8601String()),
     ]);
+    _accessCache = accessToken;
+    _accessLoaded = true;
   }
 
   @override
-  Future<String?> getAccessToken() => _storage.read(key: _kAccess);
+  Future<String?> getAccessToken() async {
+    if (!_accessLoaded) {
+      _accessCache = await _storage.read(key: _kAccess);
+      _accessLoaded = true;
+    }
+    return _accessCache;
+  }
 
   @override
   Future<String?> getRefreshToken() => _storage.read(key: _kRefresh);
@@ -61,10 +73,14 @@ class SecureTokenLocalDataSource implements TokenLocalDataSource {
 
   @override
   Future<void> clear() async {
+    _accessCache = null;
+    _accessLoaded = true;
     await Future.wait(<Future<void>>[
       _storage.delete(key: _kAccess),
       _storage.delete(key: _kRefresh),
       _storage.delete(key: _kExpiresAt),
     ]);
+    _accessCache = null;
+    _accessLoaded = true;
   }
 }

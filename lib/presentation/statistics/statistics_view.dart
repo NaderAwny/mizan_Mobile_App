@@ -7,7 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:mizan/app/di.dart';
-import 'package:mizan/core/utils/date_utils.dart';
+import 'package:mizan/app/date_utils.dart';
 import 'package:mizan/domain/model/statistics_model/statistics_model.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:mizan/app/session_manager.dart';
 import '../local/token_local_data_source.dart';
 
@@ -31,6 +32,21 @@ class AuthInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     if (err.response?.statusCode != 401) return handler.next(err);
 
+    // الطلب اتبعت بتوكن قديم لكن حد تاني جدّد التوكن بالفعل؟ يبقى نعيد المحاولة
+    // بالتوكن الجديد بس، من غير refresh تاني (refresh تاني بالتوكن القديم كان
+    // ممكن يفشل ويعمل logout غلط بعد ما الـ refresh token يتبدّل).
+    final Object? sentAuth = err.requestOptions.headers['Authorization'];
+    final String? currentToken = await tokenLocalDataSource.getAccessToken();
+    if (sentAuth is String &&
+        currentToken != null &&
+        sentAuth != 'Bearer $currentToken') {
+      try {
+        return handler.resolve(await _retry(err.requestOptions, currentToken));
+      } on DioException catch (e) {
+        return handler.next(e);
+      }
+    }
+
     if (_isRefreshing) {
       final Completer<void> completer = Completer<void>();
       _pendingRequests.add(completer);
@@ -52,10 +68,14 @@ class AuthInterceptor extends Interceptor {
           error: 'No refresh token',
         );
       }
+      final Stopwatch refreshWatch = Stopwatch()..start();
       final Response<Map<String, dynamic>> response = await authDio.post(
         '/api/auth/refresh-token',
         data: <String, String>{'refreshToken': refreshToken},
       );
+      if (kDebugMode) {
+        debugPrint('⏱ POST /api/auth/refresh-token -> ${response.statusCode} in ${refreshWatch.elapsedMilliseconds} ms');
+      }
       final Map<String, dynamic> body =
           (response.data!['data'] as Map<String, dynamic>);
       final String newAccessToken = body['token'] as String;
@@ -84,7 +104,10 @@ class AuthInterceptor extends Interceptor {
     }
   }
 
-  Future<Response<dynamic>> _retry(RequestOptions o, String? newAccessToken) {
+  Future<Response<dynamic>> _retry(
+    RequestOptions o,
+    String? newAccessToken,
+  ) async {
     final Map<String, dynamic> headers = Map<String, dynamic>.from(o.headers);
     if (newAccessToken != null) {
       headers['Authorization'] = 'Bearer $newAccessToken';
@@ -92,11 +115,16 @@ class AuthInterceptor extends Interceptor {
     final Options options = Options(method: o.method, headers: headers);
     final dynamic data =
         o.data is FormData ? (o.data as FormData).clone() : o.data;
-    return authDio.request<dynamic>(
+    final Stopwatch watch = Stopwatch()..start();
+    final Response<dynamic> response = await authDio.request<dynamic>(
       o.path,
       data: data,
       queryParameters: o.queryParameters,
       options: options,
     );
+    if (kDebugMode) {
+      debugPrint('⏱ RETRY ${o.method} ${o.path} -> ${response.statusCode} in ${watch.elapsedMilliseconds} ms');
+    }
+    return response;
   }
 }

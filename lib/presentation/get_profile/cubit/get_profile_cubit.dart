@@ -16,6 +16,7 @@ class GetProfileCubit extends Cubit<GetProfileState> {
   GetProfileCubit(this._getProfileUsecase) : super(const GetProfileState());
 
   Future<void> getProfile() async {
+    if (isClosed) return;
     emit(
       state.copyWith(
         flowState: LoadingState(

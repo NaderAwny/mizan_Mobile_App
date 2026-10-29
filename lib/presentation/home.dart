@@ -10,6 +10,7 @@ import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart'
 import 'package:mizan/presentation/customers/customers_view.dart';
 import 'package:mizan/presentation/get_profile/cubit/get_profile_cubit.dart';
 import 'package:mizan/presentation/get_profile/cubit/get_profile_state.dart';
+import 'package:mizan/presentation/home/home_tab_cubit.dart';
 import 'package:mizan/presentation/home/widgets/custom_bottom_nav_bar.dart';
 import 'package:mizan/presentation/home/widgets/hero_balance_card.dart';
 import 'package:mizan/presentation/home/widgets/home_header.dart';
@@ -58,6 +59,9 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     _notificationsCubit = getIt<NotificationsCubit>();
     // جلب العدد فور بناء الصفحة
     _notificationsCubit.fetchUnreadCount();
+    // لو الـ splash ما جابش البروفايل (فشل/timeout) نجيبه هنا تلقائياً.
+    final GetProfileCubit profile = getIt<GetProfileCubit>();
+    if (profile.state.data == null) profile.getProfile();
   }
 
   @override
@@ -71,6 +75,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _notificationsCubit.close();
     super.dispose();
   }
 
@@ -79,9 +84,8 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     final DateTime now = DateTime.now();
     return MultiBlocProvider(
       providers: <BlocProvider<StateStreamableSource<Object?>>>[
-        BlocProvider<GetProfileCubit>(
-          create: (BuildContext context) => getIt<GetProfileCubit>(),
-        ),
+        // GetProfileCubit lazySingleton: .value عشان الـ widget ما يقفلوش.
+        BlocProvider<GetProfileCubit>.value(value: getIt<GetProfileCubit>()),
         BlocProvider<StatisticsCubit>(
           create: (_) => getIt<StatisticsCubit>()
             ..getMonthlyStatistics(now.year.toString(), now.month.toString()),
@@ -90,6 +94,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           create: (_) =>
               getIt<GetListTransactionCubit>()..getListTransactions(),
         ),
+        BlocProvider<HomeTabCubit>(create: (_) => HomeTabCubit()),
         BlocProvider<NotificationsCubit>.value(
           value: _notificationsCubit,
         ),
@@ -100,72 +105,66 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 }
 
 
-class _HomeScreen extends StatefulWidget {
+class _HomeScreen extends StatelessWidget {
   const _HomeScreen();
 
-  @override
-  State<_HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<_HomeScreen> {
-  int _currentTabIndex = 0;
-
-  void _onTabSelected(int index) {
-    setState(() {
-      _currentTabIndex = index;
-    });
-  }
-
-  void _openVoiceRecordDialog() {
+  void _openVoiceRecordDialog(BuildContext context) {
     Navigator.of(context).pushNamed(Routes.createVoiceNoteRoute);
   }
 
   @override
   Widget build(BuildContext context) {
+    final HomeTabCubit tabs = context.read<HomeTabCubit>();
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) {
         if (didPop) return;
-        if (_currentTabIndex != 0) {
-          setState(() {
-            _currentTabIndex = 0;
-          });
-        }
+        if (tabs.state.index != 0) tabs.selectTab(0);
       },
       child: NotificationListener<SwitchHomeTabNotification>(
         onNotification: (SwitchHomeTabNotification notification) {
-          setState(() {
-            _currentTabIndex = notification.targetIndex;
-          });
+          tabs.selectTab(notification.targetIndex);
           return true;
         },
-        child: Scaffold(
-          backgroundColor: ColorManager.background,
-          drawer: const MizanDrawer(),
-          body: IndexedStack(
-            index: _currentTabIndex,
-            children: <Widget>[
-              _buildHomeDashboardTab(),
-              const TransactionsView(),
-              const CustomersView(),
-              const InstallmentsView(),
-              const AnalyticsView(),
-            ],
-          ),
-          floatingActionButton: _currentTabIndex == 0
-              ? _buildSmartVoiceFAB()
-              : null,
-          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-          bottomNavigationBar: CustomBottomNavBar(
-            currentIndex: _currentTabIndex,
-            onTap: _onTabSelected,
-          ),
+        child: BlocBuilder<HomeTabCubit, HomeTabState>(
+          builder: (BuildContext context, HomeTabState tab) {
+            return Scaffold(
+              backgroundColor: ColorManager.background,
+              drawer: const MizanDrawer(),
+              body: IndexedStack(
+                index: tab.index,
+                children: <Widget>[
+                  _buildHomeDashboardTab(context),
+                  tab.isBuilt(1)
+                      ? const TransactionsView()
+                      : const SizedBox.shrink(),
+                  tab.isBuilt(2)
+                      ? const CustomersView()
+                      : const SizedBox.shrink(),
+                  tab.isBuilt(3)
+                      ? const InstallmentsView()
+                      : const SizedBox.shrink(),
+                  tab.isBuilt(4)
+                      ? const AnalyticsView()
+                      : const SizedBox.shrink(),
+                ],
+              ),
+              floatingActionButton: tab.index == 0
+                  ? _buildSmartVoiceFAB(context)
+                  : null,
+              floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+              bottomNavigationBar: CustomBottomNavBar(
+                currentIndex: tab.index,
+                onTap: tabs.selectTab,
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildHomeDashboardTab() {
+  Widget _buildHomeDashboardTab(BuildContext context) {
     return SafeArea(
       child: RefreshIndicator(
         color: ColorManager.primary,
@@ -266,7 +265,7 @@ class _HomeScreenState extends State<_HomeScreen> {
     );
   }
 
-  Widget _buildSmartVoiceFAB() {
+  Widget _buildSmartVoiceFAB(BuildContext context) {
     return Container(
       height: 44.h,
       decoration: BoxDecoration(
@@ -283,7 +282,7 @@ class _HomeScreenState extends State<_HomeScreen> {
       child: Material(
         color: ColorManager.transparent,
         child: InkWell(
-          onTap: _openVoiceRecordDialog,
+          onTap: () => _openVoiceRecordDialog(context),
           borderRadius: BorderRadius.circular(AppRadius.r28.r),
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),

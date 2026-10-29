@@ -1,4 +1,4 @@
-import 'package:mizan/core/utils/date_utils.dart';
+import 'package:mizan/app/date_utils.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 
 abstract class NotificationFormatters {

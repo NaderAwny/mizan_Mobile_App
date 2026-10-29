@@ -296,7 +296,7 @@ class NotificationService {
         if (token != null) {
           _cachedToken = token;
           if (kDebugMode) {
-            debugPrint('FCM Token: $token');
+            if (kDebugMode) debugPrint('FCM Token: $token');
           }
           await _registerDeviceUseCase.execute(
             RegisterDeviceInput(token: token, platform: 'Android'),

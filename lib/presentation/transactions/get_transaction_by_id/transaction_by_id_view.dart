@@ -9,7 +9,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'package:mizan/app/di.dart';
-import 'package:mizan/core/utils/date_utils.dart';
+import 'package:mizan/app/date_utils.dart';
 import 'package:mizan/domain/model/transaction_by_id_mode/transaction_by_id_mode.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';

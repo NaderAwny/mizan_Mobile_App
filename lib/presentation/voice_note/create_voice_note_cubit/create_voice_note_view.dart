@@ -24,7 +24,7 @@ import 'package:mizan/presentation/resources/styles_manager.dart';
 import 'package:mizan/presentation/resources/values_manager.dart';
 import 'package:mizan/presentation/voice_note/create_voice_note_cubit/create_voice_note_cubit.dart';
 import 'package:mizan/presentation/voice_note/create_voice_note_cubit/create_voice_note_state.dart';
-import 'package:mizan/core/utils/voice_note_audio_service.dart';
+import 'package:mizan/app/voice_note_audio_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 

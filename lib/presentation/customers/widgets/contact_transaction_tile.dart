@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mizan/core/utils/date_utils.dart';
+import 'package:mizan/app/date_utils.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mizan/domain/model/contact_model.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
