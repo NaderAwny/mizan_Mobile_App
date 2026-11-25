@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mizan/domain/model/contact_model.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
@@ -25,7 +25,7 @@ class VipContactCard extends StatelessWidget {
   });
 
   String _getInitials(String name) {
-    final parts = name.trim().split(RegExp(r'\s+'));
+    final List<String> parts = name.trim().split(RegExp(r'\s+'));
     if (parts.isEmpty) return "ط";
     if (parts.length == 1) return parts[0].substring(0, 1);
     return "${parts[0].substring(0, 1)} ${parts[1].substring(0, 1)}";
@@ -38,11 +38,8 @@ class VipContactCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: ColorManager.surface,
         borderRadius: BorderRadius.circular(AppRadius.r20.r),
-        border: Border.all(
-          color: ColorManager.secondary,
-          width: 1.4,
-        ),
-        boxShadow: const [
+        border: Border.all(color: ColorManager.secondary, width: 1.4),
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             color: Color(0x0C1C1816),
             offset: Offset(0, 3),
@@ -51,7 +48,7 @@ class VipContactCard extends StatelessWidget {
         ],
       ),
       child: Material(
-        color: Colors.transparent,
+        color: ColorManager.transparent,
         child: InkWell(
           onTap: onTap,
           onLongPress: onDelete,
@@ -59,14 +56,17 @@ class VipContactCard extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.all(AppPadding.p16.r),
             child: Column(
-              children: [
+              children: <Widget>[
                 // Top Row: Avatar, Name, Subtitle, and VIP Badge
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
+                  children: <Widget>[
                     // VIP Badge on Left
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10.w,
+                        vertical: 3.h,
+                      ),
                       decoration: BoxDecoration(
                         color: ColorManager.lightSecondary,
                         borderRadius: BorderRadius.circular(AppRadius.r8.r),
@@ -91,7 +91,7 @@ class VipContactCard extends StatelessWidget {
                       flex: 8,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
+                        children: <Widget>[
                           Text(
                             contact.name,
                             maxLines: 1,
@@ -102,7 +102,7 @@ class VipContactCard extends StatelessWidget {
                               fontSize: FontSize.s15,
                             ),
                           ),
-                          if (contact.notes.isNotEmpty) ...[
+                          if (contact.notes.isNotEmpty) ...<Widget>[
                             SizedBox(height: 3.h),
                             Text(
                               contact.notes,
@@ -156,7 +156,7 @@ class VipContactCard extends StatelessWidget {
                 // Phone Row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                  children: <Widget>[
                     Text(
                       contact.phoneNumber,
                       textDirection: TextDirection.ltr,
@@ -179,11 +179,11 @@ class VipContactCard extends StatelessWidget {
 
                 // Action Buttons Row: Call & Send Reminder
                 Row(
-                  children: [
+                  children: <Widget>[
                     // Reminder Button
                     Expanded(
                       child: Material(
-                        color: Colors.transparent,
+                        color: ColorManager.transparent,
                         child: InkWell(
                           onTap: onSendReminder,
                           borderRadius: BorderRadius.circular(AppRadius.r12.r),
@@ -191,7 +191,9 @@ class VipContactCard extends StatelessWidget {
                             height: 40.h,
                             decoration: BoxDecoration(
                               color: ColorManager.lightSecondary,
-                              borderRadius: BorderRadius.circular(AppRadius.r12.r),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.r12.r,
+                              ),
                             ),
                             child: Center(
                               child: Text(
@@ -212,7 +214,7 @@ class VipContactCard extends StatelessWidget {
                     // Call Button
                     Expanded(
                       child: Material(
-                        color: Colors.transparent,
+                        color: ColorManager.transparent,
                         child: InkWell(
                           onTap: onCall,
                           borderRadius: BorderRadius.circular(AppRadius.r12.r),
@@ -220,11 +222,13 @@ class VipContactCard extends StatelessWidget {
                             height: 40.h,
                             decoration: BoxDecoration(
                               color: ColorManager.successContainer,
-                              borderRadius: BorderRadius.circular(AppRadius.r12.r),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.r12.r,
+                              ),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
+                              children: <Widget>[
                                 Text(
                                   AppStrings.phoneCall,
                                   style: getBoldStyle(

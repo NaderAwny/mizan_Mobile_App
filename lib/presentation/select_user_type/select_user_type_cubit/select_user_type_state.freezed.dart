@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SelectUserTypeState {
 
- FlowState? get flowState; AuthSession? get data;
+ FlowState? get flowState; AuthSession? get data; String? get selectedType; bool get shopNameTouched;
 /// Create a copy of SelectUserTypeState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $SelectUserTypeStateCopyWith<SelectUserTypeState> get copyWith => _$SelectUserTy
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SelectUserTypeState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.data, data) || other.data == data));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SelectUserTypeState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.data, data) || other.data == data)&&(identical(other.selectedType, selectedType) || other.selectedType == selectedType)&&(identical(other.shopNameTouched, shopNameTouched) || other.shopNameTouched == shopNameTouched));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,flowState,data);
+int get hashCode => Object.hash(runtimeType,flowState,data,selectedType,shopNameTouched);
 
 @override
 String toString() {
-  return 'SelectUserTypeState(flowState: $flowState, data: $data)';
+  return 'SelectUserTypeState(flowState: $flowState, data: $data, selectedType: $selectedType, shopNameTouched: $shopNameTouched)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $SelectUserTypeStateCopyWith<$Res>  {
   factory $SelectUserTypeStateCopyWith(SelectUserTypeState value, $Res Function(SelectUserTypeState) _then) = _$SelectUserTypeStateCopyWithImpl;
 @useResult
 $Res call({
- FlowState? flowState, AuthSession? data
+ FlowState? flowState, AuthSession? data, String? selectedType, bool shopNameTouched
 });
 
 
@@ -62,11 +62,13 @@ class _$SelectUserTypeStateCopyWithImpl<$Res>
 
 /// Create a copy of SelectUserTypeState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? data = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? data = freezed,Object? selectedType = freezed,Object? shopNameTouched = null,}) {
   return _then(_self.copyWith(
 flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
 as FlowState?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as AuthSession?,
+as AuthSession?,selectedType: freezed == selectedType ? _self.selectedType : selectedType // ignore: cast_nullable_to_non_nullable
+as String?,shopNameTouched: null == shopNameTouched ? _self.shopNameTouched : shopNameTouched // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -151,10 +153,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  AuthSession? data)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  AuthSession? data,  String? selectedType,  bool shopNameTouched)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SelectUserTypeState() when $default != null:
-return $default(_that.flowState,_that.data);case _:
+return $default(_that.flowState,_that.data,_that.selectedType,_that.shopNameTouched);case _:
   return orElse();
 
 }
@@ -172,10 +174,10 @@ return $default(_that.flowState,_that.data);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  AuthSession? data)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  AuthSession? data,  String? selectedType,  bool shopNameTouched)  $default,) {final _that = this;
 switch (_that) {
 case _SelectUserTypeState():
-return $default(_that.flowState,_that.data);case _:
+return $default(_that.flowState,_that.data,_that.selectedType,_that.shopNameTouched);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -192,10 +194,10 @@ return $default(_that.flowState,_that.data);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  AuthSession? data)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  AuthSession? data,  String? selectedType,  bool shopNameTouched)?  $default,) {final _that = this;
 switch (_that) {
 case _SelectUserTypeState() when $default != null:
-return $default(_that.flowState,_that.data);case _:
+return $default(_that.flowState,_that.data,_that.selectedType,_that.shopNameTouched);case _:
   return null;
 
 }
@@ -207,11 +209,13 @@ return $default(_that.flowState,_that.data);case _:
 
 
 class _SelectUserTypeState implements SelectUserTypeState {
-  const _SelectUserTypeState({this.flowState, this.data});
+  const _SelectUserTypeState({this.flowState, this.data, this.selectedType = null, this.shopNameTouched = false});
   
 
 @override final  FlowState? flowState;
 @override final  AuthSession? data;
+@override@JsonKey() final  String? selectedType;
+@override@JsonKey() final  bool shopNameTouched;
 
 /// Create a copy of SelectUserTypeState
 /// with the given fields replaced by the non-null parameter values.
@@ -223,16 +227,16 @@ _$SelectUserTypeStateCopyWith<_SelectUserTypeState> get copyWith => __$SelectUse
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SelectUserTypeState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.data, data) || other.data == data));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SelectUserTypeState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.data, data) || other.data == data)&&(identical(other.selectedType, selectedType) || other.selectedType == selectedType)&&(identical(other.shopNameTouched, shopNameTouched) || other.shopNameTouched == shopNameTouched));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,flowState,data);
+int get hashCode => Object.hash(runtimeType,flowState,data,selectedType,shopNameTouched);
 
 @override
 String toString() {
-  return 'SelectUserTypeState(flowState: $flowState, data: $data)';
+  return 'SelectUserTypeState(flowState: $flowState, data: $data, selectedType: $selectedType, shopNameTouched: $shopNameTouched)';
 }
 
 
@@ -243,7 +247,7 @@ abstract mixin class _$SelectUserTypeStateCopyWith<$Res> implements $SelectUserT
   factory _$SelectUserTypeStateCopyWith(_SelectUserTypeState value, $Res Function(_SelectUserTypeState) _then) = __$SelectUserTypeStateCopyWithImpl;
 @override @useResult
 $Res call({
- FlowState? flowState, AuthSession? data
+ FlowState? flowState, AuthSession? data, String? selectedType, bool shopNameTouched
 });
 
 
@@ -260,11 +264,13 @@ class __$SelectUserTypeStateCopyWithImpl<$Res>
 
 /// Create a copy of SelectUserTypeState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? data = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? data = freezed,Object? selectedType = freezed,Object? shopNameTouched = null,}) {
   return _then(_SelectUserTypeState(
 flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
 as FlowState?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as AuthSession?,
+as AuthSession?,selectedType: freezed == selectedType ? _self.selectedType : selectedType // ignore: cast_nullable_to_non_nullable
+as String?,shopNameTouched: null == shopNameTouched ? _self.shopNameTouched : shopNameTouched // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

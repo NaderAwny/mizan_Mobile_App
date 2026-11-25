@@ -88,9 +88,12 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
     super.initState();
     _userEmail = widget.initialEmail?.trim() ?? '';
 
-    _controllers = List.generate(_otpLength, (_) => TextEditingController());
-    _focusNodes = List.generate(_otpLength, (_) => FocusNode());
-    _boxStatus = List.generate(_otpLength, (_) => null);
+    _controllers = List<TextEditingController>.generate(
+      _otpLength,
+      (_) => TextEditingController(),
+    );
+    _focusNodes = List<FocusNode>.generate(_otpLength, (_) => FocusNode());
+    _boxStatus = List<bool?>.generate(_otpLength, (_) => null);
 
     for (int i = 0; i < _otpLength; i++) {
       _focusNodes[i].addListener(() {
@@ -122,10 +125,10 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
 
   @override
   void dispose() {
-    for (final c in _controllers) {
+    for (final TextEditingController c in _controllers) {
       c.dispose();
     }
-    for (final f in _focusNodes) {
+    for (final FocusNode f in _focusNodes) {
       f.dispose();
     }
     _animController.dispose();
@@ -134,11 +137,11 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
   }
 
   String get _currentOtpCode {
-    return _controllers.map((c) => c.text).join();
+    return _controllers.map((TextEditingController c) => c.text).join();
   }
 
   bool get _isCodeComplete {
-    final code = _currentOtpCode;
+    final String code = _currentOtpCode;
     return code.length == _otpLength && RegExp(r'^\d+$').hasMatch(code);
   }
 
@@ -157,8 +160,8 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
         return;
       }
 
-      final char = value;
-      final isDigit = RegExp(r'^[0-9]$').hasMatch(char);
+      final String char = value;
+      final bool isDigit = RegExp(r'^[0-9]$').hasMatch(char);
 
       if (isDigit) {
         _boxStatus[index] = true;
@@ -183,16 +186,16 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
 
   void _handlePastedCode(String pasted) {
     // Clean spaces and take up to 6 characters
-    final clean = pasted.replaceAll(RegExp(r'\s+'), '');
-    final chars = clean.split('');
+    final String clean = pasted.replaceAll(RegExp(r'\s+'), '');
+    final List<String> chars = clean.split('');
 
     bool hadInvalidChar = false;
 
     for (int i = 0; i < _otpLength; i++) {
       if (i < chars.length) {
-        final char = chars[i];
+        final String char = chars[i];
         _controllers[i].text = char;
-        final isDigit = RegExp(r'^[0-9]$').hasMatch(char);
+        final bool isDigit = RegExp(r'^[0-9]$').hasMatch(char);
         _boxStatus[i] = isDigit;
         if (!isDigit) hadInvalidChar = true;
       } else {
@@ -206,7 +209,7 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
       _triggerShake();
     } else {
       _inlineError = null;
-      final targetIndex = (chars.length < _otpLength)
+      final int targetIndex = (chars.length < _otpLength)
           ? chars.length
           : _otpLength - 1;
       _focusNodes[targetIndex].requestFocus();
@@ -249,11 +252,14 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<VerifyOtpCubit, VerifyOtpState>(
-      listenWhen: (prev, curr) => curr.data != null && prev.data == null,
-      listener: (ctx, state) {
+      listenWhen: (VerifyOtpState prev, VerifyOtpState curr) =>
+          curr.data != null && prev.data == null,
+      listener: (BuildContext ctx, VerifyOtpState state) {
         // Dismiss any loading dialogs
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          Navigator.of(ctx, rootNavigator: true).popUntil((route) {
+          Navigator.of(ctx, rootNavigator: true).popUntil((
+            Route<dynamic> route,
+          ) {
             return route is! PopupRoute;
           });
 
@@ -261,10 +267,10 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
           _showSuccessPopDialog(ctx, state.data);
         });
       },
-      builder: (ctx, state) {
-        final flowState = state.flowState;
+      builder: (BuildContext ctx, VerifyOtpState state) {
+        final FlowState? flowState = state.flowState;
         if (flowState is LoadingState || flowState is ErrorState) {
-          final overlay = flowState!.getScreenWidget(
+          final Widget? overlay = flowState!.getScreenWidget(
             ctx,
             _buildBody(ctx, state),
             () => _onVerify(),
@@ -291,7 +297,7 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
   Widget _withScaffold(BuildContext context, Widget body) {
     return PopScope(
       canPop: Navigator.of(context).canPop(),
-      onPopInvokedWithResult: (didPop, result) {
+      onPopInvokedWithResult: (bool didPop, Object? result) {
         if (didPop) return;
         _handleBack(context);
       },
@@ -310,7 +316,7 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
             padding: EdgeInsets.symmetric(horizontal: 24.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: <Widget>[
                 SizedBox(height: 16.h),
 
                 // ── Header Section (Back button + Logo) ──────────────────────
@@ -346,8 +352,8 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
                 Center(
                   child: AnimatedBuilder(
                     animation: _shakeAnim,
-                    builder: (context, child) {
-                      final offset =
+                    builder: (BuildContext context, Widget? child) {
+                      final double offset =
                           (_shakeAnim.value > 0 && _shakeAnim.value < 1)
                           ? (5 *
                                 (1 - _shakeAnim.value) *
@@ -398,11 +404,11 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
         border: Border.all(color: ColorManager.border),
       ),
       child: Row(
-        children: [
+        children: <Widget>[
           Container(
             width: 32.r,
             height: 32.r,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: ColorManager.lightPrimary,
               shape: BoxShape.circle,
             ),
@@ -441,7 +447,7 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
       textDirection: TextDirection.ltr,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: List.generate(_otpLength, (index) {
+        children: List<Widget>.generate(_otpLength, (int index) {
           return _buildSingleOtpBox(index);
         }),
       ),
@@ -449,9 +455,9 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
   }
 
   Widget _buildSingleOtpBox(int index) {
-    final status = _boxStatus[index];
-    final isFocused = _focusNodes[index].hasFocus;
-    final hasValue = _controllers[index].text.isNotEmpty;
+    final bool? status = _boxStatus[index];
+    final bool isFocused = _focusNodes[index].hasFocus;
+    final bool hasValue = _controllers[index].text.isNotEmpty;
 
     // Dynamic border and shadow color based on character type:
     // Digit => Green, Non-digit => Red, Focused empty => Primary terracotta, Unfocused empty => Border
@@ -466,7 +472,7 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
         borderColor = ColorManager.brandGreen;
         fillColor = ColorManager.surface;
         borderWidth = 2.0;
-        shadows = [
+        shadows = <BoxShadow>[
           BoxShadow(
             color: ColorManager.success.withAlpha(35),
             blurRadius: 8,
@@ -478,7 +484,7 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
         borderColor = ColorManager.error;
         fillColor = ColorManager.errorContainer;
         borderWidth = 2.0;
-        shadows = [
+        shadows = <BoxShadow>[
           BoxShadow(
             color: ColorManager.error.withAlpha(45),
             blurRadius: 8,
@@ -490,7 +496,7 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
       borderColor = ColorManager.primary;
       fillColor = ColorManager.surface;
       borderWidth = 1.8;
-      shadows = [
+      shadows = <BoxShadow>[
         BoxShadow(
           color: ColorManager.primary.withAlpha(30),
           blurRadius: 8,
@@ -514,7 +520,7 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
       ),
       alignment: Alignment.center,
       child: Focus(
-        onKeyEvent: (node, event) {
+        onKeyEvent: (FocusNode node, KeyEvent event) {
           if (event is KeyDownEvent &&
               event.logicalKey == LogicalKeyboardKey.backspace &&
               _controllers[index].text.isEmpty &&
@@ -534,7 +540,9 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
             keyboardType: TextInputType.text,
             textAlign: TextAlign.center,
             textAlignVertical: TextAlignVertical.center,
-            inputFormatters: [LengthLimitingTextInputFormatter(1)],
+            inputFormatters: <TextInputFormatter>[
+              LengthLimitingTextInputFormatter(1),
+            ],
             strutStyle: StrutStyle(
               fontFamily: FontConstants.montserratFontFamily,
               fontSize: 24.sp,
@@ -566,7 +574,7 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
               contentPadding: EdgeInsets.zero,
               filled: false,
             ),
-            onChanged: (val) {
+            onChanged: (String val) {
               _handleBoxChanged(index, val);
             },
           ),
@@ -578,7 +586,7 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
   Widget _buildInlineStatusFeedback() {
     if (_inlineError != null) {
       return Row(
-        children: [
+        children: <Widget>[
           SvgPicture.asset(
             IconAssets.alertTriangle,
             width: 14.r,
@@ -604,7 +612,7 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
 
     if (_isCodeComplete) {
       return Row(
-        children: [
+        children: <Widget>[
           Icon(
             Icons.check_circle_rounded,
             size: 15.r,
@@ -626,12 +634,12 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
   }
 
   void _showSuccessPopDialog(BuildContext context, AuthSession? session) {
-    showDialog(
+    showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogCtx) {
+      builder: (BuildContext dialogCtx) {
         return Dialog(
-          backgroundColor: Colors.transparent,
+          backgroundColor: ColorManager.transparent,
           insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 26.h),
@@ -639,9 +647,9 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
               color: ColorManager.surface,
               borderRadius: BorderRadius.circular(AppRadius.r20.r),
               border: Border.all(color: ColorManager.border),
-              boxShadow: const [
+              boxShadow: const <BoxShadow>[
                 BoxShadow(
-                  color: Color(0x1A000000),
+                  color: ColorManager.shadowDark,
                   blurRadius: 24,
                   offset: Offset(0, 8),
                 ),
@@ -649,7 +657,7 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: <Widget>[
                 // Lottie Success Animation
                 SizedBox(
                   width: 130.w,
@@ -658,21 +666,26 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
                     JsonAssets.success,
                     fit: BoxFit.contain,
                     animate: true,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 80.r,
-                        height: 80.r,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFEBF3EC),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.check_circle_rounded,
-                          color: ColorManager.success,
-                          size: 54.r,
-                        ),
-                      );
-                    },
+                    errorBuilder:
+                        (
+                          BuildContext context,
+                          Object error,
+                          StackTrace? stackTrace,
+                        ) {
+                          return Container(
+                            width: 80.r,
+                            height: 80.r,
+                            decoration: const BoxDecoration(
+                              color: ColorManager.successBg,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.check_circle_rounded,
+                              color: ColorManager.success,
+                              size: 54.r,
+                            ),
+                          );
+                        },
                   ),
                 ),
                 SizedBox(height: 12.h),
@@ -709,7 +722,7 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
                     decoration: BoxDecoration(
                       gradient: ColorManager.primaryGradient,
                       borderRadius: BorderRadius.circular(AppRadius.r14.r),
-                      boxShadow: const [AppShadows.fabShadow],
+                      boxShadow: const <BoxShadow>[AppShadows.fabShadow],
                     ),
                     child: ElevatedButton(
                       onPressed: () {
@@ -719,24 +732,24 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
                         // Server is the single source of truth:
                         // isNewUser == true  → Select-User-Type screen
                         // isNewUser == false → Home screen directly
-                        final isNewUser = session?.isNewUser ?? false;
+                        final bool isNewUser = session?.isNewUser ?? false;
 
                         if (isNewUser) {
                           Navigator.of(context).pushNamedAndRemoveUntil(
                             Routes.selectUserRoute,
-                            (route) => false,
+                            (Route<dynamic> route) => false,
                           );
                           return;
                         }
 
                         Navigator.of(context).pushNamedAndRemoveUntil(
                           Routes.homeRoute,
-                          (route) => false,
+                          (Route<dynamic> route) => false,
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
+                        backgroundColor: ColorManager.transparent,
+                        shadowColor: ColorManager.transparent,
                         foregroundColor: ColorManager.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.r14.r),
@@ -745,7 +758,7 @@ class _AuthVerificationScreenState extends State<_AuthVerificationScreen>
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
+                        children: <Widget>[
                           Text(
                             'المتابعة إلى التطبيق',
                             style: getBoldStyle(
@@ -784,7 +797,7 @@ class _HeaderSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: [
+      children: <Widget>[
         // Back button (36x36 rounded)
         GestureDetector(
           onTap: () {
@@ -825,7 +838,7 @@ class _HeaderSection extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
+            children: <Widget>[
               Image.asset(
                 ImageAssets.logoBoxFigmaPng,
                 width: 76.w,
@@ -860,15 +873,15 @@ class _ImportantNoticeCard extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF9EE),
+        color: ColorManager.warningBg,
         borderRadius: BorderRadius.circular(AppRadius.r16.r),
-        border: Border.all(color: const Color(0xFFE8D8B7), width: 1.0),
+        border: Border.all(color: ColorManager.warningBorder, width: 1.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Row(
-            children: [
+            children: <Widget>[
               Text(
                 '⚠️ تنبيه مهم',
                 style: getExtraBoldStyle(
@@ -909,7 +922,7 @@ class _VerifyButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isEnabled = isComplete && !isLoading;
+    final bool isEnabled = isComplete && !isLoading;
 
     return SizedBox(
       width: double.infinity,
@@ -920,13 +933,13 @@ class _VerifyButton extends StatelessWidget {
           gradient: isEnabled ? ColorManager.primaryGradient : null,
           color: isEnabled ? null : ColorManager.border,
           borderRadius: BorderRadius.circular(AppRadius.r14.r),
-          boxShadow: isEnabled ? const [AppShadows.fabShadow] : null,
+          boxShadow: isEnabled ? const <BoxShadow>[AppShadows.fabShadow] : null,
         ),
         child: ElevatedButton(
           onPressed: isEnabled ? onPressed : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            shadowColor: Colors.transparent,
+            backgroundColor: ColorManager.transparent,
+            shadowColor: ColorManager.transparent,
             foregroundColor: ColorManager.white,
             disabledForegroundColor: ColorManager.textTertiary,
             shape: RoundedRectangleBorder(
@@ -947,7 +960,7 @@ class _VerifyButton extends StatelessWidget {
                 )
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+                  children: <Widget>[
                     Text(
                       'تأكيد ومتابعة',
                       style: getBoldStyle(

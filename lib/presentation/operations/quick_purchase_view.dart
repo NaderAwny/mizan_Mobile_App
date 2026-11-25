@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mizan/app/date_utils.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -24,7 +25,7 @@ class QuickPurchaseView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveArgs =
+    final QuickTransactionArgs? effectiveArgs =
         args ??
         (ModalRoute.of(context)?.settings.arguments is QuickTransactionArgs
             ? ModalRoute.of(context)!.settings.arguments as QuickTransactionArgs
@@ -61,9 +62,9 @@ class _PurchaseInstallmentEntry {
 }
 
 class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
-  final _amountController = TextEditingController();
-  final _noteController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _noteController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   // Contact selection
   String? _selectedContactId;
@@ -84,9 +85,10 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
   DateTime _firstInstallmentDate = DateTime.now().add(const Duration(days: 30));
 
   // Custom Installments list
-  final List<_PurchaseInstallmentEntry> _customInstallmentEntries = [];
+  final List<_PurchaseInstallmentEntry> _customInstallmentEntries =
+      <_PurchaseInstallmentEntry>[];
 
-  final List<num> _quickAmountChips = [100, 250, 500, 1000, 2500];
+  final List<num> _quickAmountChips = <num>[100, 250, 500, 1000, 2500];
 
   @override
   void initState() {
@@ -101,8 +103,8 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
 
   void _initCustomInstallments() {
     _customInstallmentEntries.clear();
-    final total = double.tryParse(_amountController.text) ?? 0.0;
-    final half = total > 0 ? total / 2 : 0.0;
+    final double total = double.tryParse(_amountController.text) ?? 0.0;
+    final double half = total > 0 ? total / 2 : 0.0;
     _customInstallmentEntries.add(
       _PurchaseInstallmentEntry(
         amount: half,
@@ -121,7 +123,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
   void dispose() {
     _amountController.dispose();
     _noteController.dispose();
-    for (var entry in _customInstallmentEntries) {
+    for (_PurchaseInstallmentEntry entry in _customInstallmentEntries) {
       entry.dispose();
     }
     super.dispose();
@@ -138,8 +140,8 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
 
   void _recalculateCustomInstallments(double totalAmount) {
     if (_customInstallmentEntries.isEmpty) return;
-    final count = _customInstallmentEntries.length;
-    final split = (totalAmount / count).roundToDouble();
+    final int count = _customInstallmentEntries.length;
+    final double split = (totalAmount / count).roundToDouble();
     for (int i = 0; i < count; i++) {
       _customInstallmentEntries[i].amountController.text = split
           .toStringAsFixed(0);
@@ -148,19 +150,19 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
 
   double get _totalCustomSum {
     double sum = 0.0;
-    for (var e in _customInstallmentEntries) {
+    for (_PurchaseInstallmentEntry e in _customInstallmentEntries) {
       sum += double.tryParse(e.amountController.text) ?? 0.0;
     }
     return sum;
   }
 
   Future<void> _pickTransactionDate() async {
-    final picked = await showDatePicker(
+    final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _transactionDate,
       firstDate: DateTime(2020),
       lastDate: DateTime(2035),
-      builder: (context, child) {
+      builder: (BuildContext context, Widget? child) {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
@@ -179,12 +181,12 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
   }
 
   Future<void> _pickFirstInstallmentDate() async {
-    final picked = await showDatePicker(
+    final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _firstInstallmentDate,
       firstDate: DateTime.now(),
       lastDate: DateTime(2035),
-      builder: (context, child) {
+      builder: (BuildContext context, Widget? child) {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
@@ -203,7 +205,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
   }
 
   Future<void> _pickContact() async {
-    final result = await ContactPickerBottomSheet.show(
+    final ContactPickerResult? result = await ContactPickerBottomSheet.show(
       context,
       selectedContactId: _selectedContactId,
       selectedName: _selectedPartyName,
@@ -220,12 +222,14 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
   void _submit() {
     FocusScope.of(context).unfocus();
 
-    final amount = num.tryParse(_amountController.text.trim()) ?? 0;
+    final num amount = num.tryParse(_amountController.text.trim()) ?? 0;
 
     List<CustomInstallmentItem>? customItems;
     if (_isInstallment && _installmentPlanMode == "Custom") {
-      customItems = _customInstallmentEntries.map((e) {
-        final amt = num.tryParse(e.amountController.text.trim()) ?? 0;
+      customItems = _customInstallmentEntries.map((
+        _PurchaseInstallmentEntry e,
+      ) {
+        final num amt = num.tryParse(e.amountController.text.trim()) ?? 0;
         return CustomInstallmentItem(
           amount: amt,
           dueDate: e.dueDate.toIso8601String(),
@@ -233,7 +237,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
       }).toList();
     }
 
-    final request = CreateTransactionRequest(
+    final CreateTransactionRequest request = CreateTransactionRequest(
       contactId: _selectedContactId,
       partyName: _selectedPartyName,
       type: "Purchase",
@@ -241,7 +245,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
       paymentMethod: _isInstallment
           ? "Deferred"
           : (_isCash ? "Cash" : "Credit"),
-      transactionDate: _transactionDate.toIso8601String(),
+      transactionDate: transactionDateForRequest(_transactionDate),
       noteText: _noteController.text.trim().isEmpty
           ? null
           : _noteController.text.trim(),
@@ -266,13 +270,14 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<TransactionFormCubit, TransactionFormState>(
-      listenWhen: (prev, curr) => curr.isActionSuccess && !prev.isActionSuccess,
-      listener: (context, state) {
+      listenWhen: (TransactionFormState prev, TransactionFormState curr) =>
+          curr.isActionSuccess && !prev.isActionSuccess,
+      listener: (BuildContext context, TransactionFormState state) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Navigator.of(
             context,
             rootNavigator: true,
-          ).popUntil((route) => route is! PopupRoute);
+          ).popUntil((Route<dynamic> route) => route is! PopupRoute);
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -282,7 +287,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                 borderRadius: BorderRadius.circular(AppRadius.r12.r),
               ),
               content: Row(
-                children: [
+                children: <Widget>[
                   Icon(
                     Icons.check_circle_rounded,
                     color: ColorManager.white,
@@ -298,12 +303,16 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
           Navigator.of(context).pop(true);
         });
       },
-      builder: (context, state) {
-        final content = _buildContent(context, state);
+      builder: (BuildContext context, TransactionFormState state) {
+        final Widget content = _buildContent(context, state);
 
-        final flowState = state.flowState;
+        final FlowState? flowState = state.flowState;
         if (flowState is LoadingState || flowState is ErrorState) {
-          final overlay = flowState!.getScreenWidget(context, content, _submit);
+          final Widget? overlay = flowState!.getScreenWidget(
+            context,
+            content,
+            _submit,
+          );
           if (overlay != null) return _scaffold(overlay);
         }
 
@@ -346,7 +355,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
             fontSize: FontSize.s16,
           ),
         ),
-        actions: [
+        actions: <Widget>[
           Container(
             margin: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
             padding: EdgeInsets.all(6.r),
@@ -371,7 +380,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
   }
 
   Widget _buildContent(BuildContext context, TransactionFormState state) {
-    final parsedAmount = double.tryParse(_amountController.text) ?? 0.0;
+    final double parsedAmount = double.tryParse(_amountController.text) ?? 0.0;
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -380,7 +389,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+          children: <Widget>[
             // ── 1. Amount Input Hero ────────────────────────────────────
             _buildAmountSection(),
 
@@ -405,7 +414,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
             _buildInstallmentSwitchCard(),
 
             // ── 6. Expanded Installment Configuration ───────────────────
-            if (_isInstallment) ...[
+            if (_isInstallment) ...<Widget>[
               SizedBox(height: 14.h),
               _buildInstallmentConfigSection(parsedAmount),
             ],
@@ -435,7 +444,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
         color: ColorManager.surface,
         borderRadius: BorderRadius.circular(AppRadius.r20.r),
         border: Border.all(color: ColorManager.border),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             color: Color(0x081C1816),
             blurRadius: 10,
@@ -444,7 +453,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
         ],
       ),
       child: Column(
-        children: [
+        children: <Widget>[
           Text(
             "المبلغ المالي للمشتريات",
             style: getMediumStyle(
@@ -457,7 +466,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
-            children: [
+            children: <Widget>[
               Text(
                 AppConstants.defaultCurrency,
                 style: getBoldStyle(
@@ -494,7 +503,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                     focusedErrorBorder: InputBorder.none,
                   ),
 
-                  onChanged: (val) {
+                  onChanged: (String val) {
                     setState(() {});
                     if (_isInstallment && _installmentPlanMode == "Custom") {
                       _recalculateCustomInstallments(
@@ -513,15 +522,15 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
 
   // ── Quick Chips ────────────────────────────────────────────────────────────
   Widget _buildQuickAmountChips() {
-    final currentAmount = double.tryParse(_amountController.text) ?? -1;
+    final double currentAmount = double.tryParse(_amountController.text) ?? -1;
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       physics: const BouncingScrollPhysics(),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: _quickAmountChips.map((chipAmount) {
-          final isSelected = currentAmount == chipAmount.toDouble();
+        children: _quickAmountChips.map((num chipAmount) {
+          final bool isSelected = currentAmount == chipAmount.toDouble();
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: 4.w),
             child: ChoiceChip(
@@ -556,13 +565,13 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
 
   // ── Supplier Field ─────────────────────────────────────────────────────────
   Widget _buildSupplierField() {
-    final hasSelection =
+    final bool hasSelection =
         (_selectedContactId != null && _selectedContactId!.isNotEmpty) ||
         (_selectedPartyName != null && _selectedPartyName!.isNotEmpty);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      children: <Widget>[
         Text(
           "الطرف الثاني (المورد) *",
           style: getBoldStyle(
@@ -587,7 +596,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
               ),
             ),
             child: Row(
-              children: [
+              children: <Widget>[
                 Container(
                   padding: EdgeInsets.all(8.r),
                   decoration: BoxDecoration(
@@ -608,7 +617,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                 Expanded(
                   child: hasSelection
                       ? Row(
-                          children: [
+                          children: <Widget>[
                             Flexible(
                               child: Text(
                                 _selectedPartyName ?? "مورد محدد",
@@ -620,7 +629,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                                 ),
                               ),
                             ),
-                            if (_isPartyVip) ...[
+                            if (_isPartyVip) ...<Widget>[
                               SizedBox(width: 6.w),
                               Container(
                                 padding: EdgeInsets.symmetric(
@@ -690,17 +699,17 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
 
   // ── Date and Payment Row ───────────────────────────────────────────────────
   Widget _buildDateAndPaymentRow() {
-    final formattedDate = formatArabicDate(_transactionDate);
+    final String formattedDate = formatArabicDate(_transactionDate);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      children: <Widget>[
         // Date Field
         Expanded(
           flex: 5,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               Text(
                 "تاريخ العملية",
                 style: getBoldStyle(
@@ -721,7 +730,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                     border: Border.all(color: ColorManager.border),
                   ),
                   child: Row(
-                    children: [
+                    children: <Widget>[
                       SvgPicture.asset(
                         IconAssets.calendar,
                         width: 16.r,
@@ -758,7 +767,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
           flex: 5,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               Text(
                 "طريقة الدفع",
                 style: getBoldStyle(
@@ -776,7 +785,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                   border: Border.all(color: ColorManager.border),
                 ),
                 child: Row(
-                  children: [
+                  children: <Widget>[
                     // Cash
                     Expanded(
                       child: GestureDetector(
@@ -786,7 +795,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                           decoration: BoxDecoration(
                             color: _isCash
                                 ? ColorManager.secondary
-                                : Colors.transparent,
+                                : ColorManager.transparent,
                             borderRadius: BorderRadius.circular(
                               AppRadius.r10.r,
                             ),
@@ -813,7 +822,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                           decoration: BoxDecoration(
                             color: !_isCash
                                 ? ColorManager.secondary
-                                : Colors.transparent,
+                                : ColorManager.transparent,
                             borderRadius: BorderRadius.circular(
                               AppRadius.r10.r,
                             ),
@@ -854,7 +863,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
         ),
       ),
       child: Row(
-        children: [
+        children: <Widget>[
           Container(
             padding: EdgeInsets.all(8.r),
             decoration: BoxDecoration(
@@ -875,7 +884,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: <Widget>[
                 Text(
                   "تقسيط المشتريات على دفعات",
                   style: getBoldStyle(
@@ -896,7 +905,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
           Switch(
             value: _isInstallment,
             activeThumbColor: ColorManager.secondary,
-            onChanged: (val) {
+            onChanged: (bool val) {
               setState(() {
                 _isInstallment = val;
                 if (val && _isCash) {
@@ -921,10 +930,10 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           // Mode Tabs (Automatic vs Custom)
           Row(
-            children: [
+            children: <Widget>[
               Expanded(
                 child: GestureDetector(
                   onTap: () =>
@@ -939,7 +948,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                       border: Border.all(
                         color: _installmentPlanMode == "Automatic"
                             ? ColorManager.secondary
-                            : Colors.transparent,
+                            : ColorManager.transparent,
                       ),
                     ),
                     alignment: Alignment.center,
@@ -972,7 +981,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                       border: Border.all(
                         color: _installmentPlanMode == "Custom"
                             ? ColorManager.secondary
-                            : Colors.transparent,
+                            : ColorManager.transparent,
                       ),
                     ),
                     alignment: Alignment.center,
@@ -993,7 +1002,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
 
           SizedBox(height: 14.h),
 
-          if (_installmentPlanMode == "Automatic") ...[
+          if (_installmentPlanMode == "Automatic") ...<Widget>[
             // Count of Installments
             Text(
               "عدد الأقساط",
@@ -1006,8 +1015,8 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: [2, 3, 4, 6, 12].map((cnt) {
-                  final isSel = _installmentCount == cnt;
+                children: <int>[2, 3, 4, 6, 12].map((int cnt) {
+                  final bool isSel = _installmentCount == cnt;
                   return Padding(
                     padding: EdgeInsets.only(left: 6.w),
                     child: ChoiceChip(
@@ -1036,11 +1045,11 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
 
             // Frequency & First Date Row
             Row(
-              children: [
+              children: <Widget>[
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    children: <Widget>[
                       Text(
                         "التكرار",
                         style: getBoldStyle(
@@ -1066,30 +1075,30 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                             borderSide: BorderSide.none,
                           ),
                         ),
-                        items: const [
-                          DropdownMenuItem(
+                        items: const <DropdownMenuItem<String>>[
+                          DropdownMenuItem<String>(
                             value: "Weekly",
                             child: Text(
                               "أسبوعي",
-                              style: TextStyle(color: Colors.black),
+                              style: TextStyle(color: ColorManager.black),
                             ),
                           ),
-                          DropdownMenuItem(
+                          DropdownMenuItem<String>(
                             value: "Monthly",
                             child: Text(
                               "شهري",
-                              style: TextStyle(color: Colors.black),
+                              style: TextStyle(color: ColorManager.black),
                             ),
                           ),
-                          DropdownMenuItem(
+                          DropdownMenuItem<String>(
                             value: "Yearly",
                             child: Text(
                               "سنوي",
-                              style: TextStyle(color: Colors.black),
+                              style: TextStyle(color: ColorManager.black),
                             ),
                           ),
                         ],
-                        onChanged: (val) {
+                        onChanged: (String? val) {
                           if (val != null) setState(() => _frequency = val);
                         },
                       ),
@@ -1102,7 +1111,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    children: <Widget>[
                       Text(
                         "تاريخ أول قسط",
                         style: getBoldStyle(
@@ -1123,7 +1132,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                             ),
                           ),
                           child: Row(
-                            children: [
+                            children: <Widget>[
                               Icon(
                                 Icons.calendar_today_rounded,
                                 size: 14.r,
@@ -1149,7 +1158,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
               ],
             ),
 
-            if (totalAmount > 0) ...[
+            if (totalAmount > 0) ...<Widget>[
               SizedBox(height: 12.h),
               Container(
                 padding: EdgeInsets.all(10.r),
@@ -1158,7 +1167,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                   borderRadius: BorderRadius.circular(AppRadius.r10.r),
                 ),
                 child: Row(
-                  children: [
+                  children: <Widget>[
                     Icon(
                       Icons.info_outline_rounded,
                       color: ColorManager.darkSecondary,
@@ -1178,11 +1187,11 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                 ),
               ),
             ],
-          ] else ...[
+          ] else ...<Widget>[
             // Custom Installments List
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
+              children: <Widget>[
                 Text(
                   "الأقساط المخصصة",
                   style: getBoldStyle(
@@ -1193,7 +1202,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                 TextButton.icon(
                   onPressed: () {
                     setState(() {
-                      final count = _customInstallmentEntries.length + 1;
+                      final int count = _customInstallmentEntries.length + 1;
                       _customInstallmentEntries.add(
                         _PurchaseInstallmentEntry(
                           amount: 0,
@@ -1214,9 +1223,11 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
               ],
             ),
 
-            ..._customInstallmentEntries.asMap().entries.map((entry) {
-              final idx = entry.key;
-              final item = entry.value;
+            ..._customInstallmentEntries.asMap().entries.map((
+              MapEntry<int, _PurchaseInstallmentEntry> entry,
+            ) {
+              final int idx = entry.key;
+              final _PurchaseInstallmentEntry item = entry.value;
 
               return Container(
                 margin: EdgeInsets.only(bottom: 8.h),
@@ -1226,7 +1237,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                   borderRadius: BorderRadius.circular(AppRadius.r10.r),
                 ),
                 child: Row(
-                  children: [
+                  children: <Widget>[
                     CircleAvatar(
                       radius: 12.r,
                       backgroundColor: ColorManager.lightSecondary,
@@ -1270,7 +1281,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                       flex: 4,
                       child: InkWell(
                         onTap: () async {
-                          final picked = await showDatePicker(
+                          final DateTime? picked = await showDatePicker(
                             context: context,
                             initialDate: item.dueDate,
                             firstDate: DateTime.now(),
@@ -1320,8 +1331,8 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
             SizedBox(height: 6.h),
             Builder(
               builder: (_) {
-                final sum = _totalCustomSum;
-                final matches = (sum - totalAmount).abs() < 0.01;
+                final double sum = _totalCustomSum;
+                final bool matches = (sum - totalAmount).abs() < 0.01;
                 return Container(
                   padding: EdgeInsets.all(8.r),
                   decoration: BoxDecoration(
@@ -1331,7 +1342,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                     borderRadius: BorderRadius.circular(AppRadius.r8.r),
                   ),
                   child: Row(
-                    children: [
+                    children: <Widget>[
                       Icon(
                         matches
                             ? Icons.check_circle_rounded
@@ -1368,7 +1379,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
   Widget _buildNotesField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      children: <Widget>[
         Text(
           "ملاحظات على العملية (اختياري)",
           style: getBoldStyle(
@@ -1416,7 +1427,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
 
   // ── Submit Button ──────────────────────────────────────────────────────────
   Widget _buildSubmitButton(TransactionFormState state) {
-    final isLoading = state.flowState is LoadingState;
+    final bool isLoading = state.flowState is LoadingState;
 
     return SizedBox(
       height: 75.h,
@@ -1424,7 +1435,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
         decoration: BoxDecoration(
           color: ColorManager.secondary,
           borderRadius: BorderRadius.circular(AppRadius.r14.r),
-          boxShadow: [
+          boxShadow: <BoxShadow>[
             BoxShadow(
               color: ColorManager.secondary.withAlpha(50),
               blurRadius: 12,
@@ -1435,8 +1446,8 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
         child: ElevatedButton(
           onPressed: isLoading ? null : _submit,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            shadowColor: Colors.transparent,
+            backgroundColor: ColorManager.transparent,
+            shadowColor: ColorManager.transparent,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.r14.r),
             ),
@@ -1452,7 +1463,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
                 )
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+                  children: <Widget>[
                     Center(
                       child: Text(
                         "حفظ عملية الشراء",

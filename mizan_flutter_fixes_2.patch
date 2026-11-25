@@ -1,0 +1,71 @@
+diff --git a/lib/core/utils/date_utils.dart b/lib/core/utils/date_utils.dart
+index c4b63e2..7d63348 100644
+--- a/lib/core/utils/date_utils.dart
++++ b/lib/core/utils/date_utils.dart
+@@ -199,7 +199,28 @@ DateTime effectiveTransactionTime(String transactionDate, String createdAt) {
+   if (tx == null && created == null) return DateTime.fromMillisecondsSinceEpoch(0);
+   if (tx == null) return created!;
+   if (created == null) return tx;
++  // A business date in the future (bad/legacy data) can't be a real time of
++  // an already-created transaction; fall back to the creation time.
++  if (tx.isAfter(DateTime.now().add(const Duration(minutes: 5)))) return created;
+   final bool sameDay =
+       tx.year == created.year && tx.month == created.month && tx.day == created.day;
+   return sameDay ? created : tx;
+ }
++
++
++/// Builds the transactionDate sent to the API: the picked calendar day combined
++/// with the CURRENT time of day, as an explicit UTC instant (with 'Z').
++/// Sending a local time without an offset makes the server assume UTC and
++/// shifts the displayed time by the device's UTC offset.
++String transactionDateForRequest(DateTime picked) {
++  final DateTime now = DateTime.now();
++  final DateTime local = DateTime(
++    picked.year,
++    picked.month,
++    picked.day,
++    now.hour,
++    now.minute,
++    now.second,
++  );
++  return local.toUtc().toIso8601String();
++}
+diff --git a/lib/presentation/operations/quick_purchase_view.dart b/lib/presentation/operations/quick_purchase_view.dart
+index e3c3849..0db875e 100644
+--- a/lib/presentation/operations/quick_purchase_view.dart
++++ b/lib/presentation/operations/quick_purchase_view.dart
+@@ -1,4 +1,5 @@
+ import 'package:flutter/material.dart';
++import 'package:mizan/core/utils/date_utils.dart';
+ import 'package:flutter_bloc/flutter_bloc.dart';
+ import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import 'package:flutter_svg/flutter_svg.dart';
+@@ -244,7 +245,7 @@ class _QuickPurchaseScreenState extends State<_QuickPurchaseScreen> {
+       paymentMethod: _isInstallment
+           ? "Deferred"
+           : (_isCash ? "Cash" : "Credit"),
+-      transactionDate: _transactionDate.toIso8601String(),
++      transactionDate: transactionDateForRequest(_transactionDate),
+       noteText: _noteController.text.trim().isEmpty
+           ? null
+           : _noteController.text.trim(),
+diff --git a/lib/presentation/operations/quick_sale_view.dart b/lib/presentation/operations/quick_sale_view.dart
+index 189e3f5..6dc4743 100644
+--- a/lib/presentation/operations/quick_sale_view.dart
++++ b/lib/presentation/operations/quick_sale_view.dart
+@@ -1,4 +1,5 @@
+ import 'package:flutter/material.dart';
++import 'package:mizan/core/utils/date_utils.dart';
+ import 'package:flutter_bloc/flutter_bloc.dart';
+ import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import 'package:flutter_svg/flutter_svg.dart';
+@@ -242,7 +243,7 @@ class _QuickSaleScreenState extends State<_QuickSaleScreen> {
+       paymentMethod: _isInstallment
+           ? "Deferred"
+           : (_isCash ? "Cash" : "Credit"),
+-      transactionDate: _transactionDate.toIso8601String(),
++      transactionDate: transactionDateForRequest(_transactionDate),
+       noteText: _noteController.text.trim().isEmpty
+           ? null
+           : _noteController.text.trim(),

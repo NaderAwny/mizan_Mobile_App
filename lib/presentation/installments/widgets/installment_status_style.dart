@@ -5,6 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:mizan/app/date_utils.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 
@@ -67,10 +68,15 @@ class InstallmentStatusStyle {
 }
 
 class InstallmentFormatters {
-  static final intl.NumberFormat _amountFormat = intl.NumberFormat('#,##0.##', 'en');
-  static final intl.DateFormat _timelineDateFormat = intl.DateFormat('dd/MM/yyyy');
+  static final intl.NumberFormat _amountFormat = intl.NumberFormat(
+    '#,##0.##',
+    'en',
+  );
+  static final intl.DateFormat _timelineDateFormat = intl.DateFormat(
+    'dd/MM/yyyy',
+  );
 
-  static const List<String> _arabicMonths = [
+  static const List<String> _arabicMonths = <String>[
     'يناير',
     'فبراير',
     'مارس',
@@ -85,7 +91,7 @@ class InstallmentFormatters {
     'ديسمبر',
   ];
 
-  static const List<String> _arabicOrdinals = [
+  static const List<String> _arabicOrdinals = <String>[
     'دفعة أولى',
     'دفعة ثانية',
     'دفعة ثالثة',
@@ -115,18 +121,20 @@ class InstallmentFormatters {
   }
 
   /// Formatted date in Arabic format (e.g. "15 أكتوبر 2024")
+  /// Uses [tryParseBusinessDate] so user-chosen due dates are never timezone-shifted.
   static String formatArabicDate(String? raw) {
     if (raw == null || raw.isEmpty) return '—';
-    final dt = DateTime.tryParse(raw);
+    final DateTime? dt = tryParseBusinessDate(raw);
     if (dt == null) return raw;
-    final month = _arabicMonths[(dt.month - 1).clamp(0, 11)];
+    final String month = _arabicMonths[(dt.month - 1).clamp(0, 11)];
     return '${dt.day} $month ${dt.year}';
   }
 
   /// Formatted date in short format (e.g. "15/10/2024")
+  /// Uses [tryParseBusinessDate] so user-chosen due dates are never timezone-shifted.
   static String formatShortDate(String? raw) {
     if (raw == null || raw.isEmpty) return '—';
-    final dt = DateTime.tryParse(raw);
+    final DateTime? dt = tryParseBusinessDate(raw);
     if (dt == null) return raw;
     return _timelineDateFormat.format(dt);
   }
@@ -139,10 +147,10 @@ class InstallmentFormatters {
   /// Extracts 1 or 2 initials from a contact's name
   static String getInitials(String? name) {
     if (name == null || name.trim().isEmpty) return 'م';
-    final parts = name.trim().split(RegExp(r'\s+'));
+    final List<String> parts = name.trim().split(RegExp(r'\s+'));
     if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
-      final first = parts[0].characters.first;
-      final second = parts[1].characters.first;
+      final String first = parts[0].characters.first;
+      final String second = parts[1].characters.first;
       return '$first $second';
     }
     return parts[0].characters.first;
@@ -159,12 +167,14 @@ class InstallmentStatusHelper {
     if (isOverdue) return InstallmentStatusStyle.overdue;
     if (isDueToday) return InstallmentStatusStyle.dueToday;
 
-    final lower = status.toLowerCase();
+    final String lower = status.toLowerCase();
     if (lower == 'paid' || lower == 'completed' || lower == 'closed') {
       return InstallmentStatusStyle.paid;
     }
     if (lower == 'overdue') return InstallmentStatusStyle.overdue;
-    if (lower == 'duetoday' || lower == 'due_today') return InstallmentStatusStyle.dueToday;
+    if (lower == 'duetoday' || lower == 'due_today') {
+      return InstallmentStatusStyle.dueToday;
+    }
     if (lower == 'upcoming' || lower == 'active' || lower == 'pending') {
       return InstallmentStatusStyle.regular;
     }
@@ -180,10 +190,12 @@ class InstallmentStatusHelper {
     if (isPaid) return InstallmentStatusStyle.paid;
     if (daysOverdue > 0) return InstallmentStatusStyle.overdue;
 
-    final lower = status.toLowerCase();
+    final String lower = status.toLowerCase();
     if (lower == 'paid') return InstallmentStatusStyle.paid;
     if (lower == 'overdue') return InstallmentStatusStyle.overdue;
-    if (lower == 'duetoday' || lower == 'due_today') return InstallmentStatusStyle.dueToday;
+    if (lower == 'duetoday' || lower == 'due_today') {
+      return InstallmentStatusStyle.dueToday;
+    }
     return InstallmentStatusStyle.upcoming;
   }
 
@@ -196,10 +208,12 @@ class InstallmentStatusHelper {
     if (isPaid) return InstallmentStatusStyle.paid;
     if (daysOverdue > 0) return InstallmentStatusStyle.overdue;
 
-    final lower = status.toLowerCase();
+    final String lower = status.toLowerCase();
     if (lower == 'paid') return InstallmentStatusStyle.paid;
     if (lower == 'overdue') return InstallmentStatusStyle.overdue;
-    if (lower == 'duetoday' || lower == 'due_today') return InstallmentStatusStyle.dueToday;
+    if (lower == 'duetoday' || lower == 'due_today') {
+      return InstallmentStatusStyle.dueToday;
+    }
     return InstallmentStatusStyle.upcoming;
   }
 }

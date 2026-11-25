@@ -84,7 +84,7 @@
 //         borderRadius: BorderRadius.circular(AppSize.s14),
 //       ),
 //       elevation: AppSize.s1,
-//       backgroundColor: Colors.transparent,
+//       backgroundColor: ColorManager.transparent,
 //       child: Container(
 //         decoration: BoxDecoration(
 //           color: ColorManger.white,
@@ -253,7 +253,7 @@
 //         borderRadius: BorderRadius.circular(AppSize.s14),
 //       ),
 //       elevation: AppSize.s1,
-//       backgroundColor: Colors.transparent,
+//       backgroundColor: ColorManager.transparent,
 //       child: Container(
 //         decoration: BoxDecoration(
 //           color: ColorManger.white,
@@ -348,14 +348,13 @@ enum StateRendererType {
   contentScreenState,
 }
 
-// ignore: must_be_immutable
 class StateRandrer extends StatelessWidget {
-  StateRendererType stateRendererType;
-  String message;
-  String title;
-  Function retryAction;
+  final StateRendererType stateRendererType;
+  final String message;
+  final String title;
+  final VoidCallback? retryAction;
 
-  StateRandrer({
+  const StateRandrer({
     super.key,
     required this.stateRendererType,
     this.message = AppStrings.loading,
@@ -371,7 +370,7 @@ class StateRandrer extends StatelessWidget {
   Widget _getStateWidget(BuildContext context) {
     switch (stateRendererType) {
       case StateRendererType.popupLoadingState:
-        return _getPopupDialog(context, [
+        return _getPopupDialog(context, <Widget>[
           _getAnimatedImage(JsonAssets.loading),
           _getTitle(title.isNotEmpty ? title : "جاري المعالجة..."),
           if (message.isNotEmpty &&
@@ -382,7 +381,7 @@ class StateRandrer extends StatelessWidget {
         ]);
 
       case StateRendererType.popupErrorStatete:
-        return _getPopupDialog(context, [
+        return _getPopupDialog(context, <Widget>[
           _getAnimatedImage(JsonAssets.error),
           _getTitle(
             title.isNotEmpty ? title : "فشلت العملية",
@@ -393,7 +392,7 @@ class StateRandrer extends StatelessWidget {
         ]);
 
       case StateRendererType.fullScreenLoadingState:
-        return _getItemsColumn([
+        return _getItemsColumn(<Widget>[
           _getAnimatedImage(JsonAssets.loading),
           _getTitle(title.isNotEmpty ? title : "جاري التحميل..."),
           if (message.isNotEmpty && message != AppStrings.loading)
@@ -401,7 +400,7 @@ class StateRandrer extends StatelessWidget {
         ]);
 
       case StateRendererType.fullScreenErrorState:
-        return _getItemsColumn([
+        return _getItemsColumn(<Widget>[
           _getAnimatedImage(JsonAssets.error),
           _getTitle(
             title.isNotEmpty ? title : "حدث خطأ",
@@ -412,13 +411,13 @@ class StateRandrer extends StatelessWidget {
         ]);
 
       case StateRendererType.fullScreenEmptyState:
-        return _getItemsColumn([
+        return _getItemsColumn(<Widget>[
           _getAnimatedImage(JsonAssets.empty),
           _getMessage(message.isNotEmpty ? message : "لا توجد بيانات متاحة"),
         ]);
 
       case StateRendererType.successScreenState:
-        return _getPopupDialog(context, [
+        return _getPopupDialog(context, <Widget>[
           _getAnimatedImage(JsonAssets.success),
           _getTitle(
             title.isNotEmpty ? title : AppStrings.success,
@@ -440,7 +439,7 @@ class StateRandrer extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSize.s18),
       ),
       elevation: AppSize.s4,
-      backgroundColor: Colors.transparent,
+      backgroundColor: ColorManager.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: AppPadding.p24),
       child: Container(
         padding: const EdgeInsets.symmetric(
@@ -451,9 +450,9 @@ class StateRandrer extends StatelessWidget {
           color: ColorManager.white,
           shape: BoxShape.rectangle,
           borderRadius: BorderRadius.circular(AppSize.s18),
-          boxShadow: [
+          boxShadow: <BoxShadow>[
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
+              color: ColorManager.black.withValues(alpha: 0.12),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -478,17 +477,26 @@ class StateRandrer extends StatelessWidget {
   Widget _getItemsColumn(List<Widget> children) {
     return Material(
       color: ColorManager.background,
-      child: SizedBox(
-        width: double.infinity,
-        height: double.infinity,
-        child: Padding(
-          padding: const EdgeInsets.all(AppPadding.p24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: children,
-          ),
-        ),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(AppPadding.p24),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: constraints.maxHeight - (AppPadding.p24 * 2),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: children,
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -500,18 +508,23 @@ class StateRandrer extends StatelessWidget {
       child: Lottie.asset(
         animationPath,
         fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => Icon(
-          stateRendererType == StateRendererType.popupErrorStatete ||
-                  stateRendererType == StateRendererType.fullScreenErrorState
-              ? Icons.error_outline_rounded
-              : Icons.hourglass_top_rounded,
-          size: AppSize.s60,
-          color:
-              stateRendererType == StateRendererType.popupErrorStatete ||
-                  stateRendererType == StateRendererType.fullScreenErrorState
-              ? ColorManager.error
-              : ColorManager.primary,
-        ),
+        errorBuilder:
+            (BuildContext context, Object error, StackTrace? stackTrace) =>
+                Icon(
+                  stateRendererType == StateRendererType.popupErrorStatete ||
+                          stateRendererType ==
+                              StateRendererType.fullScreenErrorState
+                      ? Icons.error_outline_rounded
+                      : Icons.hourglass_top_rounded,
+                  size: AppSize.s60,
+                  color:
+                      stateRendererType ==
+                              StateRendererType.popupErrorStatete ||
+                          stateRendererType ==
+                              StateRendererType.fullScreenErrorState
+                      ? ColorManager.error
+                      : ColorManager.primary,
+                ),
       ),
     );
   }
@@ -575,7 +588,7 @@ class StateRandrer extends StatelessWidget {
           ),
           onPressed: () {
             if (stateRendererType == StateRendererType.fullScreenErrorState) {
-              retryAction.call();
+              retryAction?.call();
             } else {
               Navigator.of(context).pop();
             }

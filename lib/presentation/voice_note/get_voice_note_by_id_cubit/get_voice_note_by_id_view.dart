@@ -9,8 +9,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart' as intl;
-import 'package:mizan/app/constants.dart';
 import 'package:mizan/app/di.dart';
+import 'package:mizan/app/date_utils.dart';
+import 'package:mizan/app/voice_note_audio_service.dart';
 import 'package:mizan/domain/model/voice_note_model/voice_note_model.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
 import 'package:mizan/presentation/operations/quick_transaction_args.dart';
@@ -27,10 +28,7 @@ import 'package:mizan/presentation/voice_note/get_voice_note_by_id_cubit/get_voi
 class GetVoiceNoteByIdView extends StatelessWidget {
   final String id;
 
-  const GetVoiceNoteByIdView({
-    super.key,
-    required this.id,
-  });
+  const GetVoiceNoteByIdView({super.key, required this.id});
 
   @override
   Widget build(BuildContext context) {
@@ -53,34 +51,43 @@ class _VoiceNoteDetailsScreen extends StatefulWidget {
 
 class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
   late final AudioPlayer _audioPlayer;
-  bool _isPlaying = false;
-  Duration _currentPosition = Duration.zero;
-  Duration _totalDuration = Duration.zero;
 
   @override
   void initState() {
     super.initState();
     _audioPlayer = AudioPlayer();
 
-    _audioPlayer.onDurationChanged.listen((dur) {
-      if (mounted) setState(() => _totalDuration = dur);
+    _audioPlayer.onDurationChanged.listen((Duration dur) {
+      if (mounted) {
+        context.read<GetVoiceNoteByIdCubit>().updatePlayback(
+          totalDuration: dur,
+        );
+      }
     });
 
-    _audioPlayer.onPositionChanged.listen((pos) {
-      if (mounted) setState(() => _currentPosition = pos);
+    _audioPlayer.onPositionChanged.listen((Duration pos) {
+      if (mounted) {
+        context.read<GetVoiceNoteByIdCubit>().updatePlayback(
+          currentPosition: pos,
+        );
+      }
     });
 
     _audioPlayer.onPlayerComplete.listen((_) {
       if (mounted) {
-        setState(() {
-          _isPlaying = false;
-          _currentPosition = Duration.zero;
-        });
+        context.read<GetVoiceNoteByIdCubit>().updatePlayback(
+          isPlaying: false,
+          currentPosition: Duration.zero,
+        );
       }
     });
 
-    _audioPlayer.onPlayerStateChanged.listen((state) {
-      if (mounted) setState(() => _isPlaying = state == PlayerState.playing);
+    _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
+      if (mounted) {
+        context.read<GetVoiceNoteByIdCubit>().updatePlayback(
+          isPlaying: state == PlayerState.playing,
+        );
+      }
     });
   }
 
@@ -90,47 +97,79 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
     super.dispose();
   }
 
-  Future<void> _togglePlayback(VoiceNoteModel data) async {
-    if (_isPlaying) {
+  Future<void> _togglePlayback(
+    VoiceNoteModel data,
+    GetVoiceNoteByIdState state,
+  ) async {
+    if (state.isPlaying) {
       await _audioPlayer.pause();
     } else {
-      if (data.audioPath.isEmpty) return;
-      final rawPath = data.audioPath;
-      final url = rawPath.startsWith('http')
-          ? rawPath
-          : '${Constants.baseUrl}${rawPath.startsWith('/') ? '' : '/'}$rawPath';
-      if (_currentPosition > Duration.zero && !_isPlaying) {
-        await _audioPlayer.resume();
-      } else {
-        await _audioPlayer.play(UrlSource(url));
+      if (data.audioPath.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('لا يوجد ملف صوتي لهذه الملاحظة')),
+          );
+        }
+        return;
+      }
+      try {
+        if (state.currentPosition > Duration.zero && !state.isPlaying) {
+          await _audioPlayer.resume();
+        } else {
+          final Source source = await VoiceNoteAudioService.resolveSource(
+            voiceNoteId: data.id,
+            audioPath: data.audioPath,
+            audioUrl: data.audioUrl,
+          );
+          await _audioPlayer.play(source);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تعذّر تشغيل الملف الصوتي (الملف غير متاح على السيرفر حالياً)'),
+            ),
+          );
+          context.read<GetVoiceNoteByIdCubit>().updatePlayback(
+            isPlaying: false,
+          );
+        }
       }
     }
   }
 
-  Future<void> _seekRelative(int seconds) async {
-    final totalMs = _totalDuration.inMilliseconds;
+  Future<void> _seekRelative(int seconds, GetVoiceNoteByIdState state) async {
+    final int totalMs = state.totalDuration.inMilliseconds;
     if (totalMs <= 0) return;
-    final targetMs =
-        (_currentPosition.inMilliseconds + seconds * 1000).clamp(0, totalMs);
+    final int targetMs = (state.currentPosition.inMilliseconds + seconds * 1000)
+        .clamp(0, totalMs);
     await _audioPlayer.seek(Duration(milliseconds: targetMs));
   }
 
-  double get _playbackPosition {
-    final total = _totalDuration.inMilliseconds;
+  double _getPlaybackPosition(GetVoiceNoteByIdState state) {
+    final int total = state.totalDuration.inMilliseconds;
     if (total <= 0) return 0.0;
-    return (_currentPosition.inMilliseconds / total).clamp(0.0, 1.0);
+    return (state.currentPosition.inMilliseconds / total).clamp(0.0, 1.0);
   }
 
   String _formatDuration(Duration duration) {
-    final mins = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final secs = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    final String mins = duration.inMinutes
+        .remainder(60)
+        .toString()
+        .padLeft(2, '0');
+    final String secs = duration.inSeconds
+        .remainder(60)
+        .toString()
+        .padLeft(2, '0');
     return '$mins:$secs';
   }
+
+  DateTime _parseToLocal(String raw) => parseServerTime(raw);
 
   String _formatDate(String dateString) {
     if (dateString.isEmpty) return '';
     try {
-      final parsed = DateTime.parse(dateString);
+      final DateTime parsed = _parseToLocal(dateString);
       return intl.DateFormat('yyyy/MM/dd', 'ar').format(parsed);
     } catch (_) {
       return dateString;
@@ -140,7 +179,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
   String _formatDateTime(String dateString) {
     if (dateString.isEmpty) return '';
     try {
-      final parsed = DateTime.parse(dateString);
+      final DateTime parsed = _parseToLocal(dateString);
       return intl.DateFormat('yyyy/MM/dd - hh:mm a', 'ar').format(parsed);
     } catch (_) {
       return dateString;
@@ -148,8 +187,9 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
   }
 
   // ── Convert to Registered Transaction ─────────────────────────────────────
+  // ignore: unused_element
   void _convertToTransaction(VoiceNoteModel data) {
-    final args = QuickTransactionArgs(
+    final QuickTransactionArgs args = QuickTransactionArgs(
       contactId: data.contactId.isNotEmpty ? data.contactId : null,
       contactName: data.contactName.isNotEmpty ? data.contactName : null,
       isVip: false,
@@ -160,7 +200,9 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
         Navigator.of(context).pushNamed(Routes.quickSaleRoute, arguments: args);
         break;
       case 'purchase':
-        Navigator.of(context).pushNamed(Routes.quickPurchaseRoute, arguments: args);
+        Navigator.of(
+          context,
+        ).pushNamed(Routes.quickPurchaseRoute, arguments: args);
         break;
       case 'installmentcollection':
       case 'collection':
@@ -176,22 +218,22 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
     }
   }
 
-  // ── Show Delete Notice Dialog ─────────────────────────────────────────────
-  void _showDeleteDialog() {
-    showDialog(
+  // ── Show Delete Dialog ───────────────────────────────────────────────────
+  void _showDeleteDialog(BuildContext context, VoiceNoteModel data) {
+    showDialog<void>(
       context: context,
-      builder: (ctx) => Directionality(
+      builder: (BuildContext ctx) => Directionality(
         textDirection: TextDirection.rtl,
         child: AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.r16.r),
+            borderRadius: BorderRadius.circular(AppRadius.r20.r),
           ),
           backgroundColor: ColorManager.surface,
           title: Row(
-            children: [
+            children: <Widget>[
               Container(
                 padding: EdgeInsets.all(8.r),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: ColorManager.errorContainer,
                   shape: BoxShape.circle,
                 ),
@@ -206,29 +248,69 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
                 AppStrings.deleteVoiceNote,
                 style: getBoldStyle(
                   color: ColorManager.textPrimary,
-                  fontSize: FontSize.s15,
+                  fontSize: FontSize.s16.sp,
                 ),
               ),
             ],
           ),
           content: Text(
-            "سيتم تفعيل ميزة حذف الملاحظات الصوتية في التحديث القادم بمجرد توفير نقطة الاتصال بالخادم.",
+            "هل أنت متأكد من رغبتك في حذف هذه الملاحظة الصوتية نهائياً؟ لا يمكن التراجع عن هذا الإجراء.",
             style: getRegularStyle(
               color: ColorManager.textSecondary,
-              fontSize: FontSize.s13,
-              height: 1.4,
+              fontSize: FontSize.s13.sp,
+              height: 1.5,
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(
-                AppStrings.ok,
-                style: getBoldStyle(
-                  color: ColorManager.primary,
-                  fontSize: FontSize.s13,
+          actionsAlignment: MainAxisAlignment.center,
+          actions: <Widget>[
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: ColorManager.textSecondary,
+                      side: const BorderSide(color: ColorManager.border),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.r12.r),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                    ),
+                    child: Text(
+                      AppStrings.cancel,
+                      style: getSemiBoldStyle(
+                        color: ColorManager.textSecondary,
+                        fontSize: FontSize.s14.sp,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                SizedBox(width: 14.w),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      context.read<GetVoiceNoteByIdCubit>().deleteVoiceNote();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ColorManager.error,
+                      foregroundColor: ColorManager.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.r12.r),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                    ),
+                    child: Text(
+                      AppStrings.delete,
+                      style: getBoldStyle(
+                        color: ColorManager.white,
+                        fontSize: FontSize.s14.sp,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -243,8 +325,18 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
       child: Scaffold(
         backgroundColor: ColorManager.background,
         body: SafeArea(
-          child: BlocBuilder<GetVoiceNoteByIdCubit, GetVoiceNoteByIdState>(
-            builder: (context, state) {
+          child: BlocConsumer<GetVoiceNoteByIdCubit, GetVoiceNoteByIdState>(
+            listenWhen:
+                (GetVoiceNoteByIdState prev, GetVoiceNoteByIdState curr) =>
+                    curr.isDeleted && !prev.isDeleted,
+            listener: (BuildContext context, GetVoiceNoteByIdState state) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (context.mounted) {
+                  Navigator.of(context).pop(true);
+                }
+              });
+            },
+            builder: (BuildContext context, GetVoiceNoteByIdState state) {
               return state.flowState?.getScreenWidget(
                     context,
                     _buildContent(context, state.data),
@@ -266,7 +358,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
     }
 
     return Column(
-      children: [
+      children: <Widget>[
         // ── Header ───────────────────────────────────────────────────────────
         _buildHeader(context, data),
 
@@ -277,7 +369,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
             padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 24.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+              children: <Widget>[
                 // 1. Hero Audio Player Card
                 _buildHeroAudioPlayerCard(data),
 
@@ -294,14 +386,13 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
                 SizedBox(height: 16.h),
 
                 // 4. Transcription & Notes Card
-                if (data.notes.isNotEmpty) ...[
+                if (data.notes.isNotEmpty) ...<Widget>[
                   _buildNotesCard(data),
                   SizedBox(height: 24.h),
                 ],
 
                 // 5. Action Buttons
-                _buildActionButtons(data),
-
+                //  _buildActionButtons(data),
                 SizedBox(height: 16.h),
               ],
             ),
@@ -315,14 +406,14 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
   Widget _buildHeader(BuildContext context, VoiceNoteModel data) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: ColorManager.surface,
         border: Border(
           bottom: BorderSide(color: ColorManager.border, width: 1),
         ),
       ),
       child: Row(
-        children: [
+        children: <Widget>[
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
             style: IconButton.styleFrom(
@@ -344,7 +435,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: <Widget>[
                 Text(
                   AppStrings.voiceNoteDetails,
                   style: getBoldStyle(
@@ -364,7 +455,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
             ),
           ),
           IconButton(
-            onPressed: _showDeleteDialog,
+            onPressed: () => _showDeleteDialog(context, data),
             style: IconButton.styleFrom(
               backgroundColor: ColorManager.errorContainer,
               shape: const CircleBorder(),
@@ -386,172 +477,205 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
 
   // ── 1. Hero Audio Player Card (Figma Node #2025:811) ───────────────────────
   Widget _buildHeroAudioPlayerCard(VoiceNoteModel data) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(18.r),
-      decoration: BoxDecoration(
-        color: ColorManager.surface,
-        borderRadius: BorderRadius.circular(AppRadius.r20.r),
-        border: Border.all(color: ColorManager.border),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 16,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Waveform Animation Visualizer
-          Container(
-            height: 64.h,
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-            decoration: BoxDecoration(
-              color: ColorManager.surfaceVariant,
-              borderRadius: BorderRadius.circular(AppRadius.r14.r),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(24, (index) {
-                final barHeights = [
-                  16, 24, 38, 20, 32, 48, 26, 42, 54, 30, 44, 22,
-                  36, 50, 28, 40, 18, 34, 46, 24, 38, 20, 28, 14,
-                ];
-                final normalizedIndex = index / 24.0;
-                final isActive = normalizedIndex <= _playbackPosition;
-                final h = barHeights[index % barHeights.length];
-
-                return Container(
-                  width: 3.5.w,
-                  height: h.h * 0.7,
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? ColorManager.primary
-                        : ColorManager.textTertiary.withAlpha(90),
-                    borderRadius: BorderRadius.circular(2.r),
-                  ),
-                );
-              }),
-            ),
-          ),
-
-          SizedBox(height: 12.h),
-
-          // Time Scrubber Slider
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: ColorManager.primary,
-              inactiveTrackColor: ColorManager.borderDark,
-              thumbColor: ColorManager.primary,
-              trackHeight: 4.h,
-              thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6.r),
-              overlayShape: RoundSliderOverlayShape(overlayRadius: 14.r),
-            ),
-            child: Slider(
-              value: _playbackPosition,
-              onChanged: (val) {
-                final totalMs = _totalDuration.inMilliseconds;
-                if (totalMs > 0) {
-                  _audioPlayer.seek(Duration(milliseconds: (val * totalMs).toInt()));
-                }
-              },
-            ),
-          ),
-
-          // Duration Timestamps
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 6.w),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _formatDuration(_currentPosition),
-                  style: getBoldStyle(
-                    color: ColorManager.primary,
-                    fontSize: FontSize.s11,
-                  ),
-                ),
-                Text(
-                  _formatDuration(_totalDuration),
-                  style: getRegularStyle(
-                    color: ColorManager.textSecondary,
-                    fontSize: FontSize.s11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 16.h),
-
-          // Audio Controls (Rewind 5s, Play/Pause, Forward 5s)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Rewind 5s
-              IconButton(
-                onPressed: () => _seekRelative(-5),
-                icon: SvgPicture.asset(
-                  IconAssets.rewind,
-                  width: 24.r,
-                  height: 24.r,
-                  colorFilter: const ColorFilter.mode(
-                    ColorManager.textSecondary,
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ),
-
-              SizedBox(width: 16.w),
-
-              // Play / Pause Circle
-              GestureDetector(
-                onTap: () => _togglePlayback(data),
-                child: Container(
-                  width: 56.r,
-                  height: 56.r,
-                  decoration: BoxDecoration(
-                    gradient: ColorManager.primaryGradient,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: ColorManager.primary.withAlpha(80),
-                        blurRadius: 14,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Icon(
-                      _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                      color: ColorManager.white,
-                      size: 32.r,
-                    ),
-                  ),
-                ),
-              ),
-
-              SizedBox(width: 16.w),
-
-              // Forward 5s
-              IconButton(
-                onPressed: () => _seekRelative(5),
-                icon: SvgPicture.asset(
-                  IconAssets.forward,
-                  width: 24.r,
-                  height: 24.r,
-                  colorFilter: const ColorFilter.mode(
-                    ColorManager.textSecondary,
-                    BlendMode.srcIn,
-                  ),
-                ),
+    return BlocBuilder<GetVoiceNoteByIdCubit, GetVoiceNoteByIdState>(
+      buildWhen: (GetVoiceNoteByIdState p, GetVoiceNoteByIdState c) =>
+          p.isPlaying != c.isPlaying ||
+          p.currentPosition != c.currentPosition ||
+          p.totalDuration != c.totalDuration,
+      builder: (BuildContext context, GetVoiceNoteByIdState state) {
+        final double playbackPosition = _getPlaybackPosition(state);
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(18.r),
+          decoration: BoxDecoration(
+            color: ColorManager.surface,
+            borderRadius: BorderRadius.circular(AppRadius.r20.r),
+            border: Border.all(color: ColorManager.border),
+            boxShadow: const <BoxShadow>[
+              BoxShadow(
+                color: ColorManager.shadowMedium,
+                blurRadius: 16,
+                offset: Offset(0, 4),
               ),
             ],
           ),
-        ],
-      ),
+          child: Column(
+            children: <Widget>[
+              // Waveform Animation Visualizer
+              Container(
+                height: 64.h,
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: ColorManager.surfaceVariant,
+                  borderRadius: BorderRadius.circular(AppRadius.r14.r),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: List<Widget>.generate(24, (int index) {
+                    final List<int> barHeights = <int>[
+                      16,
+                      24,
+                      38,
+                      20,
+                      32,
+                      48,
+                      26,
+                      42,
+                      54,
+                      30,
+                      44,
+                      22,
+                      36,
+                      50,
+                      28,
+                      40,
+                      18,
+                      34,
+                      46,
+                      24,
+                      38,
+                      20,
+                      28,
+                      14,
+                    ];
+                    final double normalizedIndex = index / 24.0;
+                    final bool isActive = normalizedIndex <= playbackPosition;
+                    final int h = barHeights[index % barHeights.length];
+
+                    return Container(
+                      width: 3.5.w,
+                      height: h.h * 0.7,
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? ColorManager.primary
+                            : ColorManager.textTertiary.withAlpha(90),
+                        borderRadius: BorderRadius.circular(2.r),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+
+              SizedBox(height: 12.h),
+
+              // Time Scrubber Slider
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  activeTrackColor: ColorManager.primary,
+                  inactiveTrackColor: ColorManager.borderDark,
+                  thumbColor: ColorManager.primary,
+                  trackHeight: 4.h,
+                  thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6.r),
+                  overlayShape: RoundSliderOverlayShape(overlayRadius: 14.r),
+                ),
+                child: Slider(
+                  value: playbackPosition,
+                  onChanged: (double val) {
+                    final int totalMs = state.totalDuration.inMilliseconds;
+                    if (totalMs > 0) {
+                      _audioPlayer.seek(
+                        Duration(milliseconds: (val * totalMs).toInt()),
+                      );
+                    }
+                  },
+                ),
+              ),
+
+              // Duration Timestamps
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 6.w),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text(
+                      _formatDuration(state.currentPosition),
+                      style: getBoldStyle(
+                        color: ColorManager.primary,
+                        fontSize: FontSize.s11,
+                      ),
+                    ),
+                    Text(
+                      _formatDuration(state.totalDuration),
+                      style: getRegularStyle(
+                        color: ColorManager.textSecondary,
+                        fontSize: FontSize.s11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 16.h),
+
+              // Audio Controls (Rewind 5s, Play/Pause, Forward 5s)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  // Rewind 5s
+                  IconButton(
+                    onPressed: () => _seekRelative(-5, state),
+                    icon: SvgPicture.asset(
+                      IconAssets.audioMins,
+                      width: 50.r,
+                      height: 50.r,
+                      // colorFilter: const ColorFilter.mode(
+                      //   ColorManager.primary,
+                      //   BlendMode.srcIn,
+                    ),
+                  ),
+
+                  SizedBox(width: 25.w),
+
+                  // Play / Pause Circle
+                  GestureDetector(
+                    onTap: () => _togglePlayback(data, state),
+                    child: Container(
+                      width: 60.r,
+                      height: 60.r,
+                      decoration: BoxDecoration(
+                        gradient: ColorManager.primaryGradient,
+                        shape: BoxShape.circle,
+                        boxShadow: <BoxShadow>[
+                          BoxShadow(
+                            color: ColorManager.primary.withAlpha(80),
+                            blurRadius: 14,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(
+                          state.isPlaying
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          color: ColorManager.white,
+                          size: 32.r,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(width: 25.w),
+
+                  // Forward 5s
+                  IconButton(
+                    onPressed: () => _seekRelative(5, state),
+                    icon: SvgPicture.asset(
+                      IconAssets.audioPlus,
+                      width: 50.r,
+                      height: 50.r,
+                      // colorFilter: const ColorFilter.mode(
+                      //   ColorManager.textSecondary,
+                      //   BlendMode.srcIn,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -580,8 +704,8 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
         break;
       case 'installmentpayment':
       case 'payment':
-        typeColor = const Color(0xFF5E48B8);
-        typeBg = const Color(0xFFF0EDFC);
+        typeColor = ColorManager.voiceNotePurple;
+        typeBg = ColorManager.voiceNoteContainer;
         typeLabel = "سداد قسط";
         break;
       default:
@@ -602,10 +726,10 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
+        children: <Widget>[
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               Text(
                 AppStrings.amountLabel,
                 style: getRegularStyle(
@@ -617,7 +741,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
-                children: [
+                children: <Widget>[
                   Text(
                     "${data.amount}",
                     style: getExtraBoldStyle(
@@ -645,10 +769,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
             ),
             child: Text(
               typeLabel,
-              style: getBoldStyle(
-                color: typeColor,
-                fontSize: FontSize.s13,
-              ),
+              style: getBoldStyle(color: typeColor, fontSize: FontSize.s13),
             ),
           ),
         ],
@@ -667,7 +788,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Text(
             "معلومات الملاحظة",
             style: getBoldStyle(
@@ -730,7 +851,7 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 2.h),
         child: Row(
-          children: [
+          children: <Widget>[
             Container(
               padding: EdgeInsets.all(6.r),
               decoration: BoxDecoration(
@@ -755,15 +876,20 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
                 fontSize: FontSize.s12,
               ),
             ),
-            const Spacer(),
-            Text(
-              value,
-              style: getBoldStyle(
-                color: ColorManager.textPrimary,
-                fontSize: FontSize.s13,
+            SizedBox(width: 8.w),
+            Expanded(
+              child: Text(
+                value,
+                textAlign: TextAlign.end,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: getBoldStyle(
+                  color: ColorManager.textPrimary,
+                  fontSize: FontSize.s12,
+                ),
               ),
             ),
-            if (hasNavigation) ...[
+            if (hasNavigation) ...<Widget>[
               SizedBox(width: 4.w),
               Icon(
                 Icons.chevron_left_rounded,
@@ -789,9 +915,9 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Row(
-            children: [
+            children: <Widget>[
               SvgPicture.asset(
                 IconAssets.waveform,
                 width: 16.r,
@@ -834,58 +960,58 @@ class _VoiceNoteDetailsScreenState extends State<_VoiceNoteDetailsScreen> {
   }
 
   // ── 5. Bottom Action Buttons ──────────────────────────────────────────────
-  Widget _buildActionButtons(VoiceNoteModel data) {
-    return Column(
-      children: [
-        // Primary: Convert to transaction
-        Container(
-          width: double.infinity,
-          height: 52.h,
-          decoration: BoxDecoration(
-            gradient: ColorManager.primaryGradient,
-            borderRadius: BorderRadius.circular(AppRadius.r14.r),
-            boxShadow: [
-              BoxShadow(
-                color: ColorManager.primary.withAlpha(70),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: ElevatedButton(
-            onPressed: () => _convertToTransaction(data),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.r14.r),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SvgPicture.asset(
-                  IconAssets.receiptText,
-                  width: 18.r,
-                  height: 18.r,
-                  colorFilter: const ColorFilter.mode(
-                    ColorManager.white,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                SizedBox(width: 8.w),
-                Text(
-                  AppStrings.convertToTransaction,
-                  style: getBoldStyle(
-                    color: ColorManager.white,
-                    fontSize: FontSize.s14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  // Widget _buildActionButtons(VoiceNoteModel data) {
+  //   return Column(
+  //     children: <Widget>[
+  //       // Primary: Convert to transaction
+  //       Container(
+  //         width: double.infinity,
+  //         height: 52.h,
+  //         decoration: BoxDecoration(
+  //           gradient: ColorManager.primaryGradient,
+  //           borderRadius: BorderRadius.circular(AppRadius.r14.r),
+  //           boxShadow: <BoxShadow>[
+  //             BoxShadow(
+  //               color: ColorManager.primary.withAlpha(70),
+  //               blurRadius: 12,
+  //               offset: const Offset(0, 4),
+  //             ),
+  //           ],
+  //         ),
+  //         child: ElevatedButton(
+  //           onPressed: () => _convertToTransaction(data),
+  //           style: ElevatedButton.styleFrom(
+  //             backgroundColor: ColorManager.transparent,
+  //             shadowColor: ColorManager.transparent,
+  //             shape: RoundedRectangleBorder(
+  //               borderRadius: BorderRadius.circular(AppRadius.r14.r),
+  //             ),
+  //           ),
+  //           child: Row(
+  //             mainAxisAlignment: MainAxisAlignment.center,
+  //             children: <Widget>[
+  //               SvgPicture.asset(
+  //                 IconAssets.receiptText,
+  //                 width: 18.r,
+  //                 height: 18.r,
+  //                 colorFilter: const ColorFilter.mode(
+  //                   ColorManager.white,
+  //                   BlendMode.srcIn,
+  //                 ),
+  //               ),
+  //               SizedBox(width: 8.w),
+  //               Text(
+  //                 AppStrings.convertToTransaction,
+  //                 style: getBoldStyle(
+  //                   color: ColorManager.white,
+  //                   fontSize: FontSize.s14,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 }

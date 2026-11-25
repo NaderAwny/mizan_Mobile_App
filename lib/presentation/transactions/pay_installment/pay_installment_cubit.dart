@@ -1,5 +1,9 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/app/data_refresh_manager.dart';
+import 'package:mizan/data/network/failure.dart';
+import 'package:mizan/domain/model/transaction_by_id_mode/transaction_by_id_mode.dart';
 import 'package:mizan/domain/use_case/pay_installment_use_case.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
@@ -8,9 +12,12 @@ import 'package:mizan/presentation/transactions/pay_installment/pay_installment_
 @injectable
 class PayInstallmentCubit extends Cubit<PayInstallmentState> {
   final PayInstallmentUseCase _payInstallmentUseCase;
+  final DataRefreshManager? _dataRefreshManager;
 
-  PayInstallmentCubit(this._payInstallmentUseCase)
-      : super(PayInstallmentState(flowState: ContentState()));
+  PayInstallmentCubit(
+    this._payInstallmentUseCase, [
+    this._dataRefreshManager,
+  ]) : super(PayInstallmentState(flowState: ContentState()));
 
   Future<void> pay(String installmentId) async {
     emit(
@@ -23,10 +30,11 @@ class PayInstallmentCubit extends Cubit<PayInstallmentState> {
       ),
     );
 
-    final result = await _payInstallmentUseCase.execute(installmentId);
+    final Either<Failure, TransactionbyidModel> result =
+        await _payInstallmentUseCase.execute(installmentId);
 
     result.fold(
-      (failure) {
+      (Failure failure) {
         if (isClosed) return;
         emit(
           state.copyWith(
@@ -39,7 +47,8 @@ class PayInstallmentCubit extends Cubit<PayInstallmentState> {
           ),
         );
       },
-      (transactionModel) {
+      (TransactionbyidModel transactionModel) {
+        _dataRefreshManager?.notifyTransactionsChanged();
         if (isClosed) return;
         emit(
           state.copyWith(

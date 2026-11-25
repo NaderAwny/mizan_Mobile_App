@@ -9,6 +9,8 @@ abstract class TransactionRemoteDataSource {
     CreateTransactionRequest request,
   );
   Future<TransactionResponseById> getTransactionById(String id);
+
+  Future<void> deleteTransaction(String transactionid);
 }
 
 @LazySingleton(as: TransactionRemoteDataSource)
@@ -27,5 +29,10 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
   @override
   Future<TransactionResponseById> getTransactionById(String id) {
     return _appServiceClient.getTransactionById(id);
+  }
+
+  @override
+  Future<void> deleteTransaction(String transactionid) {
+    return _appServiceClient.deleteTransaction(transactionid);
   }
 }

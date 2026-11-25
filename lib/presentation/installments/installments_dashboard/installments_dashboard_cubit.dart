@@ -1,5 +1,8 @@
+﻿import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/data/network/failure.dart';
+import 'package:mizan/domain/model/installments_dashboard_model.dart';
 import 'package:mizan/domain/use_case/get_installments_dashboard_use_case.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
@@ -27,10 +30,11 @@ class InstallmentsDashboardCubit extends Cubit<InstallmentsDashboardState> {
       );
     }
 
-    final result = await _getInstallmentsDashboardUseCase.execute(null);
+    final Either<Failure, InstallmentsDashboardModel> result =
+        await _getInstallmentsDashboardUseCase.execute(null);
 
     result.fold(
-      (failure) {
+      (Failure failure) {
         if (isClosed) return;
         emit(
           state.copyWith(
@@ -42,7 +46,7 @@ class InstallmentsDashboardCubit extends Cubit<InstallmentsDashboardState> {
           ),
         );
       },
-      (dashboard) {
+      (InstallmentsDashboardModel dashboard) {
         if (isClosed) return;
         emit(
           state.copyWith(

@@ -17,6 +17,7 @@ import 'package:mizan/presentation/resources/font_manager.dart';
 import 'package:mizan/presentation/resources/routes_manager.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 import 'package:mizan/presentation/resources/styles_manager.dart';
+import 'package:mizan/app/date_utils.dart';
 import 'package:mizan/presentation/resources/values_manager.dart';
 import 'package:mizan/presentation/transactions/get_list_transaction/get_list_transaction_cubit.dart';
 import 'package:mizan/presentation/transactions/get_list_transaction/get_list_transaction_state.dart';
@@ -44,9 +45,8 @@ class _TransactionsScreen extends StatefulWidget {
 class _TransactionsScreenState extends State<_TransactionsScreen> {
   final ScrollController _scrollController = ScrollController();
   late final TextEditingController _searchController;
-  int _selectedFilterIndex = 0; // 0: الكل, 1: بيع, 2: شراء, 3: تحصيل, 4: دفع
 
-  static const List<String> _filterTabs = [
+  static const List<String> _filterTabs = <String>[
     AppStrings.allTransactions,
     AppStrings.quickSale,
     AppStrings.quickPurchase,
@@ -54,7 +54,7 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
     AppStrings.quickPay,
   ];
 
-  static const List<String?> _filterTypeValues = [
+  static const List<String?> _filterTypeValues = <String?>[
     null,
     "Sale",
     "Purchase",
@@ -71,8 +71,8 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
 
   void _onScroll() {
     if (_scrollController.hasClients) {
-      final maxScroll = _scrollController.position.maxScrollExtent;
-      final currentScroll = _scrollController.position.pixels;
+      final double maxScroll = _scrollController.position.maxScrollExtent;
+      final double currentScroll = _scrollController.position.pixels;
       if (currentScroll >= (maxScroll * 0.8)) {
         context.read<GetListTransactionCubit>().loadMoreTransactions();
       }
@@ -87,9 +87,8 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
   }
 
   void _onFilterTabChanged(int index) {
-    setState(() => _selectedFilterIndex = index);
-    final selectedType = _filterTypeValues[index];
-    context.read<GetListTransactionCubit>().changeFilterType(selectedType);
+    final String? selectedType = _filterTypeValues[index];
+    context.read<GetListTransactionCubit>().selectFilter(index, selectedType);
   }
 
   void _handleBack() {
@@ -98,7 +97,11 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
       context.read<GetListTransactionCubit>().searchTransactions('');
       return;
     }
-    if (_selectedFilterIndex != 0) {
+    final int currentFilter = context
+        .read<GetListTransactionCubit>()
+        .state
+        .selectedFilterIndex;
+    if (currentFilter != 0) {
       _onFilterTabChanged(0);
       return;
     }
@@ -110,10 +113,10 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
   }
 
   void _showTransactionTypePicker(BuildContext context) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
+      backgroundColor: ColorManager.transparent,
+      builder: (BuildContext ctx) => Container(
         padding: EdgeInsets.all(20.r),
         decoration: BoxDecoration(
           color: ColorManager.background,
@@ -121,7 +124,7 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
             topLeft: Radius.circular(AppRadius.r24.r),
             topRight: Radius.circular(AppRadius.r24.r),
           ),
-          boxShadow: [
+          boxShadow: <BoxShadow>[
             BoxShadow(
               color: ColorManager.black.withAlpha(20),
               blurRadius: 20,
@@ -132,7 +135,7 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+          children: <Widget>[
             Center(
               child: Container(
                 width: 44.w,
@@ -209,18 +212,60 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<GetListTransactionCubit, GetListTransactionState>(
-      listener: (context, state) {},
-      builder: (context, state) {
+      listener: (BuildContext context, GetListTransactionState state) {},
+      builder: (BuildContext context, GetListTransactionState state) {
         return Scaffold(
-            backgroundColor: ColorManager.background,
-            appBar: AppBar(
-              backgroundColor: ColorManager.surface,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              centerTitle: true,
-              leading: Padding(
-                padding: EdgeInsets.all(8.r),
+          backgroundColor: ColorManager.background,
+          appBar: AppBar(
+            backgroundColor: ColorManager.surface,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            centerTitle: true,
+            leading: Padding(
+              padding: EdgeInsets.all(8.r),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: ColorManager.surfaceVariant,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: ColorManager.border, width: 1),
+                ),
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: ColorManager.textPrimary,
+                    size: 16.r,
+                  ),
+                  onPressed: _handleBack,
+                ),
+              ),
+            ),
+            title: Column(
+              children: <Widget>[
+                Text(
+                  AppStrings.financialTransactions,
+                  style: getBoldStyle(
+                    color: ColorManager.textPrimary,
+                    fontSize: FontSize.s16,
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  AppStrings.transactionsSubtitle,
+                  style: getRegularStyle(
+                    color: ColorManager.textSecondary,
+                    fontSize: FontSize.s11,
+                  ),
+                ),
+              ],
+            ),
+            actions: <Widget>[
+              Padding(
+                padding: EdgeInsets.only(left: 12.w),
                 child: Container(
+                  width: 38.r,
+                  height: 38.r,
                   decoration: BoxDecoration(
                     color: ColorManager.surfaceVariant,
                     shape: BoxShape.circle,
@@ -230,138 +275,97 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     icon: Icon(
-                      Icons.arrow_forward_ios_rounded,
+                      Icons.notifications_none_rounded,
                       color: ColorManager.textPrimary,
-                      size: 16.r,
+                      size: 20.r,
                     ),
-                    onPressed: _handleBack,
+                    onPressed: () {
+                      Navigator.pushNamed(context, Routes.notificationsRoute);
+                    },
                   ),
                 ),
               ),
-              title: Column(
-                children: [
-                  Text(
-                    AppStrings.financialTransactions,
-                    style: getBoldStyle(
-                      color: ColorManager.textPrimary,
-                      fontSize: FontSize.s16,
-                    ),
-                  ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    AppStrings.transactionsSubtitle,
-                    style: getRegularStyle(
-                      color: ColorManager.textSecondary,
-                      fontSize: FontSize.s11,
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                Padding(
-                  padding: EdgeInsets.only(left: 12.w),
-                  child: Container(
-                    width: 38.r,
-                    height: 38.r,
-                    decoration: BoxDecoration(
-                      color: ColorManager.surfaceVariant,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: ColorManager.border, width: 1),
-                    ),
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      icon: Icon(
-                        Icons.notifications_none_rounded,
-                        color: ColorManager.textPrimary,
-                        size: 20.r,
-                      ),
-                      onPressed: () {
-                        Navigator.pushNamed(context, Routes.notificationsRoute);
+            ],
+          ),
+          body: Column(
+            children: <Widget>[
+              // Pinned Search Bar & Horizontal Filter Tabs (Figma Node #3:116)
+              Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 8.h),
+                child: Column(
+                  children: <Widget>[
+                    // Search Bar with real-time filtering without full screen loading
+                    _TransactionsSearchBar(
+                      controller: _searchController,
+                      onChanged: (String query) {
+                        context
+                            .read<GetListTransactionCubit>()
+                            .searchTransactions(query);
+                      },
+                      onClear: () {
+                        context
+                            .read<GetListTransactionCubit>()
+                            .searchTransactions('');
                       },
                     ),
-                  ),
+                    SizedBox(height: 10.h),
+                    // Horizontal Filter Tabs Pills
+                    _TransactionsFilterTabs(
+                      tabs: _filterTabs,
+                      selectedIndex: state.selectedFilterIndex,
+                      onTabSelected: _onFilterTabChanged,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            body: Column(
-              children: [
-                // Pinned Search Bar & Horizontal Filter Tabs (Figma Node #3:116)
-                Padding(
-                  padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 8.h),
-                  child: Column(
-                    children: [
-                      // Search Bar with real-time filtering without full screen loading
-                      _TransactionsSearchBar(
-                        controller: _searchController,
-                        onChanged: (query) {
-                          context
-                              .read<GetListTransactionCubit>()
-                              .searchTransactions(query);
-                        },
-                        onClear: () {
-                          context
-                              .read<GetListTransactionCubit>()
-                              .searchTransactions('');
-                        },
-                      ),
-                      SizedBox(height: 10.h),
-                      // Horizontal Filter Tabs Pills
-                      _TransactionsFilterTabs(
-                        tabs: _filterTabs,
-                        selectedIndex: _selectedFilterIndex,
-                        onTabSelected: _onFilterTabChanged,
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Transactions List with State Handling
-                Expanded(
-                  child:
-                      state.flowState?.getScreenWidget(
-                        context,
-                        _buildBody(context, state),
-                        () => context
-                            .read<GetListTransactionCubit>()
-                            .getListTransactions(),
-                      ) ??
-                      _buildBody(context, state),
-                ),
-              ],
-            ),
-            floatingActionButton: FloatingActionButton(
-              heroTag: 'transactions_fab',
-              backgroundColor: ColorManager.primary,
-              elevation: 4,
-              shape: const CircleBorder(),
-              onPressed: () => _showTransactionTypePicker(context),
-              child: const Icon(
-                Icons.add_rounded,
-                color: ColorManager.white,
-                size: 28,
               ),
+
+              // Transactions List with State Handling
+              Expanded(
+                child:
+                    state.flowState?.getScreenWidget(
+                      context,
+                      _buildBody(context, state),
+                      () => context
+                          .read<GetListTransactionCubit>()
+                          .getListTransactions(),
+                    ) ??
+                    _buildBody(context, state),
+              ),
+            ],
+          ),
+          floatingActionButton: FloatingActionButton(
+            heroTag: 'transactions_fab',
+            backgroundColor: ColorManager.primary,
+            elevation: 4,
+            shape: const CircleBorder(),
+            onPressed: () => _showTransactionTypePicker(context),
+            child: const Icon(
+              Icons.add_rounded,
+              color: ColorManager.white,
+              size: 28,
             ),
-          );
+          ),
+        );
       },
     );
   }
 
   Widget _buildBody(BuildContext context, GetListTransactionState state) {
-    final rawList = state.data ?? [];
-    final searchQuery = state.searchQuery.trim().toLowerCase();
+    final List<GetListTransactionsModel> rawList =
+        state.data ?? <GetListTransactionsModel>[];
+    final String searchQuery = state.searchQuery.trim().toLowerCase();
 
     // Client-side query filter for instant search without reload
-    final items = searchQuery.isEmpty
+    final List<GetListTransactionsModel> items = searchQuery.isEmpty
         ? rawList
-        : rawList.where((tx) {
-            final contactMatch = tx.contactName.toLowerCase().contains(
+        : rawList.where((GetListTransactionsModel tx) {
+            final bool contactMatch = tx.contactName.toLowerCase().contains(
               searchQuery,
             );
-            final idMatch = tx.id.toLowerCase().contains(searchQuery);
-            final typeMatch = tx.type.toLowerCase().contains(searchQuery);
-            final amountMatch = tx.amount.toString().contains(searchQuery);
-            final paymentMatch = tx.paymentMethod.toLowerCase().contains(
+            final bool idMatch = tx.id.toLowerCase().contains(searchQuery);
+            final bool typeMatch = tx.type.toLowerCase().contains(searchQuery);
+            final bool amountMatch = tx.amount.toString().contains(searchQuery);
+            final bool paymentMatch = tx.paymentMethod.toLowerCase().contains(
               searchQuery,
             );
             return contactMatch ||
@@ -380,7 +384,7 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        slivers: [
+        slivers: <Widget>[
           if (items.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
@@ -389,7 +393,7 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
                   padding: EdgeInsets.all(24.r),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
+                    children: <Widget>[
                       Container(
                         width: 76.r,
                         height: 76.r,
@@ -428,7 +432,7 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
                           height: 1.4,
                         ),
                       ),
-                      if (searchQuery.isEmpty) ...[
+                      if (searchQuery.isEmpty) ...<Widget>[
                         SizedBox(height: 24.h),
                         ElevatedButton.icon(
                           onPressed: () => _showTransactionTypePicker(context),
@@ -488,26 +492,38 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
     List<GetListTransactionsModel> transactions,
   ) {
     // Group transactions by date string
-    final Map<String, List<GetListTransactionsModel>> grouped = {};
-    for (var tx in transactions) {
-      final headerKey = _getDateGroupKey(
+    final Map<String, List<GetListTransactionsModel>> grouped =
+        <String, List<GetListTransactionsModel>>{};
+    final List<GetListTransactionsModel> sortedTx =
+        List<GetListTransactionsModel>.from(transactions)
+          ..sort(
+            (GetListTransactionsModel a, GetListTransactionsModel b) =>
+                effectiveTransactionTime(b.transactionDate, b.createdAt)
+                    .compareTo(
+                      effectiveTransactionTime(a.transactionDate, a.createdAt),
+                    ),
+          );
+    for (GetListTransactionsModel tx in sortedTx) {
+      final String headerKey = _getDateGroupKey(
         tx.transactionDate.isNotEmpty ? tx.transactionDate : tx.createdAt,
       );
-      grouped.putIfAbsent(headerKey, () => []).add(tx);
+      grouped
+          .putIfAbsent(headerKey, () => <GetListTransactionsModel>[])
+          .add(tx);
     }
 
-    final dateKeys = grouped.keys.toList();
+    final List<String> dateKeys = grouped.keys.toList();
 
     return SliverPadding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       sliver: SliverList(
-        delegate: SliverChildBuilderDelegate((context, index) {
-          final dateKey = dateKeys[index];
-          final txList = grouped[dateKey]!;
+        delegate: SliverChildBuilderDelegate((BuildContext context, int index) {
+          final String dateKey = dateKeys[index];
+          final List<GetListTransactionsModel> txList = grouped[dateKey]!;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               // Date Section Header (e.g. اليوم - الأحد 26 يناير)
               Padding(
                 padding: EdgeInsets.only(top: 14.h, bottom: 8.h),
@@ -520,7 +536,10 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
                 ),
               ),
               // Transaction Cards for this date
-              ...txList.map((tx) => _TransactionCardItem(transaction: tx)),
+              ...txList.map(
+                (GetListTransactionsModel tx) =>
+                    _TransactionCardItem(transaction: tx),
+              ),
             ],
           );
         }, childCount: dateKeys.length),
@@ -531,12 +550,12 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
   String _getDateGroupKey(String rawDate) {
     if (rawDate.isEmpty) return "معاملات سابقة";
     try {
-      final dt = DateTime.parse(rawDate).toLocal();
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      final txDay = DateTime(dt.year, dt.month, dt.day);
+      final DateTime dt = parseServerTime(rawDate);
+      final DateTime now = DateTime.now();
+      final DateTime today = DateTime(now.year, now.month, now.day);
+      final DateTime txDay = DateTime(dt.year, dt.month, dt.day);
 
-      const daysArabic = [
+      const List<String> daysArabic = <String>[
         "الإثنين",
         "الثلاثاء",
         "الأربعاء",
@@ -545,7 +564,7 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
         "السبت",
         "الأحد",
       ];
-      const monthsArabic = [
+      const List<String> monthsArabic = <String>[
         "يناير",
         "فبراير",
         "مارس",
@@ -560,8 +579,8 @@ class _TransactionsScreenState extends State<_TransactionsScreen> {
         "ديسمبر",
       ];
 
-      final dayName = daysArabic[dt.weekday - 1];
-      final monthName = monthsArabic[dt.month - 1];
+      final String dayName = daysArabic[dt.weekday - 1];
+      final String monthName = monthsArabic[dt.month - 1];
 
       if (txDay == today) {
         return "اليوم - $dayName ${dt.day} $monthName";
@@ -585,7 +604,7 @@ class _TransactionCardItem extends StatelessWidget {
   const _TransactionCardItem({required this.transaction});
 
   bool get _isIncome {
-    final t = transaction.type.toLowerCase();
+    final String t = transaction.type.toLowerCase();
     return t == 'sale' ||
         t == 'بيع' ||
         t == 'collect' ||
@@ -596,14 +615,14 @@ class _TransactionCardItem extends StatelessWidget {
   String _formatTime(String rawDate) {
     if (rawDate.isEmpty) return "";
     try {
-      final dt = DateTime.parse(rawDate).toLocal();
-      final hour = dt.hour > 12
+      final DateTime dt = parseServerTime(rawDate);
+      final int hour = dt.hour > 12
           ? dt.hour - 12
           : dt.hour == 0
           ? 12
           : dt.hour;
-      final minute = dt.minute.toString().padLeft(2, '0');
-      final period = dt.hour >= 12 ? "م" : "ص";
+      final String minute = dt.minute.toString().padLeft(2, '0');
+      final String period = dt.hour >= 12 ? "م" : "ص";
       return "$hour:$minute $period";
     } catch (_) {
       return "";
@@ -611,8 +630,8 @@ class _TransactionCardItem extends StatelessWidget {
   }
 
   String _getTitle() {
-    final t = transaction.type.toLowerCase();
-    final isCash =
+    final String t = transaction.type.toLowerCase();
+    final bool isCash =
         transaction.paymentMethod.toLowerCase() == 'cash' ||
         transaction.paymentMethod == 'كاش';
 
@@ -630,13 +649,16 @@ class _TransactionCardItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isIncome = _isIncome;
-    final amountPrefix = isIncome ? "+" : "-";
-    final amountColor = isIncome ? ColorManager.success : ColorManager.error;
-    final timeStr = _formatTime(
-      transaction.transactionDate.isNotEmpty
-          ? transaction.transactionDate
-          : transaction.createdAt,
+    final bool isIncome = _isIncome;
+    final String amountPrefix = isIncome ? "+" : "-";
+    final Color amountColor = isIncome
+        ? ColorManager.success
+        : ColorManager.error;
+    final String timeStr = _formatTime(
+      effectiveTransactionTime(
+        transaction.transactionDate,
+        transaction.createdAt,
+      ).toUtc().toIso8601String(),
     );
 
     return Container(
@@ -645,33 +667,36 @@ class _TransactionCardItem extends StatelessWidget {
         color: ColorManager.surface,
         borderRadius: BorderRadius.circular(AppRadius.r14.r),
         border: Border.all(color: ColorManager.border, width: 1.0),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
-            color: Color(0x061C1816),
+            color: ColorManager.shadowWarm,
             offset: Offset(0, 2),
             blurRadius: 6,
           ),
         ],
       ),
       child: Material(
-        color: Colors.transparent,
+        color: ColorManager.transparent,
         child: InkWell(
-          onTap: () {
-            Navigator.push(
+          onTap: () async {
+            final Object? result = await Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => TransactionDetailsView(
+              MaterialPageRoute<Object>(
+                builder: (BuildContext context) => TransactionDetailsView(
                   transactionId: transaction.id,
                   id: transaction.id,
                 ),
               ),
             );
+            if (result == true && context.mounted) {
+              context.read<GetListTransactionCubit>().getListTransactions();
+            }
           },
           borderRadius: BorderRadius.circular(AppRadius.r14.r),
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
             child: Row(
-              children: [
+              children: <Widget>[
                 // Type Icon Badge (Figma Node #3:116)
                 Container(
                   width: 40.r,
@@ -703,7 +728,7 @@ class _TransactionCardItem extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
-                    children: [
+                    children: <Widget>[
                       Text(
                         _getTitle(),
                         style: getBoldStyle(
@@ -715,7 +740,7 @@ class _TransactionCardItem extends StatelessWidget {
                       ),
                       SizedBox(height: 3.h),
                       Row(
-                        children: [
+                        children: <Widget>[
                           Flexible(
                             child: Text(
                               transaction.contactName.isNotEmpty
@@ -729,7 +754,7 @@ class _TransactionCardItem extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          if (transaction.isInstallment) ...[
+                          if (transaction.isInstallment) ...<Widget>[
                             SizedBox(width: 6.w),
                             Container(
                               padding: EdgeInsets.symmetric(
@@ -761,7 +786,7 @@ class _TransactionCardItem extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
-                  children: [
+                  children: <Widget>[
                     Text(
                       "$amountPrefix${transaction.amount} ${AppConstants.defaultCurrency}",
                       textDirection: TextDirection.ltr,
@@ -770,7 +795,7 @@ class _TransactionCardItem extends StatelessWidget {
                         fontSize: FontSize.s13,
                       ),
                     ),
-                    if (timeStr.isNotEmpty) ...[
+                    if (timeStr.isNotEmpty) ...<Widget>[
                       SizedBox(height: 3.h),
                       Text(
                         timeStr,
@@ -794,7 +819,7 @@ class _TransactionCardItem extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────
 // Search Bar with Real-time Filtering (Figma Node #3:116)
 // ─────────────────────────────────────────────────────────────
-class _TransactionsSearchBar extends StatefulWidget {
+class _TransactionsSearchBar extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final VoidCallback onClear;
@@ -806,11 +831,6 @@ class _TransactionsSearchBar extends StatefulWidget {
   });
 
   @override
-  State<_TransactionsSearchBar> createState() => _TransactionsSearchBarState();
-}
-
-class _TransactionsSearchBarState extends State<_TransactionsSearchBar> {
-  @override
   Widget build(BuildContext context) {
     return Container(
       height: 48.h,
@@ -818,73 +838,74 @@ class _TransactionsSearchBarState extends State<_TransactionsSearchBar> {
         color: ColorManager.surface,
         borderRadius: BorderRadius.circular(AppRadius.r14.r),
         border: Border.all(color: ColorManager.border, width: 1.2),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
-            color: Color(0x061C1816),
+            color: ColorManager.shadowWarm,
             offset: Offset(0, 2),
             blurRadius: 6,
           ),
         ],
       ),
-      child: TextField(
-        controller: widget.controller,
-        onChanged: (val) {
-          widget.onChanged(val);
-          setState(() {});
-        },
-        style: getMediumStyle(
-          color: ColorManager.textPrimary,
-          fontSize: FontSize.s13,
-        ),
-        textAlignVertical: TextAlignVertical.center,
-        decoration: InputDecoration(
-          isDense: true,
-          filled: true,
-          fillColor: ColorManager.surface,
-          hintText: AppStrings.searchTransactionsHint,
-          hintStyle: getRegularStyle(
-            color: ColorManager.textTertiary,
-            fontSize: FontSize.s12,
-          ),
-          prefixIcon: Icon(
-            Icons.search_rounded,
-            color: ColorManager.textTertiary,
-            size: 20.r,
-          ),
-          suffixIcon: widget.controller.text.isNotEmpty
-              ? IconButton(
-                  icon: Icon(
-                    Icons.close_rounded,
-                    color: ColorManager.textSecondary,
-                    size: 18.r,
-                  ),
-                  onPressed: () {
-                    widget.controller.clear();
-                    widget.onClear();
-                    setState(() {});
-                  },
-                )
-              : null,
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: 14.w,
-            vertical: 12.h,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppRadius.r14.r),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppRadius.r14.r),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppRadius.r14.r),
-            borderSide: const BorderSide(
-              color: ColorManager.primary,
-              width: 1.2,
+      child: ValueListenableBuilder<TextEditingValue>(
+        valueListenable: controller,
+        builder: (BuildContext context, TextEditingValue value, _) {
+          return TextField(
+            controller: controller,
+            onChanged: onChanged,
+            style: getMediumStyle(
+              color: ColorManager.textPrimary,
+              fontSize: FontSize.s13,
             ),
-          ),
-        ),
+            textAlignVertical: TextAlignVertical.center,
+            decoration: InputDecoration(
+              isDense: true,
+              filled: true,
+              fillColor: ColorManager.surface,
+              hintText: AppStrings.searchTransactionsHint,
+              hintStyle: getRegularStyle(
+                color: ColorManager.textTertiary,
+                fontSize: FontSize.s12,
+              ),
+              prefixIcon: Icon(
+                Icons.search_rounded,
+                color: ColorManager.textTertiary,
+                size: 20.r,
+              ),
+              suffixIcon: value.text.isNotEmpty
+                  ? IconButton(
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: ColorManager.textSecondary,
+                        size: 18.r,
+                      ),
+                      onPressed: () {
+                        controller.clear();
+                        onClear();
+                      },
+                    )
+                  : null,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 14.w,
+                vertical: 12.h,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadius.r14.r),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadius.r14.r),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadius.r14.r),
+                borderSide: const BorderSide(
+                  color: ColorManager.primary,
+                  width: 1.2,
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -913,10 +934,10 @@ class _TransactionsFilterTabs extends StatelessWidget {
         physics: const BouncingScrollPhysics(),
         itemCount: tabs.length,
         separatorBuilder: (_, _) => SizedBox(width: 8.w),
-        itemBuilder: (context, index) {
-          final isSelected = selectedIndex == index;
+        itemBuilder: (BuildContext context, int index) {
+          final bool isSelected = selectedIndex == index;
           return Material(
-            color: Colors.transparent,
+            color: ColorManager.transparent,
             child: InkWell(
               onTap: () => onTabSelected(index),
               borderRadius: BorderRadius.circular(AppRadius.r20.r),
@@ -935,7 +956,7 @@ class _TransactionsFilterTabs extends StatelessWidget {
                     width: 1.0,
                   ),
                   boxShadow: isSelected
-                      ? [
+                      ? <BoxShadow>[
                           BoxShadow(
                             color: ColorManager.primary.withAlpha(40),
                             offset: const Offset(0, 2),
@@ -993,14 +1014,14 @@ class _TransactionTypeOption extends StatelessWidget {
         border: Border.all(color: ColorManager.border),
       ),
       child: Material(
-        color: Colors.transparent,
+        color: ColorManager.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppRadius.r14.r),
           child: Padding(
             padding: EdgeInsets.all(14.r),
             child: Row(
-              children: [
+              children: <Widget>[
                 Container(
                   width: 44.r,
                   height: 44.r,
@@ -1021,7 +1042,7 @@ class _TransactionTypeOption extends StatelessWidget {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    children: <Widget>[
                       Text(
                         title,
                         style: getBoldStyle(

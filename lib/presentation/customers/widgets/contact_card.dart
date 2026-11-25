@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mizan/domain/model/contact_model.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
@@ -27,10 +27,10 @@ class ContactCard extends StatelessWidget {
   Color _getAvatarBg(String name) {
     if (name.isEmpty) return ColorManager.lightPrimary;
     final int code = name.codeUnitAt(0);
-    const colors = [
+    const List<Color> colors = <Color>[
       Color(0xFFEAE2F8), // Lavender
       Color(0xFFFAF0EC), // Peach / Light Terracotta
-      Color(0xFFEBF3EC), // Mint Green
+      ColorManager.successBg, // Mint Green
       Color(0xFFFAF3E3), // Soft Gold
       Color(0xFFE6EEF8), // Soft Blue
     ];
@@ -40,7 +40,7 @@ class ContactCard extends StatelessWidget {
   Color _getAvatarTextColor(String name) {
     if (name.isEmpty) return ColorManager.primary;
     final int code = name.codeUnitAt(0);
-    const textColors = [
+    const List<Color> textColors = <Color>[
       Color(0xFF5B3F8A),
       Color(0xFFA8623B),
       Color(0xFF2D5C43),
@@ -51,16 +51,16 @@ class ContactCard extends StatelessWidget {
   }
 
   String _getInitialLetter(String name) {
-    final trimmed = name.trim();
+    final String trimmed = name.trim();
     if (trimmed.isEmpty) return "ط";
     return trimmed.substring(0, 1);
   }
 
   @override
   Widget build(BuildContext context) {
-    final initial = _getInitialLetter(contact.name);
-    final avatarBg = _getAvatarBg(contact.name);
-    final avatarTextColor = _getAvatarTextColor(contact.name);
+    final String initial = _getInitialLetter(contact.name);
+    final Color avatarBg = _getAvatarBg(contact.name);
+    final Color avatarTextColor = _getAvatarTextColor(contact.name);
 
     return Container(
       margin: EdgeInsets.only(bottom: 10.h),
@@ -73,16 +73,16 @@ class ContactCard extends StatelessWidget {
               : ColorManager.border,
           width: contact.isVip ? 1.4 : 1.0,
         ),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
-            color: Color(0x061C1816),
+            color: ColorManager.shadowWarm,
             offset: Offset(0, 2),
             blurRadius: 8,
           ),
         ],
       ),
       child: Material(
-        color: Colors.transparent,
+        color: ColorManager.transparent,
         child: InkWell(
           onTap: onTap,
           onLongPress: onDelete,
@@ -90,13 +90,13 @@ class ContactCard extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
             child: Row(
-              children: [
+              children: <Widget>[
                 // Left Column: Email info & VIP Badge
                 Expanded(
                   flex: 5,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    children: <Widget>[
                       if (contact.isVip)
                         Container(
                           padding: EdgeInsets.symmetric(
@@ -153,7 +153,7 @@ class ContactCard extends StatelessWidget {
                   flex: 6,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
+                    children: <Widget>[
                       Text(
                         contact.name,
                         maxLines: 1,
@@ -191,7 +191,7 @@ class ContactCard extends StatelessWidget {
                       border: Border.all(
                         color: contact.isVip
                             ? ColorManager.secondary
-                            : Colors.transparent,
+                            : ColorManager.transparent,
                         width: 1.5,
                       ),
                     ),

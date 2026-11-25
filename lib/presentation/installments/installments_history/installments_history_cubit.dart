@@ -1,5 +1,8 @@
+﻿import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/data/network/failure.dart';
+import 'package:mizan/domain/model/installments_history_model.dart';
 import 'package:mizan/domain/use_case/get_installments_history_use_case.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
@@ -18,8 +21,8 @@ class InstallmentsHistoryCubit extends Cubit<InstallmentsHistoryState> {
 
   Future<void> getInstallmentsHistory({String? status}) async {
     currentPage = 1;
-    final isInitialLoad = state.data == null;
-    final targetStatus = status ?? state.status;
+    final bool isInitialLoad = state.data == null;
+    final String targetStatus = status ?? state.status;
 
     if (isInitialLoad) {
       emit(
@@ -37,16 +40,17 @@ class InstallmentsHistoryCubit extends Cubit<InstallmentsHistoryState> {
       emit(state.copyWith(status: targetStatus, hasMore: true));
     }
 
-    final result = await _getInstallmentsHistoryUseCase.execute(
-      GetInstallmentsHistoryParams(
-        status: targetStatus,
-        page: 1,
-        pageSize: pageSize,
-      ),
-    );
+    final Either<Failure, InstallmentsHistoryPage> result =
+        await _getInstallmentsHistoryUseCase.execute(
+          GetInstallmentsHistoryParams(
+            status: targetStatus,
+            page: 1,
+            pageSize: pageSize,
+          ),
+        );
 
     result.fold(
-      (failure) {
+      (Failure failure) {
         if (isClosed) return;
         emit(
           state.copyWith(
@@ -58,7 +62,7 @@ class InstallmentsHistoryCubit extends Cubit<InstallmentsHistoryState> {
           ),
         );
       },
-      (page) {
+      (InstallmentsHistoryPage page) {
         if (isClosed) return;
         currentPage = page.page;
         emit(
@@ -90,26 +94,28 @@ class InstallmentsHistoryCubit extends Cubit<InstallmentsHistoryState> {
     emit(state.copyWith(isLoadingMore: true));
     final int nextPage = currentPage + 1;
 
-    final result = await _getInstallmentsHistoryUseCase.execute(
-      GetInstallmentsHistoryParams(
-        status: state.status,
-        page: nextPage,
-        pageSize: pageSize,
-      ),
-    );
+    final Either<Failure, InstallmentsHistoryPage> result =
+        await _getInstallmentsHistoryUseCase.execute(
+          GetInstallmentsHistoryParams(
+            status: state.status,
+            page: nextPage,
+            pageSize: pageSize,
+          ),
+        );
 
     result.fold(
-      (failure) {
+      (Failure failure) {
         if (isClosed) return;
         emit(state.copyWith(isLoadingMore: false));
       },
-      (page) {
+      (InstallmentsHistoryPage page) {
         if (isClosed) return;
         currentPage = nextPage;
-        final currentItems = state.data ?? [];
+        final List<InstallmentHistoryItemModel> currentItems =
+            state.data ?? <InstallmentHistoryItemModel>[];
         emit(
           state.copyWith(
-            data: [...currentItems, ...page.items],
+            data: <InstallmentHistoryItemModel>[...currentItems, ...page.items],
             isLoadingMore: false,
             hasMore: page.hasNextPage,
             totalCount: page.totalCount,

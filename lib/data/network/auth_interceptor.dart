@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:mizan/app/session_manager.dart';
 import '../local/token_local_data_source.dart';
 
@@ -15,14 +16,14 @@ class AuthInterceptor extends Interceptor {
   });
 
   bool _isRefreshing = false;
-  final List<Completer<void>> _pendingRequests = [];
+  final List<Completer<void>> _pendingRequests = <Completer<void>>[];
 
   @override
   void onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await tokenLocalDataSource.getAccessToken();
+    final String? token = await tokenLocalDataSource.getAccessToken();
     if (token != null) options.headers['Authorization'] = 'Bearer $token';
     handler.next(options);
   }
@@ -31,12 +32,27 @@ class AuthInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     if (err.response?.statusCode != 401) return handler.next(err);
 
+    // الطلب اتبعت بتوكن قديم لكن حد تاني جدّد التوكن بالفعل؟ يبقى نعيد المحاولة
+    // بالتوكن الجديد بس، من غير refresh تاني (refresh تاني بالتوكن القديم كان
+    // ممكن يفشل ويعمل logout غلط بعد ما الـ refresh token يتبدّل).
+    final Object? sentAuth = err.requestOptions.headers['Authorization'];
+    final String? currentToken = await tokenLocalDataSource.getAccessToken();
+    if (sentAuth is String &&
+        currentToken != null &&
+        sentAuth != 'Bearer $currentToken') {
+      try {
+        return handler.resolve(await _retry(err.requestOptions, currentToken));
+      } on DioException catch (e) {
+        return handler.next(e);
+      }
+    }
+
     if (_isRefreshing) {
-      final completer = Completer<void>();
+      final Completer<void> completer = Completer<void>();
       _pendingRequests.add(completer);
       try {
         await completer.future;
-        final freshToken = await tokenLocalDataSource.getAccessToken();
+        final String? freshToken = await tokenLocalDataSource.getAccessToken();
         return handler.resolve(await _retry(err.requestOptions, freshToken));
       } catch (_) {
         return handler.next(err);
@@ -45,25 +61,30 @@ class AuthInterceptor extends Interceptor {
 
     _isRefreshing = true;
     try {
-      final refreshToken = await tokenLocalDataSource.getRefreshToken();
+      final String? refreshToken = await tokenLocalDataSource.getRefreshToken();
       if (refreshToken == null) {
         throw DioException(
           requestOptions: err.requestOptions,
           error: 'No refresh token',
         );
       }
-      final response = await authDio.post(
+      final Stopwatch refreshWatch = Stopwatch()..start();
+      final Response<Map<String, dynamic>> response = await authDio.post(
         '/api/auth/refresh-token',
-        data: {'refreshToken': refreshToken},
+        data: <String, String>{'refreshToken': refreshToken},
       );
-      final data = response.data['data'];
-      final newAccessToken = data['token'];
+      if (kDebugMode) {
+        debugPrint('⏱ POST /api/auth/refresh-token -> ${response.statusCode} in ${refreshWatch.elapsedMilliseconds} ms');
+      }
+      final Map<String, dynamic> body =
+          (response.data!['data'] as Map<String, dynamic>);
+      final String newAccessToken = body['token'] as String;
       await tokenLocalDataSource.saveSession(
         accessToken: newAccessToken,
-        refreshToken: data['refreshToken'],
-        expiresInSeconds: data['expiresInSeconds'],
+        refreshToken: body['refreshToken'] as String,
+        expiresInSeconds: body['expiresInSeconds'] as int,
       );
-      for (final c in _pendingRequests) {
+      for (final Completer<void> c in _pendingRequests) {
         c.complete();
       }
       _pendingRequests.clear();
@@ -71,7 +92,7 @@ class AuthInterceptor extends Interceptor {
       // لسه فيه Bearer التوكن القديم المنتهي.
       return handler.resolve(await _retry(err.requestOptions, newAccessToken));
     } catch (e) {
-      for (final c in _pendingRequests) {
+      for (final Completer<void> c in _pendingRequests) {
         c.completeError(e);
       }
       _pendingRequests.clear();
@@ -83,18 +104,27 @@ class AuthInterceptor extends Interceptor {
     }
   }
 
-  Future<Response> _retry(RequestOptions o, String? newAccessToken) {
-    final headers = Map<String, dynamic>.from(o.headers);
+  Future<Response<dynamic>> _retry(
+    RequestOptions o,
+    String? newAccessToken,
+  ) async {
+    final Map<String, dynamic> headers = Map<String, dynamic>.from(o.headers);
     if (newAccessToken != null) {
       headers['Authorization'] = 'Bearer $newAccessToken';
     }
-    final options = Options(method: o.method, headers: headers);
-    final data = o.data is FormData ? (o.data as FormData).clone() : o.data;
-    return authDio.request(
+    final Options options = Options(method: o.method, headers: headers);
+    final dynamic data =
+        o.data is FormData ? (o.data as FormData).clone() : o.data;
+    final Stopwatch watch = Stopwatch()..start();
+    final Response<dynamic> response = await authDio.request<dynamic>(
       o.path,
       data: data,
       queryParameters: o.queryParameters,
       options: options,
     );
+    if (kDebugMode) {
+      debugPrint('⏱ RETRY ${o.method} ${o.path} -> ${response.statusCode} in ${watch.elapsedMilliseconds} ms');
+    }
+    return response;
   }
 }

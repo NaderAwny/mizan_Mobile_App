@@ -64,7 +64,7 @@ TextStyle getRegularStyle({
 
 // Medium style (500)
 TextStyle getMediumStyle({
-  double fontSize = FontSize.s14,
+  double fontSize = FontSize.s13,
   required Color color,
   String? fontFamily,
   double? height,
@@ -123,7 +123,7 @@ TextStyle getSemiboldStyle({
 
 // Bold style (700)
 TextStyle getBoldStyle({
-  double fontSize = FontSize.s16,
+  double fontSize = FontSize.s15,
   required Color color,
   String? fontFamily,
   double? height,

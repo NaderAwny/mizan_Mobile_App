@@ -9,4 +9,5 @@ abstract class TransactionRepository {
     CreateTransactionRequest request,
   );
   Future<Either<Failure, TransactionbyidModel>> getTransactionById(String id);
+  Future<Either<Failure, void>> deleteTransaction(String transactionid);
 }

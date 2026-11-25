@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:mizan/app/constants.dart';
+import 'package:mizan/data/response/assistant_responses/assistant_responses.dart';
 import 'package:mizan/data/response/auth_session_responses/auth_session_responses.dart';
 import 'package:mizan/data/response/base_responses/base_responses.dart';
 import 'package:mizan/data/response/contact_responses/contact_responses.dart';
@@ -10,6 +11,7 @@ import 'package:mizan/data/response/get_profile_responses/get_profile_responses.
 import 'package:mizan/data/response/installments_dashboard_responses/installments_dashboard_responses.dart';
 import 'package:mizan/data/response/installments_history_responses/installments_history_responses.dart';
 import 'package:mizan/data/response/register_responses/register_responses.dart';
+import 'package:mizan/data/response/notifications_responses/notifications_responses.dart';
 import 'package:mizan/data/response/pay_installment_responses/pay_installment_responses.dart';
 import 'package:mizan/data/response/statistics_response/statistic_response.dart';
 import 'package:mizan/data/response/transaction_by_id_responses/transaction_by_id_responses.dart';
@@ -44,6 +46,13 @@ abstract class AppServiceClient {
 
   @POST("/api/auth/logout")
   Future<BaseResponse> logout(@Body() Map<String, dynamic> body);
+
+  // ======================== Devices Endpoints ========================
+  @POST("/api/devices/register")
+  Future<BaseResponse> registerDevice(@Body() Map<String, dynamic> body);
+
+  @POST("/api/devices/unregister")
+  Future<BaseResponse> unregisterDevice(@Body() Map<String, dynamic> body);
 
   // ======================== Contacts Endpoints ========================
   @POST("/api/contacts")
@@ -111,6 +120,10 @@ abstract class AppServiceClient {
   // ======================== get Transaction By Id Endpoint ========================
   @GET("/api/transactions/{id}")
   Future<TransactionResponseById> getTransactionById(@Path("id") String id);
+  //Delete transaction
+  @DELETE("/api/transactions/{transaction_id}")
+  // ignore: non_constant_identifier_names
+  Future<void> deleteTransaction(@Path("transaction_id") String transaction_id);
 
   // ======================== Installments Endpoints ========================
   /// POST /api/installments/{id}/pay — تسجيل سداد قسط
@@ -148,8 +161,19 @@ abstract class AppServiceClient {
     @Query("pageSize") int pageSize,
   );
 
+  @GET("/api/voice-notes/summary")
+  Future<VoiceNoteSummaryResponse> getVoiceNotesSummary(
+    @Query("period") String period,
+    @Query("from") String? from,
+    @Query("to") String? to,
+  );
+
   @GET("/api/voice-notes/{id}")
   Future<VoiceNoteResponse> getVoiceNoteById(@Path("id") String id);
+  //Delete voice note
+  @DELETE("/api/voice-notes/{voice_note_id}")
+  // ignore: non_constant_identifier_names
+  Future<void> deleteVoiceNote(@Path("voice_note_id") String voice_note_id);
 
   /// GET /api/installments/dashboard — لوحة متابعة الأقساط والديون
   @GET("/api/installments/dashboard")
@@ -161,5 +185,57 @@ abstract class AppServiceClient {
     @Query("status") String status,
     @Query("page") int page,
     @Query("pageSize") int pageSize,
+  );
+
+  // ======================== Notifications Endpoints ========================
+  /// GET /api/notifications — قائمة الإشعارات
+  @GET("/api/notifications")
+  Future<NotificationsPageResponse> getNotifications(
+    @Query("page") int page,
+    @Query("pageSize") int pageSize,
+    @Query("unreadOnly") bool unreadOnly,
+  );
+
+  /// PATCH /api/notifications/read-all — تعليم الكل كمقروء
+  @PATCH("/api/notifications/read-all")
+  Future<BaseResponse> markAllNotificationsRead();
+
+  /// PATCH /api/notifications/{id}/read — تعليم إشعار كمقروء
+  @PATCH("/api/notifications/{id}/read")
+  Future<void> markNotificationRead(@Path("id") String id);
+
+  /// POST /api/notifications/run-reminders-scan — تشغيل فحص التذكيرات
+  @POST("/api/notifications/run-reminders-scan")
+  Future<RunRemindersScanResponse> runRemindersScan();
+
+  // ======================== Assistant Endpoints (يا ميزان) ========================
+  /// POST /api/assistant/sessions — بدء جلسة مساعد جديدة
+  @POST("/api/assistant/sessions")
+  Future<AssistantSessionResponse> startAssistantSession();
+
+  /// POST /api/assistant/command — إرسال أمر نصي للمساعد
+  @POST("/api/assistant/command")
+  Future<AssistantCommandResponse> sendAssistantCommand(
+    @Body() Map<String, dynamic> body,
+  );
+
+  /// POST /api/assistant/sessions/{sessionId}/actions/{actionId}/confirm — تأكيد عملية معلقة
+  @POST("/api/assistant/sessions/{sessionId}/actions/{actionId}/confirm")
+  Future<AssistantCommandResponse> confirmAssistantAction(
+    @Path("sessionId") String sessionId,
+    @Path("actionId") String actionId,
+  );
+
+  /// POST /api/assistant/sessions/{sessionId}/actions/{actionId}/cancel — إلغاء عملية معلقة
+  @POST("/api/assistant/sessions/{sessionId}/actions/{actionId}/cancel")
+  Future<AssistantCommandResponse> cancelAssistantAction(
+    @Path("sessionId") String sessionId,
+    @Path("actionId") String actionId,
+  );
+
+  /// DELETE /api/assistant/sessions/{sessionId} — إنهاء جلسة المساعد
+  @DELETE("/api/assistant/sessions/{sessionId}")
+  Future<BaseResponse> endAssistantSession(
+    @Path("sessionId") String sessionId,
   );
 }

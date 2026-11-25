@@ -25,6 +25,37 @@ class AppStrings {
   static const String startNow = "ابدأ الآن";
   static const String submit = "إرسال";
   static const String loading = "جاري التحميل...";
+  // --- Notifications Feature ---
+  static const String notificationsSubtitle =
+      "تذكيرات الأقساط وتنبيهات العملاء";
+  static const String notificationsFilterAll = "الكل";
+  static const String notificationsFilterUnread = "غير مقروءة";
+  static const String markAllAsRead = "تعليم الكل كمقروء";
+  static const String notificationsLoading = "جاري جلب الإشعارات...";
+  static const String notificationsLoadError = "تعذر تحميل الإشعارات";
+  static const String notificationsEmpty = "لا توجد إشعارات حتى الآن";
+  static const String notificationsUnreadEmpty = "لا توجد إشعارات غير مقروءة";
+  static const String markReadFailed = "فشل تحديث حالة الإشعار";
+  static const String markAllLoading = "جاري تعليم الإشعارات كمقروءة...";
+  static const String markAllFailed = "تعذر تعليم الإشعارات كمقروءة";
+  static const String notificationsToday = "اليوم";
+  static const String notificationsYesterday = "أمس";
+  static const String notificationsOlder = "أقدم";
+  // reminders sheet (7.4)
+  static const String runRemindersTitle = "إرسال التذكيرات الآن";
+  static const String runRemindersDescription =
+      "سيفحص النظام الأقساط المستحقة بعد 3 أيام، وبعد يوم، وفي نفس اليوم.";
+  static const String runRemindersInApp = "إشعار داخل التطبيق لك";
+  static const String runRemindersEmail =
+      "إيميل تذكير للعميل (لو مسجّل له بريد إلكتروني)";
+  static const String runRemindersNoEmailNote =
+      "العميل المسجّل بالاسم فقط ولا يملك بريداً إلكترونياً لن يصله إيميل. أضف بريده من بيانات الطرف.";
+  static const String runRemindersConfirm = "إرسال الآن";
+  static const String runRemindersLoading =
+      "جاري فحص الأقساط وإرسال التذكيرات...";
+  static const String runRemindersFailed = "تعذر تشغيل التذكيرات";
+  static const String runRemindersDone = "تم تشغيل التذكيرات";
+  static const String runRemindersProcessedSuffix = "تذكير تمت معالجته";
 
   // --- Navigation Tabs ---
   static const String home = "الرئيسية";
@@ -335,4 +366,39 @@ class AppStrings {
   static const String noHistoryItems = "لا توجد أقساط في هذه الحالة";
   static const String earliestDueDatePrefix = "أقرب استحقاق:";
   static const String upcomingInstallmentsPeriod = "استحقاقات قادمة";
+
+  // --- Assistant Feature (يا ميزان) ---
+  static const String assistantTitle = "يا ميزان";
+  static const String assistantThinking = "جاري التفكير...";
+  static const String assistantExecuting = "جاري تنفيذ العملية...";
+  static const String assistantErrorRateLimit = "تم تجاوز حد الطلبات، يرجى الانتظار قليلاً ثم المحاولة مجدداً.";
+  static const String assistantEmptyTextError = "لا يمكن إرسال رسالة فارغة.";
+  static const String assistantMaxCharsError = "لا يمكن أن تتجاوز الرسالة 500 حرف.";
+  static const String assistantActionExpired = "انتهت مهلة تأكيد العملية، يرجى إعادة الطلب.";
+  static const String assistantSessionReset = "تم مسح سياق المحادثة وبدأت جلسة جديدة.";
+  static const String assistantRetry = "إعادة المحاولة";
+  static const String assistantConfirmSuccess = "تم تنفيذ الإجراء بنجاح.";
+  static const String assistantConfirmCancelled = "تم إلغاء الإجراء.";
+  static const String assistantMicBusy = "الميكروفون قيد الاستخدام حالياً.";
+  static const String assistantPermissionDenied = "يرجى منح إذن استخدام الميكروفون لاستخدام الإدخال الصوتي.";
+  static const String assistantPermissionPermanentlyDenied = "تم رفض إذن الميكروفون بشكل دائم، يرجى تفعيله من إعدادات الهاتف.";
+  static const String assistantSpeechInitError = "تعذر تهيئة التعرف على الصوت.";
+  static const String assistantListening = "جاري الاستماع...";
+  static const String assistantReviewing = "مراجعة النص الصوتي...";
+
+  // --- Voice Notes Summary Feature ---
+  static const String voiceSummaryPeriodToday = "اليوم";
+  static const String voiceSummaryPeriodYesterday = "أمس";
+  static const String voiceSummaryPeriodThisWeek = "هذا الأسبوع";
+  static const String voiceSummaryPeriodLastWeek = "الأسبوع الماضي";
+  static const String voiceSummaryPeriodThisMonth = "هذا الشهر";
+  static const String voiceSummaryPeriodLastMonth = "الشهر الماضي";
+  static const String voiceSummaryPeriodCustom = "فترة مخصصة";
+  static const String voiceSummaryNetTitle = "صافي الملاحظات الصوتية";
+  static const String voiceSummarySalesLabel = "المبيعات";
+  static const String voiceSummaryPurchasesLabel = "المشتريات";
+  static const String voiceSummaryOperationsSuffix = "عملية";
+  static const String voiceSummaryCurrencyEgp = "EGP";
+  static const String voiceSummaryCurrencyAr = "ج.م";
+  static const String voiceSummarySelectDateRange = "اختر الفترة المخصصة";
 }

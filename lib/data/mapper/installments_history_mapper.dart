@@ -23,7 +23,10 @@ extension InstallmentHistoryItemMapper on InstallmentHistoryItemData? {
 extension InstallmentsHistoryPageMapper on InstallmentsHistoryPageData? {
   InstallmentsHistoryPage toDomain() {
     return InstallmentsHistoryPage(
-      items: (this?.items?.map((i) => i.toDomain()) ?? const []).toList(),
+      items:
+          (this?.items?.map((InstallmentHistoryItemData i) => i.toDomain()) ??
+                  const <InstallmentHistoryItemModel>[])
+              .toList(),
       page: this?.page.orZero() ?? 1,
       pageSize: this?.pageSize.orZero() ?? 20,
       totalCount: this?.totalCount.orZero() ?? 0,

@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/domain/use_case/logout_use_case.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
@@ -11,22 +12,23 @@ class LogoutCubit extends Cubit<LogoutState> {
   LogoutCubit(this._usecase) : super(const LogoutState());
 
   Future<void> logout() async {
-    emit(state.copyWith(
-      flowState: LoadingState(
-        stateRendererType: StateRendererType.popupLoadingState,
-      ),
-    ));
-    (await _usecase.execute(null)).fold(
-      (failure) => emit(state.copyWith(
-        flowState: ErrorState(
-          StateRendererType.popupErrorStatete,
-          failure.message,
+    emit(
+      state.copyWith(
+        flowState: LoadingState(
+          stateRendererType: StateRendererType.popupLoadingState,
         ),
-      )),
-      (_) => emit(state.copyWith(
-        isLoggedOut: true,
-        flowState: ContentState(),
-      )),
+      ),
+    );
+    (await _usecase.execute(null)).fold(
+      (Failure failure) => emit(
+        state.copyWith(
+          flowState: ErrorState(
+            StateRendererType.popupErrorStatete,
+            failure.message,
+          ),
+        ),
+      ),
+      (_) => emit(state.copyWith(isLoggedOut: true, flowState: ContentState())),
     );
   }
 }

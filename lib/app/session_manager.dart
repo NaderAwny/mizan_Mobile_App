@@ -3,7 +3,7 @@ import 'package:injectable/injectable.dart';
 
 @lazySingleton
 class SessionManager {
-  final _controller = StreamController<void>.broadcast();
+  final StreamController<void> _controller = StreamController<void>.broadcast();
 
   /// UI layer تسمع عليه وتعمل Navigator.pushNamedAndRemoveUntil(login).
   Stream<void> get onSessionExpired => _controller.stream;

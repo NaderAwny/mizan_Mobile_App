@@ -26,7 +26,7 @@ class _MyAppState extends State<MyApp> {
       designSize: AppConstants.designSize,
       minTextAdapt: true,
       splitScreenMode: true,
-      builder: (context, child) {
+      builder: (BuildContext context, Widget? child) {
         return MaterialApp(
           title: 'Mizan',
           debugShowCheckedModeBanner: false,
@@ -35,11 +35,8 @@ class _MyAppState extends State<MyApp> {
           onGenerateRoute: RouteGenerator.getRoute,
           navigatorKey: Routes.navigatorKey,
           locale: const Locale('ar'),
-          supportedLocales: const [
-            Locale('ar'),
-            Locale('en'),
-          ],
-          localizationsDelegates: const [
+          supportedLocales: const <Locale>[Locale('ar'), Locale('en')],
+          localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
@@ -49,4 +46,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-

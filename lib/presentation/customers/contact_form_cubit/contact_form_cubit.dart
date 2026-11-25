@@ -1,5 +1,7 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/domain/model/contact_model.dart';
 import 'package:mizan/domain/use_case/create_contact_use_case.dart';
 import 'package:mizan/domain/use_case/update_contact_use_case.dart';
@@ -21,13 +23,19 @@ class ContactFormCubit extends Cubit<ContactFormState> {
   void init(Contact? contact) {
     _initialContact = contact;
     emit(
-      state.copyWith(isEditMode: contact != null, flowState: ContentState()),
+      state.copyWith(
+        isEditMode: contact != null,
+        isVip: contact?.isVip ?? false,
+        flowState: ContentState(),
+      ),
     );
   }
 
+  void toggleVip(bool val) => emit(state.copyWith(isVip: val));
+
   bool _isLettersOnly(String str) {
     // Allows Arabic characters, English letters, and spaces
-    final letterRegex = RegExp(r'^[\p{L}\s]+$', unicode: true);
+    final RegExp letterRegex = RegExp(r'^[\p{L}\s]+$', unicode: true);
     return letterRegex.hasMatch(str.trim());
   }
 
@@ -38,8 +46,8 @@ class ContactFormCubit extends Cubit<ContactFormState> {
     bool isVip = false,
     String contactEmail = '',
   }) async {
-    final trimmedName = name.trim();
-    final trimmedPhone = phoneNumber.trim();
+    final String trimmedName = name.trim();
+    final String trimmedPhone = phoneNumber.trim();
 
     if (trimmedName.isEmpty) {
       emit(
@@ -94,18 +102,19 @@ class ContactFormCubit extends Cubit<ContactFormState> {
 
     if (_initialContact == null) {
       // Create Contact
-      final result = await _createContactUseCase.execute(
-        CreateContactInput(
-          trimmedName,
-          trimmedPhone,
-          notes?.trim(),
-          isVip,
-          contactEmail.trim(),
-        ),
-      );
+      final Either<Failure, Contact> result = await _createContactUseCase
+          .execute(
+            CreateContactInput(
+              trimmedName,
+              trimmedPhone,
+              notes?.trim(),
+              isVip,
+              contactEmail.trim(),
+            ),
+          );
 
       result.fold(
-        (failure) {
+        (Failure failure) {
           if (isClosed) return;
           emit(
             state.copyWith(
@@ -117,7 +126,7 @@ class ContactFormCubit extends Cubit<ContactFormState> {
             ),
           );
         },
-        (contact) {
+        (Contact contact) {
           if (isClosed) return;
           emit(
             state.copyWith(
@@ -130,19 +139,20 @@ class ContactFormCubit extends Cubit<ContactFormState> {
       );
     } else {
       // Update Contact (Full body)
-      final result = await _updateContactUseCase.execute(
-        UpdateContactInput(
-          _initialContact!.id,
-          trimmedName,
-          trimmedPhone,
-          notes?.trim(),
-          isVip,
-          contactEmail.trim(),
-        ),
-      );
+      final Either<Failure, Contact> result = await _updateContactUseCase
+          .execute(
+            UpdateContactInput(
+              _initialContact!.id,
+              trimmedName,
+              trimmedPhone,
+              notes?.trim(),
+              isVip,
+              contactEmail.trim(),
+            ),
+          );
 
       result.fold(
-        (failure) {
+        (Failure failure) {
           if (isClosed) return;
           emit(
             state.copyWith(
@@ -154,7 +164,7 @@ class ContactFormCubit extends Cubit<ContactFormState> {
             ),
           );
         },
-        (contact) {
+        (Contact contact) {
           if (isClosed) return;
           emit(
             state.copyWith(

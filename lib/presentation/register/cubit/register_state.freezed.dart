@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$RegisterState {
 
- FlowState? get flowState; String get email; String get lastName; String get firstName; bool get isEmailValid; bool get isLastNameValid; bool get isFirstNameValid; bool get isAllValid; bool get registerSuccess;
+ FlowState? get flowState; String get email; String get lastName; String get firstName; bool get isEmailValid; bool get isLastNameValid; bool get isFirstNameValid; bool get isAllValid; bool get registerSuccess; bool get firstNameTouched; bool get lastNameTouched; bool get emailTouched;
 /// Create a copy of RegisterState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $RegisterStateCopyWith<RegisterState> get copyWith => _$RegisterStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RegisterState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.email, email) || other.email == email)&&(identical(other.lastName, lastName) || other.lastName == lastName)&&(identical(other.firstName, firstName) || other.firstName == firstName)&&(identical(other.isEmailValid, isEmailValid) || other.isEmailValid == isEmailValid)&&(identical(other.isLastNameValid, isLastNameValid) || other.isLastNameValid == isLastNameValid)&&(identical(other.isFirstNameValid, isFirstNameValid) || other.isFirstNameValid == isFirstNameValid)&&(identical(other.isAllValid, isAllValid) || other.isAllValid == isAllValid)&&(identical(other.registerSuccess, registerSuccess) || other.registerSuccess == registerSuccess));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RegisterState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.email, email) || other.email == email)&&(identical(other.lastName, lastName) || other.lastName == lastName)&&(identical(other.firstName, firstName) || other.firstName == firstName)&&(identical(other.isEmailValid, isEmailValid) || other.isEmailValid == isEmailValid)&&(identical(other.isLastNameValid, isLastNameValid) || other.isLastNameValid == isLastNameValid)&&(identical(other.isFirstNameValid, isFirstNameValid) || other.isFirstNameValid == isFirstNameValid)&&(identical(other.isAllValid, isAllValid) || other.isAllValid == isAllValid)&&(identical(other.registerSuccess, registerSuccess) || other.registerSuccess == registerSuccess)&&(identical(other.firstNameTouched, firstNameTouched) || other.firstNameTouched == firstNameTouched)&&(identical(other.lastNameTouched, lastNameTouched) || other.lastNameTouched == lastNameTouched)&&(identical(other.emailTouched, emailTouched) || other.emailTouched == emailTouched));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,flowState,email,lastName,firstName,isEmailValid,isLastNameValid,isFirstNameValid,isAllValid,registerSuccess);
+int get hashCode => Object.hash(runtimeType,flowState,email,lastName,firstName,isEmailValid,isLastNameValid,isFirstNameValid,isAllValid,registerSuccess,firstNameTouched,lastNameTouched,emailTouched);
 
 @override
 String toString() {
-  return 'RegisterState(flowState: $flowState, email: $email, lastName: $lastName, firstName: $firstName, isEmailValid: $isEmailValid, isLastNameValid: $isLastNameValid, isFirstNameValid: $isFirstNameValid, isAllValid: $isAllValid, registerSuccess: $registerSuccess)';
+  return 'RegisterState(flowState: $flowState, email: $email, lastName: $lastName, firstName: $firstName, isEmailValid: $isEmailValid, isLastNameValid: $isLastNameValid, isFirstNameValid: $isFirstNameValid, isAllValid: $isAllValid, registerSuccess: $registerSuccess, firstNameTouched: $firstNameTouched, lastNameTouched: $lastNameTouched, emailTouched: $emailTouched)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $RegisterStateCopyWith<$Res>  {
   factory $RegisterStateCopyWith(RegisterState value, $Res Function(RegisterState) _then) = _$RegisterStateCopyWithImpl;
 @useResult
 $Res call({
- FlowState? flowState, String email, String lastName, String firstName, bool isEmailValid, bool isLastNameValid, bool isFirstNameValid, bool isAllValid, bool registerSuccess
+ FlowState? flowState, String email, String lastName, String firstName, bool isEmailValid, bool isLastNameValid, bool isFirstNameValid, bool isAllValid, bool registerSuccess, bool firstNameTouched, bool lastNameTouched, bool emailTouched
 });
 
 
@@ -62,7 +62,7 @@ class _$RegisterStateCopyWithImpl<$Res>
 
 /// Create a copy of RegisterState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? email = null,Object? lastName = null,Object? firstName = null,Object? isEmailValid = null,Object? isLastNameValid = null,Object? isFirstNameValid = null,Object? isAllValid = null,Object? registerSuccess = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? email = null,Object? lastName = null,Object? firstName = null,Object? isEmailValid = null,Object? isLastNameValid = null,Object? isFirstNameValid = null,Object? isAllValid = null,Object? registerSuccess = null,Object? firstNameTouched = null,Object? lastNameTouched = null,Object? emailTouched = null,}) {
   return _then(_self.copyWith(
 flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
 as FlowState?,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
@@ -73,6 +73,9 @@ as bool,isLastNameValid: null == isLastNameValid ? _self.isLastNameValid : isLas
 as bool,isFirstNameValid: null == isFirstNameValid ? _self.isFirstNameValid : isFirstNameValid // ignore: cast_nullable_to_non_nullable
 as bool,isAllValid: null == isAllValid ? _self.isAllValid : isAllValid // ignore: cast_nullable_to_non_nullable
 as bool,registerSuccess: null == registerSuccess ? _self.registerSuccess : registerSuccess // ignore: cast_nullable_to_non_nullable
+as bool,firstNameTouched: null == firstNameTouched ? _self.firstNameTouched : firstNameTouched // ignore: cast_nullable_to_non_nullable
+as bool,lastNameTouched: null == lastNameTouched ? _self.lastNameTouched : lastNameTouched // ignore: cast_nullable_to_non_nullable
+as bool,emailTouched: null == emailTouched ? _self.emailTouched : emailTouched // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -158,10 +161,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  String email,  String lastName,  String firstName,  bool isEmailValid,  bool isLastNameValid,  bool isFirstNameValid,  bool isAllValid,  bool registerSuccess)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  String email,  String lastName,  String firstName,  bool isEmailValid,  bool isLastNameValid,  bool isFirstNameValid,  bool isAllValid,  bool registerSuccess,  bool firstNameTouched,  bool lastNameTouched,  bool emailTouched)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RegisterState() when $default != null:
-return $default(_that.flowState,_that.email,_that.lastName,_that.firstName,_that.isEmailValid,_that.isLastNameValid,_that.isFirstNameValid,_that.isAllValid,_that.registerSuccess);case _:
+return $default(_that.flowState,_that.email,_that.lastName,_that.firstName,_that.isEmailValid,_that.isLastNameValid,_that.isFirstNameValid,_that.isAllValid,_that.registerSuccess,_that.firstNameTouched,_that.lastNameTouched,_that.emailTouched);case _:
   return orElse();
 
 }
@@ -179,10 +182,10 @@ return $default(_that.flowState,_that.email,_that.lastName,_that.firstName,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  String email,  String lastName,  String firstName,  bool isEmailValid,  bool isLastNameValid,  bool isFirstNameValid,  bool isAllValid,  bool registerSuccess)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  String email,  String lastName,  String firstName,  bool isEmailValid,  bool isLastNameValid,  bool isFirstNameValid,  bool isAllValid,  bool registerSuccess,  bool firstNameTouched,  bool lastNameTouched,  bool emailTouched)  $default,) {final _that = this;
 switch (_that) {
 case _RegisterState():
-return $default(_that.flowState,_that.email,_that.lastName,_that.firstName,_that.isEmailValid,_that.isLastNameValid,_that.isFirstNameValid,_that.isAllValid,_that.registerSuccess);case _:
+return $default(_that.flowState,_that.email,_that.lastName,_that.firstName,_that.isEmailValid,_that.isLastNameValid,_that.isFirstNameValid,_that.isAllValid,_that.registerSuccess,_that.firstNameTouched,_that.lastNameTouched,_that.emailTouched);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +202,10 @@ return $default(_that.flowState,_that.email,_that.lastName,_that.firstName,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  String email,  String lastName,  String firstName,  bool isEmailValid,  bool isLastNameValid,  bool isFirstNameValid,  bool isAllValid,  bool registerSuccess)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  String email,  String lastName,  String firstName,  bool isEmailValid,  bool isLastNameValid,  bool isFirstNameValid,  bool isAllValid,  bool registerSuccess,  bool firstNameTouched,  bool lastNameTouched,  bool emailTouched)?  $default,) {final _that = this;
 switch (_that) {
 case _RegisterState() when $default != null:
-return $default(_that.flowState,_that.email,_that.lastName,_that.firstName,_that.isEmailValid,_that.isLastNameValid,_that.isFirstNameValid,_that.isAllValid,_that.registerSuccess);case _:
+return $default(_that.flowState,_that.email,_that.lastName,_that.firstName,_that.isEmailValid,_that.isLastNameValid,_that.isFirstNameValid,_that.isAllValid,_that.registerSuccess,_that.firstNameTouched,_that.lastNameTouched,_that.emailTouched);case _:
   return null;
 
 }
@@ -214,7 +217,7 @@ return $default(_that.flowState,_that.email,_that.lastName,_that.firstName,_that
 
 
 class _RegisterState implements RegisterState {
-  const _RegisterState({this.flowState, this.email = '', this.lastName = '', this.firstName = '', this.isEmailValid = false, this.isLastNameValid = false, this.isFirstNameValid = false, this.isAllValid = false, this.registerSuccess = false});
+  const _RegisterState({this.flowState, this.email = '', this.lastName = '', this.firstName = '', this.isEmailValid = false, this.isLastNameValid = false, this.isFirstNameValid = false, this.isAllValid = false, this.registerSuccess = false, this.firstNameTouched = false, this.lastNameTouched = false, this.emailTouched = false});
   
 
 @override final  FlowState? flowState;
@@ -226,6 +229,9 @@ class _RegisterState implements RegisterState {
 @override@JsonKey() final  bool isFirstNameValid;
 @override@JsonKey() final  bool isAllValid;
 @override@JsonKey() final  bool registerSuccess;
+@override@JsonKey() final  bool firstNameTouched;
+@override@JsonKey() final  bool lastNameTouched;
+@override@JsonKey() final  bool emailTouched;
 
 /// Create a copy of RegisterState
 /// with the given fields replaced by the non-null parameter values.
@@ -237,16 +243,16 @@ _$RegisterStateCopyWith<_RegisterState> get copyWith => __$RegisterStateCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RegisterState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.email, email) || other.email == email)&&(identical(other.lastName, lastName) || other.lastName == lastName)&&(identical(other.firstName, firstName) || other.firstName == firstName)&&(identical(other.isEmailValid, isEmailValid) || other.isEmailValid == isEmailValid)&&(identical(other.isLastNameValid, isLastNameValid) || other.isLastNameValid == isLastNameValid)&&(identical(other.isFirstNameValid, isFirstNameValid) || other.isFirstNameValid == isFirstNameValid)&&(identical(other.isAllValid, isAllValid) || other.isAllValid == isAllValid)&&(identical(other.registerSuccess, registerSuccess) || other.registerSuccess == registerSuccess));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RegisterState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.email, email) || other.email == email)&&(identical(other.lastName, lastName) || other.lastName == lastName)&&(identical(other.firstName, firstName) || other.firstName == firstName)&&(identical(other.isEmailValid, isEmailValid) || other.isEmailValid == isEmailValid)&&(identical(other.isLastNameValid, isLastNameValid) || other.isLastNameValid == isLastNameValid)&&(identical(other.isFirstNameValid, isFirstNameValid) || other.isFirstNameValid == isFirstNameValid)&&(identical(other.isAllValid, isAllValid) || other.isAllValid == isAllValid)&&(identical(other.registerSuccess, registerSuccess) || other.registerSuccess == registerSuccess)&&(identical(other.firstNameTouched, firstNameTouched) || other.firstNameTouched == firstNameTouched)&&(identical(other.lastNameTouched, lastNameTouched) || other.lastNameTouched == lastNameTouched)&&(identical(other.emailTouched, emailTouched) || other.emailTouched == emailTouched));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,flowState,email,lastName,firstName,isEmailValid,isLastNameValid,isFirstNameValid,isAllValid,registerSuccess);
+int get hashCode => Object.hash(runtimeType,flowState,email,lastName,firstName,isEmailValid,isLastNameValid,isFirstNameValid,isAllValid,registerSuccess,firstNameTouched,lastNameTouched,emailTouched);
 
 @override
 String toString() {
-  return 'RegisterState(flowState: $flowState, email: $email, lastName: $lastName, firstName: $firstName, isEmailValid: $isEmailValid, isLastNameValid: $isLastNameValid, isFirstNameValid: $isFirstNameValid, isAllValid: $isAllValid, registerSuccess: $registerSuccess)';
+  return 'RegisterState(flowState: $flowState, email: $email, lastName: $lastName, firstName: $firstName, isEmailValid: $isEmailValid, isLastNameValid: $isLastNameValid, isFirstNameValid: $isFirstNameValid, isAllValid: $isAllValid, registerSuccess: $registerSuccess, firstNameTouched: $firstNameTouched, lastNameTouched: $lastNameTouched, emailTouched: $emailTouched)';
 }
 
 
@@ -257,7 +263,7 @@ abstract mixin class _$RegisterStateCopyWith<$Res> implements $RegisterStateCopy
   factory _$RegisterStateCopyWith(_RegisterState value, $Res Function(_RegisterState) _then) = __$RegisterStateCopyWithImpl;
 @override @useResult
 $Res call({
- FlowState? flowState, String email, String lastName, String firstName, bool isEmailValid, bool isLastNameValid, bool isFirstNameValid, bool isAllValid, bool registerSuccess
+ FlowState? flowState, String email, String lastName, String firstName, bool isEmailValid, bool isLastNameValid, bool isFirstNameValid, bool isAllValid, bool registerSuccess, bool firstNameTouched, bool lastNameTouched, bool emailTouched
 });
 
 
@@ -274,7 +280,7 @@ class __$RegisterStateCopyWithImpl<$Res>
 
 /// Create a copy of RegisterState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? email = null,Object? lastName = null,Object? firstName = null,Object? isEmailValid = null,Object? isLastNameValid = null,Object? isFirstNameValid = null,Object? isAllValid = null,Object? registerSuccess = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? email = null,Object? lastName = null,Object? firstName = null,Object? isEmailValid = null,Object? isLastNameValid = null,Object? isFirstNameValid = null,Object? isAllValid = null,Object? registerSuccess = null,Object? firstNameTouched = null,Object? lastNameTouched = null,Object? emailTouched = null,}) {
   return _then(_RegisterState(
 flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
 as FlowState?,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
@@ -285,6 +291,9 @@ as bool,isLastNameValid: null == isLastNameValid ? _self.isLastNameValid : isLas
 as bool,isFirstNameValid: null == isFirstNameValid ? _self.isFirstNameValid : isFirstNameValid // ignore: cast_nullable_to_non_nullable
 as bool,isAllValid: null == isAllValid ? _self.isAllValid : isAllValid // ignore: cast_nullable_to_non_nullable
 as bool,registerSuccess: null == registerSuccess ? _self.registerSuccess : registerSuccess // ignore: cast_nullable_to_non_nullable
+as bool,firstNameTouched: null == firstNameTouched ? _self.firstNameTouched : firstNameTouched // ignore: cast_nullable_to_non_nullable
+as bool,lastNameTouched: null == lastNameTouched ? _self.lastNameTouched : lastNameTouched // ignore: cast_nullable_to_non_nullable
+as bool,emailTouched: null == emailTouched ? _self.emailTouched : emailTouched // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

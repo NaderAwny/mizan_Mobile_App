@@ -94,7 +94,7 @@ class _InstallmentsDashboardScreen extends StatelessWidget {
               fontSize: FontSize.s16,
             ),
           ),
-          actions: [
+          actions: <Widget>[
             Padding(
               padding: EdgeInsets.only(left: 12.w),
               child: Container(
@@ -126,16 +126,17 @@ class _InstallmentsDashboardScreen extends StatelessWidget {
         ),
         body:
             BlocBuilder<InstallmentsDashboardCubit, InstallmentsDashboardState>(
-              builder: (context, state) {
-                return state.flowState?.getScreenWidget(
-                      context,
-                      _buildBody(context, state.data),
-                      () => context
-                          .read<InstallmentsDashboardCubit>()
-                          .getInstallmentsDashboard(),
-                    ) ??
-                    _buildBody(context, state.data);
-              },
+              builder:
+                  (BuildContext context, InstallmentsDashboardState state) {
+                    return state.flowState?.getScreenWidget(
+                          context,
+                          _buildBody(context, state.data),
+                          () => context
+                              .read<InstallmentsDashboardCubit>()
+                              .getInstallmentsDashboard(),
+                        ) ??
+                        _buildBody(context, state.data);
+                  },
             ),
       ),
     );
@@ -154,14 +155,14 @@ class _InstallmentsDashboardScreen extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        slivers: [
+        slivers: <Widget>[
           // ── Top Spacing & Summary Grid ──
           SliverPadding(
             padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 0),
             sliver: SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+                children: <Widget>[
                   // 2x2 Summary Cards Grid
                   InstallmentSummaryGrid(data: data),
                   SizedBox(height: 14.h),
@@ -174,7 +175,7 @@ class _InstallmentsDashboardScreen extends StatelessWidget {
                   // Section Header: "خطط التقسيط" + "عرض السجل الكامل"
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
+                    children: <Widget>[
                       Text(
                         AppStrings.installmentPlansSection,
                         style: getBoldStyle(
@@ -192,7 +193,7 @@ class _InstallmentsDashboardScreen extends StatelessWidget {
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
-                            children: [
+                            children: <Widget>[
                               Text(
                                 AppStrings.viewFullHistory,
                                 style: getBoldStyle(
@@ -227,10 +228,10 @@ class _InstallmentsDashboardScreen extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 16.w),
             sliver: SliverList.separated(
               itemCount: data.plans.length,
-              itemBuilder: (context, index) {
-                final plan = data.plans[index];
+              itemBuilder: (BuildContext context, int index) {
+                final InstallmentPlanModel plan = data.plans[index];
                 return InstallmentPlanCard(
-                  key: ValueKey(plan.transactionId),
+                  key: ValueKey<String>(plan.transactionId),
                   plan: plan,
                 );
               },

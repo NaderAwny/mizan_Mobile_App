@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 mixin _$StatisticsState {
 
  FlowState? get flowState; StatisticsPageModel? get data; String? get selectedDate;// null = summary mode, non-null = daily mode
- bool get isMonthlyMode; String? get selectedMonthYear;
+ bool get isMonthlyMode; String? get selectedMonthYear;// Format: "YYYY-MM"
+ int get selectedTabIndex;
 /// Create a copy of StatisticsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,16 @@ $StatisticsStateCopyWith<StatisticsState> get copyWith => _$StatisticsStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StatisticsState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.data, data) || other.data == data)&&(identical(other.selectedDate, selectedDate) || other.selectedDate == selectedDate)&&(identical(other.isMonthlyMode, isMonthlyMode) || other.isMonthlyMode == isMonthlyMode)&&(identical(other.selectedMonthYear, selectedMonthYear) || other.selectedMonthYear == selectedMonthYear));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StatisticsState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.data, data) || other.data == data)&&(identical(other.selectedDate, selectedDate) || other.selectedDate == selectedDate)&&(identical(other.isMonthlyMode, isMonthlyMode) || other.isMonthlyMode == isMonthlyMode)&&(identical(other.selectedMonthYear, selectedMonthYear) || other.selectedMonthYear == selectedMonthYear)&&(identical(other.selectedTabIndex, selectedTabIndex) || other.selectedTabIndex == selectedTabIndex));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,flowState,data,selectedDate,isMonthlyMode,selectedMonthYear);
+int get hashCode => Object.hash(runtimeType,flowState,data,selectedDate,isMonthlyMode,selectedMonthYear,selectedTabIndex);
 
 @override
 String toString() {
-  return 'StatisticsState(flowState: $flowState, data: $data, selectedDate: $selectedDate, isMonthlyMode: $isMonthlyMode, selectedMonthYear: $selectedMonthYear)';
+  return 'StatisticsState(flowState: $flowState, data: $data, selectedDate: $selectedDate, isMonthlyMode: $isMonthlyMode, selectedMonthYear: $selectedMonthYear, selectedTabIndex: $selectedTabIndex)';
 }
 
 
@@ -46,7 +47,7 @@ abstract mixin class $StatisticsStateCopyWith<$Res>  {
   factory $StatisticsStateCopyWith(StatisticsState value, $Res Function(StatisticsState) _then) = _$StatisticsStateCopyWithImpl;
 @useResult
 $Res call({
- FlowState? flowState, StatisticsPageModel? data, String? selectedDate, bool isMonthlyMode, String? selectedMonthYear
+ FlowState? flowState, StatisticsPageModel? data, String? selectedDate, bool isMonthlyMode, String? selectedMonthYear, int selectedTabIndex
 });
 
 
@@ -63,14 +64,15 @@ class _$StatisticsStateCopyWithImpl<$Res>
 
 /// Create a copy of StatisticsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? data = freezed,Object? selectedDate = freezed,Object? isMonthlyMode = null,Object? selectedMonthYear = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? data = freezed,Object? selectedDate = freezed,Object? isMonthlyMode = null,Object? selectedMonthYear = freezed,Object? selectedTabIndex = null,}) {
   return _then(_self.copyWith(
 flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
 as FlowState?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
 as StatisticsPageModel?,selectedDate: freezed == selectedDate ? _self.selectedDate : selectedDate // ignore: cast_nullable_to_non_nullable
 as String?,isMonthlyMode: null == isMonthlyMode ? _self.isMonthlyMode : isMonthlyMode // ignore: cast_nullable_to_non_nullable
 as bool,selectedMonthYear: freezed == selectedMonthYear ? _self.selectedMonthYear : selectedMonthYear // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,selectedTabIndex: null == selectedTabIndex ? _self.selectedTabIndex : selectedTabIndex // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -155,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  StatisticsPageModel? data,  String? selectedDate,  bool isMonthlyMode,  String? selectedMonthYear)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  StatisticsPageModel? data,  String? selectedDate,  bool isMonthlyMode,  String? selectedMonthYear,  int selectedTabIndex)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StatisticsState() when $default != null:
-return $default(_that.flowState,_that.data,_that.selectedDate,_that.isMonthlyMode,_that.selectedMonthYear);case _:
+return $default(_that.flowState,_that.data,_that.selectedDate,_that.isMonthlyMode,_that.selectedMonthYear,_that.selectedTabIndex);case _:
   return orElse();
 
 }
@@ -176,10 +178,10 @@ return $default(_that.flowState,_that.data,_that.selectedDate,_that.isMonthlyMod
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  StatisticsPageModel? data,  String? selectedDate,  bool isMonthlyMode,  String? selectedMonthYear)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  StatisticsPageModel? data,  String? selectedDate,  bool isMonthlyMode,  String? selectedMonthYear,  int selectedTabIndex)  $default,) {final _that = this;
 switch (_that) {
 case _StatisticsState():
-return $default(_that.flowState,_that.data,_that.selectedDate,_that.isMonthlyMode,_that.selectedMonthYear);case _:
+return $default(_that.flowState,_that.data,_that.selectedDate,_that.isMonthlyMode,_that.selectedMonthYear,_that.selectedTabIndex);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +198,10 @@ return $default(_that.flowState,_that.data,_that.selectedDate,_that.isMonthlyMod
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  StatisticsPageModel? data,  String? selectedDate,  bool isMonthlyMode,  String? selectedMonthYear)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  StatisticsPageModel? data,  String? selectedDate,  bool isMonthlyMode,  String? selectedMonthYear,  int selectedTabIndex)?  $default,) {final _that = this;
 switch (_that) {
 case _StatisticsState() when $default != null:
-return $default(_that.flowState,_that.data,_that.selectedDate,_that.isMonthlyMode,_that.selectedMonthYear);case _:
+return $default(_that.flowState,_that.data,_that.selectedDate,_that.isMonthlyMode,_that.selectedMonthYear,_that.selectedTabIndex);case _:
   return null;
 
 }
@@ -211,7 +213,7 @@ return $default(_that.flowState,_that.data,_that.selectedDate,_that.isMonthlyMod
 
 
 class _StatisticsState implements StatisticsState {
-  const _StatisticsState({this.flowState, this.data, this.selectedDate, this.isMonthlyMode = false, this.selectedMonthYear});
+  const _StatisticsState({this.flowState, this.data, this.selectedDate, this.isMonthlyMode = false, this.selectedMonthYear, this.selectedTabIndex = 1});
   
 
 @override final  FlowState? flowState;
@@ -220,6 +222,8 @@ class _StatisticsState implements StatisticsState {
 // null = summary mode, non-null = daily mode
 @override@JsonKey() final  bool isMonthlyMode;
 @override final  String? selectedMonthYear;
+// Format: "YYYY-MM"
+@override@JsonKey() final  int selectedTabIndex;
 
 /// Create a copy of StatisticsState
 /// with the given fields replaced by the non-null parameter values.
@@ -231,16 +235,16 @@ _$StatisticsStateCopyWith<_StatisticsState> get copyWith => __$StatisticsStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StatisticsState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.data, data) || other.data == data)&&(identical(other.selectedDate, selectedDate) || other.selectedDate == selectedDate)&&(identical(other.isMonthlyMode, isMonthlyMode) || other.isMonthlyMode == isMonthlyMode)&&(identical(other.selectedMonthYear, selectedMonthYear) || other.selectedMonthYear == selectedMonthYear));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StatisticsState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.data, data) || other.data == data)&&(identical(other.selectedDate, selectedDate) || other.selectedDate == selectedDate)&&(identical(other.isMonthlyMode, isMonthlyMode) || other.isMonthlyMode == isMonthlyMode)&&(identical(other.selectedMonthYear, selectedMonthYear) || other.selectedMonthYear == selectedMonthYear)&&(identical(other.selectedTabIndex, selectedTabIndex) || other.selectedTabIndex == selectedTabIndex));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,flowState,data,selectedDate,isMonthlyMode,selectedMonthYear);
+int get hashCode => Object.hash(runtimeType,flowState,data,selectedDate,isMonthlyMode,selectedMonthYear,selectedTabIndex);
 
 @override
 String toString() {
-  return 'StatisticsState(flowState: $flowState, data: $data, selectedDate: $selectedDate, isMonthlyMode: $isMonthlyMode, selectedMonthYear: $selectedMonthYear)';
+  return 'StatisticsState(flowState: $flowState, data: $data, selectedDate: $selectedDate, isMonthlyMode: $isMonthlyMode, selectedMonthYear: $selectedMonthYear, selectedTabIndex: $selectedTabIndex)';
 }
 
 
@@ -251,7 +255,7 @@ abstract mixin class _$StatisticsStateCopyWith<$Res> implements $StatisticsState
   factory _$StatisticsStateCopyWith(_StatisticsState value, $Res Function(_StatisticsState) _then) = __$StatisticsStateCopyWithImpl;
 @override @useResult
 $Res call({
- FlowState? flowState, StatisticsPageModel? data, String? selectedDate, bool isMonthlyMode, String? selectedMonthYear
+ FlowState? flowState, StatisticsPageModel? data, String? selectedDate, bool isMonthlyMode, String? selectedMonthYear, int selectedTabIndex
 });
 
 
@@ -268,14 +272,15 @@ class __$StatisticsStateCopyWithImpl<$Res>
 
 /// Create a copy of StatisticsState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? data = freezed,Object? selectedDate = freezed,Object? isMonthlyMode = null,Object? selectedMonthYear = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? data = freezed,Object? selectedDate = freezed,Object? isMonthlyMode = null,Object? selectedMonthYear = freezed,Object? selectedTabIndex = null,}) {
   return _then(_StatisticsState(
 flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
 as FlowState?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
 as StatisticsPageModel?,selectedDate: freezed == selectedDate ? _self.selectedDate : selectedDate // ignore: cast_nullable_to_non_nullable
 as String?,isMonthlyMode: null == isMonthlyMode ? _self.isMonthlyMode : isMonthlyMode // ignore: cast_nullable_to_non_nullable
 as bool,selectedMonthYear: freezed == selectedMonthYear ? _self.selectedMonthYear : selectedMonthYear // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,selectedTabIndex: null == selectedTabIndex ? _self.selectedTabIndex : selectedTabIndex // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 

@@ -29,7 +29,8 @@ class VoiceNoteModel {
   String get audioUrl {
     if (audioPath.isEmpty) return '';
     if (audioPath.startsWith('http')) return audioPath;
-    return '${Constants.baseUrl}$audioPath';
+    final String normalized = audioPath.replaceAll('\\', '/');
+    return '${Constants.baseUrl}${normalized.startsWith('/') ? '' : '/'}$normalized';
   }
 }
 
@@ -49,4 +50,20 @@ class VoiceNotesPage {
   });
 
   bool get hasNextPage => page < totalPages;
+}
+
+class VoiceNoteSummaryModel {
+  final double totalSales;
+  final double totalPurchases;
+  final double net;
+  final int count;
+  final String period;
+
+  const VoiceNoteSummaryModel({
+    required this.totalSales,
+    required this.totalPurchases,
+    required this.net,
+    required this.count,
+    required this.period,
+  });
 }

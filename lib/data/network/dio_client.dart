@@ -10,6 +10,8 @@ import 'package:mizan/app/constants.dart';
 import 'package:mizan/app/session_manager.dart';
 import 'package:mizan/data/local/token_local_data_source.dart';
 import 'package:mizan/data/network/auth_interceptor.dart';
+import 'package:mizan/data/network/retry_interceptor.dart';
+import 'package:mizan/data/network/timing_interceptor.dart';
 
 const String APPLICATION_JSON = "application/json";
 const String CONTENT_TYPE = "content-type";
@@ -23,25 +25,25 @@ class DioFactory {
     TokenLocalDataSource tokenLocalDataSource,
     SessionManager sessionManager,
   ) {
-    final Map<String, String> headers = {
+    final Map<String, String> headers = <String, String>{
       CONTENT_TYPE: APPLICATION_JSON,
       ACCEPT: APPLICATION_JSON,
     };
 
     // authDio منفصل (بدون AuthInterceptor) لتجنب الـ loop عند refresh
-    final authDio = Dio(
+    final Dio authDio = Dio(
       BaseOptions(
         baseUrl: Constants.baseUrl,
         headers: headers,
-        connectTimeout: Duration(milliseconds: Constants.apiTimeOut),
-        receiveTimeout: Duration(milliseconds: Constants.apiTimeOut),
-        sendTimeout: Duration(milliseconds: Constants.apiTimeOut),
+        connectTimeout: const Duration(milliseconds: Constants.apiTimeOut),
+        receiveTimeout: const Duration(milliseconds: Constants.apiTimeOut),
+        sendTimeout: const Duration(milliseconds: Constants.apiTimeOut),
       ),
     );
 
     if (!kReleaseMode) {
       (authDio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-        final client = HttpClient();
+        final HttpClient client = HttpClient();
         client.badCertificateCallback =
             (X509Certificate cert, String host, int port) => true;
         return client;
@@ -52,16 +54,16 @@ class DioFactory {
       BaseOptions(
         baseUrl: Constants.baseUrl,
         headers: headers,
-        connectTimeout: Duration(milliseconds: Constants.apiTimeOut),
-        receiveTimeout: Duration(milliseconds: Constants.apiTimeOut),
-        sendTimeout: Duration(milliseconds: Constants.apiTimeOut),
+        connectTimeout: const Duration(milliseconds: Constants.apiTimeOut),
+        receiveTimeout: const Duration(milliseconds: Constants.apiTimeOut),
+        sendTimeout: const Duration(milliseconds: Constants.apiTimeOut),
       ),
     );
 
     if (!kReleaseMode) {
       // Bypass SSL certificate errors in debug mode (e.g. self-signed / duckdns certs)
       (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-        final client = HttpClient();
+        final HttpClient client = HttpClient();
         client.badCertificateCallback =
             (X509Certificate cert, String host, int port) => true;
         return client;
@@ -70,22 +72,24 @@ class DioFactory {
       // Log all requests, responses and errors
       dio.interceptors.add(
         InterceptorsWrapper(
-          onRequest: (options, handler) {
-            debugPrint('┌── REQUEST ──────────────────────────');
-            debugPrint('│ URL: ${options.baseUrl}${options.path}');
-            debugPrint('│ Method: ${options.method}');
-            debugPrint('│ Data: ${options.data}');
-            debugPrint('└─────────────────────────────────────');
-            handler.next(options);
-          },
-          onResponse: (response, handler) {
-            debugPrint('┌── RESPONSE ─────────────────────────');
-            debugPrint('│ Status: ${response.statusCode}');
-            debugPrint('│ Data: ${response.data}');
-            debugPrint('└─────────────────────────────────────');
-            handler.next(response);
-          },
-          onError: (error, handler) {
+          onRequest:
+              (RequestOptions options, RequestInterceptorHandler handler) {
+                debugPrint('┌── REQUEST ──────────────────────────');
+                debugPrint('│ URL: ${options.baseUrl}${options.path}');
+                debugPrint('│ Method: ${options.method}');
+                debugPrint('│ Data: ${options.data}');
+                debugPrint('└─────────────────────────────────────');
+                handler.next(options);
+              },
+          onResponse:
+              (Response<dynamic> response, ResponseInterceptorHandler handler) {
+                debugPrint('┌── RESPONSE ─────────────────────────');
+                debugPrint('│ Status: ${response.statusCode}');
+                debugPrint('│ Data: ${response.data}');
+                debugPrint('└─────────────────────────────────────');
+                handler.next(response);
+              },
+          onError: (DioException error, ErrorInterceptorHandler handler) {
             debugPrint('┌── ERROR ────────────────────────────');
             debugPrint('│ Type: ${error.type}');
             debugPrint('│ Message: ${error.message}');
@@ -98,6 +102,9 @@ class DioFactory {
         ),
       );
     }
+
+    if (!kReleaseMode) dio.interceptors.add(TimingInterceptor());
+    dio.interceptors.add(RetryInterceptor(dio));
 
     // AuthInterceptor على الـ dio الرئيسي فقط
     dio.interceptors.add(

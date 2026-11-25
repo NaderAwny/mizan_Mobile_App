@@ -8,7 +8,19 @@ part 'create_voice_note_state.freezed.dart';
 abstract class VoiceNoteFormState with _$VoiceNoteFormState {
   const factory VoiceNoteFormState({
     FlowState? flowState,
+
     VoiceNoteModel? savedVoiceNote,
     @Default(false) bool isActionSuccess,
+    @Default('sale') String operationType,
+    String? contactId,
+    String? partyName,
+    @Default(false) bool isPartyVip,
+    DateTime? operationDate,
+    @Default(false) bool isRecording,
+    @Default(0) int recordSeconds,
+    String? recordedAudioPath,
+    @Default(false) bool isPlayingPreview,
+    @Default(0.0) double previewProgress,
+    @Default(Duration.zero) Duration totalAudioDuration,
   }) = _VoiceNoteFormState;
 }

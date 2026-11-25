@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$GetListVoiceNotesState {
 
- FlowState? get flowState; List<VoiceNoteModel>? get data; bool get isLoadingMore; bool get hasMore;
+ FlowState? get flowState; List<VoiceNoteModel>? get data; bool get isLoadingMore; bool get hasMore; int get selectedFilterIndex; String get searchQuery; String? get currentlyPlayingId; double get playbackProgress; Duration get currentPosition; Duration get currentAudioDuration;
 /// Create a copy of GetListVoiceNotesState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $GetListVoiceNotesStateCopyWith<GetListVoiceNotesState> get copyWith => _$GetLis
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GetListVoiceNotesState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&const DeepCollectionEquality().equals(other.data, data)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GetListVoiceNotesState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&const DeepCollectionEquality().equals(other.data, data)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.selectedFilterIndex, selectedFilterIndex) || other.selectedFilterIndex == selectedFilterIndex)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.currentlyPlayingId, currentlyPlayingId) || other.currentlyPlayingId == currentlyPlayingId)&&(identical(other.playbackProgress, playbackProgress) || other.playbackProgress == playbackProgress)&&(identical(other.currentPosition, currentPosition) || other.currentPosition == currentPosition)&&(identical(other.currentAudioDuration, currentAudioDuration) || other.currentAudioDuration == currentAudioDuration));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,flowState,const DeepCollectionEquality().hash(data),isLoadingMore,hasMore);
+int get hashCode => Object.hash(runtimeType,flowState,const DeepCollectionEquality().hash(data),isLoadingMore,hasMore,selectedFilterIndex,searchQuery,currentlyPlayingId,playbackProgress,currentPosition,currentAudioDuration);
 
 @override
 String toString() {
-  return 'GetListVoiceNotesState(flowState: $flowState, data: $data, isLoadingMore: $isLoadingMore, hasMore: $hasMore)';
+  return 'GetListVoiceNotesState(flowState: $flowState, data: $data, isLoadingMore: $isLoadingMore, hasMore: $hasMore, selectedFilterIndex: $selectedFilterIndex, searchQuery: $searchQuery, currentlyPlayingId: $currentlyPlayingId, playbackProgress: $playbackProgress, currentPosition: $currentPosition, currentAudioDuration: $currentAudioDuration)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $GetListVoiceNotesStateCopyWith<$Res>  {
   factory $GetListVoiceNotesStateCopyWith(GetListVoiceNotesState value, $Res Function(GetListVoiceNotesState) _then) = _$GetListVoiceNotesStateCopyWithImpl;
 @useResult
 $Res call({
- FlowState? flowState, List<VoiceNoteModel>? data, bool isLoadingMore, bool hasMore
+ FlowState? flowState, List<VoiceNoteModel>? data, bool isLoadingMore, bool hasMore, int selectedFilterIndex, String searchQuery, String? currentlyPlayingId, double playbackProgress, Duration currentPosition, Duration currentAudioDuration
 });
 
 
@@ -62,13 +62,19 @@ class _$GetListVoiceNotesStateCopyWithImpl<$Res>
 
 /// Create a copy of GetListVoiceNotesState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? data = freezed,Object? isLoadingMore = null,Object? hasMore = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? data = freezed,Object? isLoadingMore = null,Object? hasMore = null,Object? selectedFilterIndex = null,Object? searchQuery = null,Object? currentlyPlayingId = freezed,Object? playbackProgress = null,Object? currentPosition = null,Object? currentAudioDuration = null,}) {
   return _then(_self.copyWith(
 flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
 as FlowState?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
 as List<VoiceNoteModel>?,isLoadingMore: null == isLoadingMore ? _self.isLoadingMore : isLoadingMore // ignore: cast_nullable_to_non_nullable
 as bool,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,selectedFilterIndex: null == selectedFilterIndex ? _self.selectedFilterIndex : selectedFilterIndex // ignore: cast_nullable_to_non_nullable
+as int,searchQuery: null == searchQuery ? _self.searchQuery : searchQuery // ignore: cast_nullable_to_non_nullable
+as String,currentlyPlayingId: freezed == currentlyPlayingId ? _self.currentlyPlayingId : currentlyPlayingId // ignore: cast_nullable_to_non_nullable
+as String?,playbackProgress: null == playbackProgress ? _self.playbackProgress : playbackProgress // ignore: cast_nullable_to_non_nullable
+as double,currentPosition: null == currentPosition ? _self.currentPosition : currentPosition // ignore: cast_nullable_to_non_nullable
+as Duration,currentAudioDuration: null == currentAudioDuration ? _self.currentAudioDuration : currentAudioDuration // ignore: cast_nullable_to_non_nullable
+as Duration,
   ));
 }
 
@@ -153,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  List<VoiceNoteModel>? data,  bool isLoadingMore,  bool hasMore)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  List<VoiceNoteModel>? data,  bool isLoadingMore,  bool hasMore,  int selectedFilterIndex,  String searchQuery,  String? currentlyPlayingId,  double playbackProgress,  Duration currentPosition,  Duration currentAudioDuration)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _GetListVoiceNotesState() when $default != null:
-return $default(_that.flowState,_that.data,_that.isLoadingMore,_that.hasMore);case _:
+return $default(_that.flowState,_that.data,_that.isLoadingMore,_that.hasMore,_that.selectedFilterIndex,_that.searchQuery,_that.currentlyPlayingId,_that.playbackProgress,_that.currentPosition,_that.currentAudioDuration);case _:
   return orElse();
 
 }
@@ -174,10 +180,10 @@ return $default(_that.flowState,_that.data,_that.isLoadingMore,_that.hasMore);ca
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  List<VoiceNoteModel>? data,  bool isLoadingMore,  bool hasMore)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  List<VoiceNoteModel>? data,  bool isLoadingMore,  bool hasMore,  int selectedFilterIndex,  String searchQuery,  String? currentlyPlayingId,  double playbackProgress,  Duration currentPosition,  Duration currentAudioDuration)  $default,) {final _that = this;
 switch (_that) {
 case _GetListVoiceNotesState():
-return $default(_that.flowState,_that.data,_that.isLoadingMore,_that.hasMore);case _:
+return $default(_that.flowState,_that.data,_that.isLoadingMore,_that.hasMore,_that.selectedFilterIndex,_that.searchQuery,_that.currentlyPlayingId,_that.playbackProgress,_that.currentPosition,_that.currentAudioDuration);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -194,10 +200,10 @@ return $default(_that.flowState,_that.data,_that.isLoadingMore,_that.hasMore);ca
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  List<VoiceNoteModel>? data,  bool isLoadingMore,  bool hasMore)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  List<VoiceNoteModel>? data,  bool isLoadingMore,  bool hasMore,  int selectedFilterIndex,  String searchQuery,  String? currentlyPlayingId,  double playbackProgress,  Duration currentPosition,  Duration currentAudioDuration)?  $default,) {final _that = this;
 switch (_that) {
 case _GetListVoiceNotesState() when $default != null:
-return $default(_that.flowState,_that.data,_that.isLoadingMore,_that.hasMore);case _:
+return $default(_that.flowState,_that.data,_that.isLoadingMore,_that.hasMore,_that.selectedFilterIndex,_that.searchQuery,_that.currentlyPlayingId,_that.playbackProgress,_that.currentPosition,_that.currentAudioDuration);case _:
   return null;
 
 }
@@ -209,7 +215,7 @@ return $default(_that.flowState,_that.data,_that.isLoadingMore,_that.hasMore);ca
 
 
 class _GetListVoiceNotesState implements GetListVoiceNotesState {
-  const _GetListVoiceNotesState({this.flowState, final  List<VoiceNoteModel>? data, this.isLoadingMore = false, this.hasMore = true}): _data = data;
+  const _GetListVoiceNotesState({this.flowState, final  List<VoiceNoteModel>? data, this.isLoadingMore = false, this.hasMore = true, this.selectedFilterIndex = 0, this.searchQuery = '', this.currentlyPlayingId, this.playbackProgress = 0.0, this.currentPosition = Duration.zero, this.currentAudioDuration = Duration.zero}): _data = data;
   
 
 @override final  FlowState? flowState;
@@ -224,6 +230,12 @@ class _GetListVoiceNotesState implements GetListVoiceNotesState {
 
 @override@JsonKey() final  bool isLoadingMore;
 @override@JsonKey() final  bool hasMore;
+@override@JsonKey() final  int selectedFilterIndex;
+@override@JsonKey() final  String searchQuery;
+@override final  String? currentlyPlayingId;
+@override@JsonKey() final  double playbackProgress;
+@override@JsonKey() final  Duration currentPosition;
+@override@JsonKey() final  Duration currentAudioDuration;
 
 /// Create a copy of GetListVoiceNotesState
 /// with the given fields replaced by the non-null parameter values.
@@ -235,16 +247,16 @@ _$GetListVoiceNotesStateCopyWith<_GetListVoiceNotesState> get copyWith => __$Get
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GetListVoiceNotesState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&const DeepCollectionEquality().equals(other._data, _data)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GetListVoiceNotesState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&const DeepCollectionEquality().equals(other._data, _data)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.selectedFilterIndex, selectedFilterIndex) || other.selectedFilterIndex == selectedFilterIndex)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.currentlyPlayingId, currentlyPlayingId) || other.currentlyPlayingId == currentlyPlayingId)&&(identical(other.playbackProgress, playbackProgress) || other.playbackProgress == playbackProgress)&&(identical(other.currentPosition, currentPosition) || other.currentPosition == currentPosition)&&(identical(other.currentAudioDuration, currentAudioDuration) || other.currentAudioDuration == currentAudioDuration));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,flowState,const DeepCollectionEquality().hash(_data),isLoadingMore,hasMore);
+int get hashCode => Object.hash(runtimeType,flowState,const DeepCollectionEquality().hash(_data),isLoadingMore,hasMore,selectedFilterIndex,searchQuery,currentlyPlayingId,playbackProgress,currentPosition,currentAudioDuration);
 
 @override
 String toString() {
-  return 'GetListVoiceNotesState(flowState: $flowState, data: $data, isLoadingMore: $isLoadingMore, hasMore: $hasMore)';
+  return 'GetListVoiceNotesState(flowState: $flowState, data: $data, isLoadingMore: $isLoadingMore, hasMore: $hasMore, selectedFilterIndex: $selectedFilterIndex, searchQuery: $searchQuery, currentlyPlayingId: $currentlyPlayingId, playbackProgress: $playbackProgress, currentPosition: $currentPosition, currentAudioDuration: $currentAudioDuration)';
 }
 
 
@@ -255,7 +267,7 @@ abstract mixin class _$GetListVoiceNotesStateCopyWith<$Res> implements $GetListV
   factory _$GetListVoiceNotesStateCopyWith(_GetListVoiceNotesState value, $Res Function(_GetListVoiceNotesState) _then) = __$GetListVoiceNotesStateCopyWithImpl;
 @override @useResult
 $Res call({
- FlowState? flowState, List<VoiceNoteModel>? data, bool isLoadingMore, bool hasMore
+ FlowState? flowState, List<VoiceNoteModel>? data, bool isLoadingMore, bool hasMore, int selectedFilterIndex, String searchQuery, String? currentlyPlayingId, double playbackProgress, Duration currentPosition, Duration currentAudioDuration
 });
 
 
@@ -272,13 +284,19 @@ class __$GetListVoiceNotesStateCopyWithImpl<$Res>
 
 /// Create a copy of GetListVoiceNotesState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? data = freezed,Object? isLoadingMore = null,Object? hasMore = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? data = freezed,Object? isLoadingMore = null,Object? hasMore = null,Object? selectedFilterIndex = null,Object? searchQuery = null,Object? currentlyPlayingId = freezed,Object? playbackProgress = null,Object? currentPosition = null,Object? currentAudioDuration = null,}) {
   return _then(_GetListVoiceNotesState(
 flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
 as FlowState?,data: freezed == data ? _self._data : data // ignore: cast_nullable_to_non_nullable
 as List<VoiceNoteModel>?,isLoadingMore: null == isLoadingMore ? _self.isLoadingMore : isLoadingMore // ignore: cast_nullable_to_non_nullable
 as bool,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,selectedFilterIndex: null == selectedFilterIndex ? _self.selectedFilterIndex : selectedFilterIndex // ignore: cast_nullable_to_non_nullable
+as int,searchQuery: null == searchQuery ? _self.searchQuery : searchQuery // ignore: cast_nullable_to_non_nullable
+as String,currentlyPlayingId: freezed == currentlyPlayingId ? _self.currentlyPlayingId : currentlyPlayingId // ignore: cast_nullable_to_non_nullable
+as String?,playbackProgress: null == playbackProgress ? _self.playbackProgress : playbackProgress // ignore: cast_nullable_to_non_nullable
+as double,currentPosition: null == currentPosition ? _self.currentPosition : currentPosition // ignore: cast_nullable_to_non_nullable
+as Duration,currentAudioDuration: null == currentAudioDuration ? _self.currentAudioDuration : currentAudioDuration // ignore: cast_nullable_to_non_nullable
+as Duration,
   ));
 }
 

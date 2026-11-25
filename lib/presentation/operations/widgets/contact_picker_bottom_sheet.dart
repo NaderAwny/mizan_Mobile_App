@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -45,7 +45,7 @@ class ContactPickerBottomSheet extends StatefulWidget {
     return showModalBottomSheet<ContactPickerResult>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: ColorManager.transparent,
       builder: (_) => ContactPickerBottomSheet(
         selectedContactId: selectedContactId,
         selectedName: selectedName,
@@ -75,7 +75,7 @@ class _ContactPickerBottomSheetState extends State<ContactPickerBottomSheet> {
     return BlocProvider<ContactsCubit>(
       create: (_) => getIt<ContactsCubit>()..getContacts(),
       child: Builder(
-        builder: (context) {
+        builder: (BuildContext context) {
           return Container(
             height: MediaQuery.of(context).size.height * 0.85,
             decoration: BoxDecoration(
@@ -84,7 +84,7 @@ class _ContactPickerBottomSheetState extends State<ContactPickerBottomSheet> {
                 topLeft: Radius.circular(AppRadius.r24.r),
                 topRight: Radius.circular(AppRadius.r24.r),
               ),
-              boxShadow: [
+              boxShadow: <BoxShadow>[
                 BoxShadow(
                   color: ColorManager.black.withAlpha(20),
                   blurRadius: 20,
@@ -93,7 +93,7 @@ class _ContactPickerBottomSheetState extends State<ContactPickerBottomSheet> {
               ],
             ),
             child: Column(
-              children: [
+              children: <Widget>[
                 // Top drag handle
                 Container(
                   margin: EdgeInsets.symmetric(vertical: 10.h),
@@ -113,10 +113,10 @@ class _ContactPickerBottomSheetState extends State<ContactPickerBottomSheet> {
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
+                    children: <Widget>[
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                        children: <Widget>[
                           Text(
                             "تحديد الطرف الثاني",
                             style: getBoldStyle(
@@ -169,7 +169,7 @@ class _ContactPickerBottomSheetState extends State<ContactPickerBottomSheet> {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      children: <Widget>[
                         InkWell(
                           onTap: () {
                             setState(() {
@@ -177,7 +177,7 @@ class _ContactPickerBottomSheetState extends State<ContactPickerBottomSheet> {
                             });
                           },
                           child: Row(
-                            children: [
+                            children: <Widget>[
                               Container(
                                 padding: EdgeInsets.all(8.r),
                                 decoration: BoxDecoration(
@@ -200,7 +200,7 @@ class _ContactPickerBottomSheetState extends State<ContactPickerBottomSheet> {
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
+                                  children: <Widget>[
                                     Text(
                                       "كتابة اسم الطرف يدوياً",
                                       style: getBoldStyle(
@@ -228,10 +228,10 @@ class _ContactPickerBottomSheetState extends State<ContactPickerBottomSheet> {
                             ],
                           ),
                         ),
-                        if (_isManualEntryOpen) ...[
+                        if (_isManualEntryOpen) ...<Widget>[
                           SizedBox(height: 10.h),
                           Row(
-                            children: [
+                            children: <Widget>[
                               Expanded(
                                 child: TextField(
                                   controller: _manualNameController,
@@ -259,7 +259,7 @@ class _ContactPickerBottomSheetState extends State<ContactPickerBottomSheet> {
                               SizedBox(width: 8.w),
                               ElevatedButton(
                                 onPressed: () {
-                                  final name = _manualNameController.text
+                                  final String name = _manualNameController.text
                                       .trim();
                                   if (name.isNotEmpty) {
                                     Navigator.pop(
@@ -304,7 +304,7 @@ class _ContactPickerBottomSheetState extends State<ContactPickerBottomSheet> {
                     vertical: 8.h,
                   ),
                   child: Row(
-                    children: [
+                    children: <Widget>[
                       // Search Field
                       Expanded(
                         child: Container(
@@ -321,7 +321,7 @@ class _ContactPickerBottomSheetState extends State<ContactPickerBottomSheet> {
                               fontSize: FontSize.s13,
                             ),
                             controller: _searchController,
-                            onChanged: (val) {
+                            onChanged: (String val) {
                               context.read<ContactsCubit>().searchContacts(val);
                             },
                             decoration: InputDecoration(
@@ -373,8 +373,8 @@ class _ContactPickerBottomSheetState extends State<ContactPickerBottomSheet> {
                       SizedBox(width: 8.w),
                       // VIP Filter toggle
                       BlocBuilder<ContactsCubit, ContactsState>(
-                        builder: (ctx, state) {
-                          final isVip = state.isVipOnly;
+                        builder: (BuildContext ctx, ContactsState state) {
+                          final bool isVip = state.isVipOnly;
                           return GestureDetector(
                             onTap: () {
                               context.read<ContactsCubit>().setVipFilter(
@@ -401,7 +401,7 @@ class _ContactPickerBottomSheetState extends State<ContactPickerBottomSheet> {
                                 ),
                               ),
                               child: Row(
-                                children: [
+                                children: <Widget>[
                                   SvgPicture.asset(
                                     IconAssets.star,
                                     width: 14.r,
@@ -436,7 +436,7 @@ class _ContactPickerBottomSheetState extends State<ContactPickerBottomSheet> {
                 // Contacts List
                 Expanded(
                   child: BlocBuilder<ContactsCubit, ContactsState>(
-                    builder: (ctx, state) {
+                    builder: (BuildContext ctx, ContactsState state) {
                       if (state.flowState is LoadingState &&
                           (state.data == null || state.data!.isEmpty)) {
                         return const Center(
@@ -446,7 +446,7 @@ class _ContactPickerBottomSheetState extends State<ContactPickerBottomSheet> {
                         );
                       }
 
-                      final contacts = state.data ?? [];
+                      final List<Contact> contacts = state.data ?? <Contact>[];
 
                       if (contacts.isEmpty) {
                         return Center(
@@ -454,7 +454,7 @@ class _ContactPickerBottomSheetState extends State<ContactPickerBottomSheet> {
                             padding: EdgeInsets.all(24.r),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
+                              children: <Widget>[
                                 SvgPicture.asset(
                                   IconAssets.users,
                                   width: 42.r,
@@ -493,11 +493,11 @@ class _ContactPickerBottomSheetState extends State<ContactPickerBottomSheet> {
                           vertical: 8.h,
                         ),
                         itemCount: contacts.length,
-                        separatorBuilder: (context, index) =>
+                        separatorBuilder: (BuildContext context, int index) =>
                             SizedBox(height: 6.h),
-                        itemBuilder: (ctx, index) {
-                          final contact = contacts[index];
-                          final isSelected =
+                        itemBuilder: (BuildContext ctx, int index) {
+                          final Contact contact = contacts[index];
+                          final bool isSelected =
                               widget.selectedContactId == contact.id;
 
                           return _ContactTile(
@@ -551,14 +551,14 @@ class _ContactTile extends StatelessWidget {
         ),
       ),
       child: Material(
-        color: Colors.transparent,
+        color: ColorManager.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppRadius.r12.r),
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
             child: Row(
-              children: [
+              children: <Widget>[
                 // Avatar circle
                 Container(
                   width: 38.r,
@@ -588,9 +588,9 @@ class _ContactTile extends StatelessWidget {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    children: <Widget>[
                       Row(
-                        children: [
+                        children: <Widget>[
                           Flexible(
                             child: Text(
                               contact.name,
@@ -602,7 +602,7 @@ class _ContactTile extends StatelessWidget {
                               ),
                             ),
                           ),
-                          if (contact.isVip) ...[
+                          if (contact.isVip) ...<Widget>[
                             SizedBox(width: 6.w),
                             Container(
                               padding: EdgeInsets.symmetric(
@@ -617,7 +617,7 @@ class _ContactTile extends StatelessWidget {
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
-                                children: [
+                                children: <Widget>[
                                   SvgPicture.asset(
                                     IconAssets.star,
                                     width: 10.r,
@@ -641,7 +641,7 @@ class _ContactTile extends StatelessWidget {
                           ],
                         ],
                       ),
-                      if (contact.phoneNumber.isNotEmpty) ...[
+                      if (contact.phoneNumber.isNotEmpty) ...<Widget>[
                         SizedBox(height: 2.h),
                         Text(
                           contact.phoneNumber,

@@ -21,8 +21,12 @@ extension GetListTransactionsModelMapper on GetListTransactionData? {
 extension TransactionsPageMapper on GetListTransactionsPageData? {
   GetListTransactionsPage toDomain() {
     return GetListTransactionsPage(
-      items: (this?.items?.map((contact) => contact.toDomain()) ?? const [])
-          .toList(),
+      items:
+          (this?.items?.map(
+                    (GetListTransactionData contact) => contact.toDomain(),
+                  ) ??
+                  const <GetListTransactionsModel>[])
+              .toList(),
       totalCount: this?.totalCount.orZero() ?? 0,
       page: this?.page.orZero() ?? 1,
       pageSize: this?.pageSize.orZero() ?? 20,

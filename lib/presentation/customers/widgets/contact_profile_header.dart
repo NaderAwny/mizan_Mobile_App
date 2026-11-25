@@ -11,13 +11,10 @@ import 'package:mizan/presentation/resources/values_manager.dart';
 class ContactProfileHeader extends StatelessWidget {
   final ContactProfile profile;
 
-  const ContactProfileHeader({
-    super.key,
-    required this.profile,
-  });
+  const ContactProfileHeader({super.key, required this.profile});
 
   String _getInitialLetter(String name) {
-    final trimmed = name.trim();
+    final String trimmed = name.trim();
     if (trimmed.isEmpty) return "ط";
     return trimmed.substring(0, 1);
   }
@@ -36,7 +33,7 @@ class ContactProfileHeader extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [
+          colors: <Color>[
             Color(0xFFA8623B),
             Color(0xFFD1A153),
             Color(0xFFC57B57),
@@ -46,7 +43,7 @@ class ContactProfileHeader extends StatelessWidget {
           bottomLeft: Radius.circular(AppRadius.r32.r),
           bottomRight: Radius.circular(AppRadius.r32.r),
         ),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             color: Color(0x28A8623B),
             offset: Offset(0, 8),
@@ -55,7 +52,7 @@ class ContactProfileHeader extends StatelessWidget {
         ],
       ),
       child: Column(
-        children: [
+        children: <Widget>[
           // Circular White Avatar Container
           Container(
             width: 80.r,
@@ -63,7 +60,7 @@ class ContactProfileHeader extends StatelessWidget {
             decoration: const BoxDecoration(
               color: ColorManager.white,
               shape: BoxShape.circle,
-              boxShadow: [
+              boxShadow: <BoxShadow>[
                 BoxShadow(
                   color: Color(0x18000000),
                   offset: Offset(0, 4),
@@ -87,10 +84,13 @@ class ContactProfileHeader extends StatelessWidget {
           // Name and VIP Badge
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (profile.isVip) ...[
+            children: <Widget>[
+              if (profile.isVip) ...<Widget>[
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 3.h,
+                  ),
                   decoration: BoxDecoration(
                     color: ColorManager.white.withAlpha(220),
                     borderRadius: BorderRadius.circular(AppRadius.r8.r),
@@ -125,7 +125,7 @@ class ContactProfileHeader extends StatelessWidget {
           // Phone Row
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+            children: <Widget>[
               Text(
                 profile.phoneNumber,
                 textDirection: TextDirection.ltr,
@@ -143,11 +143,11 @@ class ContactProfileHeader extends StatelessWidget {
             ],
           ),
 
-          if (profile.contactEmail.isNotEmpty) ...[
+          if (profile.contactEmail.isNotEmpty) ...<Widget>[
             SizedBox(height: 6.h),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+              children: <Widget>[
                 Text(
                   profile.contactEmail,
                   style: getRegularStyle(

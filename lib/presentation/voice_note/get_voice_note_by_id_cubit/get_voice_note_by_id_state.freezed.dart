@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$GetVoiceNoteByIdState {
 
- FlowState? get flowState; VoiceNoteModel? get data;
+ FlowState? get flowState; VoiceNoteModel? get data; bool get isPlaying; Duration get currentPosition; Duration get totalDuration; bool get isDeleted;
 /// Create a copy of GetVoiceNoteByIdState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $GetVoiceNoteByIdStateCopyWith<GetVoiceNoteByIdState> get copyWith => _$GetVoice
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GetVoiceNoteByIdState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.data, data) || other.data == data));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GetVoiceNoteByIdState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.data, data) || other.data == data)&&(identical(other.isPlaying, isPlaying) || other.isPlaying == isPlaying)&&(identical(other.currentPosition, currentPosition) || other.currentPosition == currentPosition)&&(identical(other.totalDuration, totalDuration) || other.totalDuration == totalDuration)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,flowState,data);
+int get hashCode => Object.hash(runtimeType,flowState,data,isPlaying,currentPosition,totalDuration,isDeleted);
 
 @override
 String toString() {
-  return 'GetVoiceNoteByIdState(flowState: $flowState, data: $data)';
+  return 'GetVoiceNoteByIdState(flowState: $flowState, data: $data, isPlaying: $isPlaying, currentPosition: $currentPosition, totalDuration: $totalDuration, isDeleted: $isDeleted)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $GetVoiceNoteByIdStateCopyWith<$Res>  {
   factory $GetVoiceNoteByIdStateCopyWith(GetVoiceNoteByIdState value, $Res Function(GetVoiceNoteByIdState) _then) = _$GetVoiceNoteByIdStateCopyWithImpl;
 @useResult
 $Res call({
- FlowState? flowState, VoiceNoteModel? data
+ FlowState? flowState, VoiceNoteModel? data, bool isPlaying, Duration currentPosition, Duration totalDuration, bool isDeleted
 });
 
 
@@ -62,11 +62,15 @@ class _$GetVoiceNoteByIdStateCopyWithImpl<$Res>
 
 /// Create a copy of GetVoiceNoteByIdState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? data = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? data = freezed,Object? isPlaying = null,Object? currentPosition = null,Object? totalDuration = null,Object? isDeleted = null,}) {
   return _then(_self.copyWith(
 flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
 as FlowState?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as VoiceNoteModel?,
+as VoiceNoteModel?,isPlaying: null == isPlaying ? _self.isPlaying : isPlaying // ignore: cast_nullable_to_non_nullable
+as bool,currentPosition: null == currentPosition ? _self.currentPosition : currentPosition // ignore: cast_nullable_to_non_nullable
+as Duration,totalDuration: null == totalDuration ? _self.totalDuration : totalDuration // ignore: cast_nullable_to_non_nullable
+as Duration,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -151,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  VoiceNoteModel? data)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  VoiceNoteModel? data,  bool isPlaying,  Duration currentPosition,  Duration totalDuration,  bool isDeleted)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _GetVoiceNoteByIdState() when $default != null:
-return $default(_that.flowState,_that.data);case _:
+return $default(_that.flowState,_that.data,_that.isPlaying,_that.currentPosition,_that.totalDuration,_that.isDeleted);case _:
   return orElse();
 
 }
@@ -172,10 +176,10 @@ return $default(_that.flowState,_that.data);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  VoiceNoteModel? data)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  VoiceNoteModel? data,  bool isPlaying,  Duration currentPosition,  Duration totalDuration,  bool isDeleted)  $default,) {final _that = this;
 switch (_that) {
 case _GetVoiceNoteByIdState():
-return $default(_that.flowState,_that.data);case _:
+return $default(_that.flowState,_that.data,_that.isPlaying,_that.currentPosition,_that.totalDuration,_that.isDeleted);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -192,10 +196,10 @@ return $default(_that.flowState,_that.data);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  VoiceNoteModel? data)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  VoiceNoteModel? data,  bool isPlaying,  Duration currentPosition,  Duration totalDuration,  bool isDeleted)?  $default,) {final _that = this;
 switch (_that) {
 case _GetVoiceNoteByIdState() when $default != null:
-return $default(_that.flowState,_that.data);case _:
+return $default(_that.flowState,_that.data,_that.isPlaying,_that.currentPosition,_that.totalDuration,_that.isDeleted);case _:
   return null;
 
 }
@@ -207,11 +211,15 @@ return $default(_that.flowState,_that.data);case _:
 
 
 class _GetVoiceNoteByIdState implements GetVoiceNoteByIdState {
-  const _GetVoiceNoteByIdState({this.flowState, this.data});
+  const _GetVoiceNoteByIdState({this.flowState, this.data, this.isPlaying = false, this.currentPosition = Duration.zero, this.totalDuration = Duration.zero, this.isDeleted = false});
   
 
 @override final  FlowState? flowState;
 @override final  VoiceNoteModel? data;
+@override@JsonKey() final  bool isPlaying;
+@override@JsonKey() final  Duration currentPosition;
+@override@JsonKey() final  Duration totalDuration;
+@override@JsonKey() final  bool isDeleted;
 
 /// Create a copy of GetVoiceNoteByIdState
 /// with the given fields replaced by the non-null parameter values.
@@ -223,16 +231,16 @@ _$GetVoiceNoteByIdStateCopyWith<_GetVoiceNoteByIdState> get copyWith => __$GetVo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GetVoiceNoteByIdState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.data, data) || other.data == data));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GetVoiceNoteByIdState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.data, data) || other.data == data)&&(identical(other.isPlaying, isPlaying) || other.isPlaying == isPlaying)&&(identical(other.currentPosition, currentPosition) || other.currentPosition == currentPosition)&&(identical(other.totalDuration, totalDuration) || other.totalDuration == totalDuration)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,flowState,data);
+int get hashCode => Object.hash(runtimeType,flowState,data,isPlaying,currentPosition,totalDuration,isDeleted);
 
 @override
 String toString() {
-  return 'GetVoiceNoteByIdState(flowState: $flowState, data: $data)';
+  return 'GetVoiceNoteByIdState(flowState: $flowState, data: $data, isPlaying: $isPlaying, currentPosition: $currentPosition, totalDuration: $totalDuration, isDeleted: $isDeleted)';
 }
 
 
@@ -243,7 +251,7 @@ abstract mixin class _$GetVoiceNoteByIdStateCopyWith<$Res> implements $GetVoiceN
   factory _$GetVoiceNoteByIdStateCopyWith(_GetVoiceNoteByIdState value, $Res Function(_GetVoiceNoteByIdState) _then) = __$GetVoiceNoteByIdStateCopyWithImpl;
 @override @useResult
 $Res call({
- FlowState? flowState, VoiceNoteModel? data
+ FlowState? flowState, VoiceNoteModel? data, bool isPlaying, Duration currentPosition, Duration totalDuration, bool isDeleted
 });
 
 
@@ -260,11 +268,15 @@ class __$GetVoiceNoteByIdStateCopyWithImpl<$Res>
 
 /// Create a copy of GetVoiceNoteByIdState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? data = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? data = freezed,Object? isPlaying = null,Object? currentPosition = null,Object? totalDuration = null,Object? isDeleted = null,}) {
   return _then(_GetVoiceNoteByIdState(
 flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
 as FlowState?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as VoiceNoteModel?,
+as VoiceNoteModel?,isPlaying: null == isPlaying ? _self.isPlaying : isPlaying // ignore: cast_nullable_to_non_nullable
+as bool,currentPosition: null == currentPosition ? _self.currentPosition : currentPosition // ignore: cast_nullable_to_non_nullable
+as Duration,totalDuration: null == totalDuration ? _self.totalDuration : totalDuration // ignore: cast_nullable_to_non_nullable
+as Duration,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

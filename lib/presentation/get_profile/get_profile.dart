@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mizan/app/di.dart';
+import 'package:mizan/domain/model/get_profile_model/get_profile_model.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
 import 'package:mizan/presentation/get_profile/cubit/get_profile_cubit.dart';
 import 'package:mizan/presentation/get_profile/cubit/get_profile_state.dart';
@@ -25,13 +26,15 @@ class GetProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (_) => getIt<GetProfileCubit>()..getProfile(),
+      providers: <BlocProvider<StateStreamableSource<Object?>>>[
+        BlocProvider<GetProfileCubit>.value(
+          value: getIt<GetProfileCubit>()..getProfile(),
         ),
-        BlocProvider(create: (_) => getIt<LogoutCubit>()),
+        BlocProvider<LogoutCubit>(
+          create: (BuildContext context) => getIt<LogoutCubit>(),
+        ),
       ],
-      child: const _GetProfileScreen(),
+      child: const _GetProfileScreen(),                                              
     );
   }
 }
@@ -42,28 +45,33 @@ class _GetProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocListener<LogoutCubit, LogoutState>(
-      listener: (ctx, state) {
+      listener: (BuildContext ctx, LogoutState state) {
         if (state.isLoggedOut == true) {
-          Navigator.of(ctx, rootNavigator: true).popUntil((route) => route is! PopupRoute);
+          Navigator.of(
+            ctx,
+            rootNavigator: true,
+          ).popUntil((Route<dynamic> route) => route is! PopupRoute);
           Navigator.of(ctx).pushNamedAndRemoveUntil(
             Routes.sendOtpRoute,
-            (route) => false,
+            (Route<dynamic> route) => false,
           );
           return;
         }
-        final flowState = state.flowState;
-        if (flowState != null && (flowState is ErrorState || flowState is LoadingState)) {
+        final FlowState? flowState = state.flowState;
+        if (flowState != null &&
+            (flowState is ErrorState || flowState is LoadingState)) {
           flowState.getScreenWidget(ctx, const SizedBox.shrink(), () {});
         }
       },
       child: BlocBuilder<GetProfileCubit, GetProfileState>(
-        builder: (ctx, state) {
-          final flowState = state.flowState;
+        builder: (BuildContext ctx, GetProfileState state) {
+          final FlowState? flowState = state.flowState;
 
           if (flowState is LoadingState) {
             return Scaffold(
               backgroundColor: ColorManager.background,
-              body: flowState.getScreenWidget(
+              body:
+                  flowState.getScreenWidget(
                     ctx,
                     const SizedBox.shrink(),
                     () => ctx.read<GetProfileCubit>().getProfile(),
@@ -75,7 +83,8 @@ class _GetProfileScreen extends StatelessWidget {
           if (flowState is ErrorState) {
             return Scaffold(
               backgroundColor: ColorManager.background,
-              body: flowState.getScreenWidget(
+              body:
+                  flowState.getScreenWidget(
                     ctx,
                     const SizedBox.shrink(),
                     () => ctx.read<GetProfileCubit>().getProfile(),
@@ -103,13 +112,13 @@ class _ProfileContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final profile = state.data;
+    final GetProfileModel? profile = state.data;
 
     return SafeArea(
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
-          children: [
+          children: <Widget>[
             // ── Hero Header ─────────────────────────────────────────────────
             _ProfileHeroHeader(
               firstName: profile?.firstName ?? '',
@@ -126,17 +135,18 @@ class _ProfileContent extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 16.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: <Widget>[
                   // Account Info Section
-                  _SectionTitle(title: AppStrings.profileAccountInfo),
+                  const _SectionTitle(title: AppStrings.profileAccountInfo),
                   SizedBox(height: 12.h),
                   _ProfileInfoCard(
-                    children: [
+                    children: <Widget>[
                       _InfoRow(
                         icon: IconAssets.user,
                         label: AppStrings.profileFullName,
                         value:
-                            '${profile?.firstName ?? ''} ${profile?.lastName ?? ''}'.trim(),
+                            '${profile?.firstName ?? ''} ${profile?.lastName ?? ''}'
+                                .trim(),
                       ),
                       _divider(),
                       _InfoRow(
@@ -163,18 +173,19 @@ class _ProfileContent extends StatelessWidget {
                   ),
 
                   // Shop Info Section (only if shop exists)
-                  if (profile?.shop != null) ...[
+                  if (profile?.shop != null) ...<Widget>[
                     SizedBox(height: 20.h),
-                    _SectionTitle(title: AppStrings.profileShopInfo),
+                    const _SectionTitle(title: AppStrings.profileShopInfo),
                     SizedBox(height: 12.h),
                     _ProfileInfoCard(
-                      children: [
+                      children: <Widget>[
                         _InfoRow(
                           icon: IconAssets.store,
                           label: AppStrings.shopNameLabel,
                           value: profile?.shop?.shopName ?? '—',
                         ),
-                        if ((profile?.shop?.address ?? '').isNotEmpty) ...[
+                        if ((profile?.shop?.address ?? '')
+                            .isNotEmpty) ...<Widget>[
                           _divider(),
                           _InfoRow(
                             icon: IconAssets.mapPin,
@@ -202,9 +213,9 @@ class _ProfileContent extends StatelessWidget {
   }
 
   Widget _divider() => Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w),
-        child: Divider(color: ColorManager.border, height: 1),
-      );
+    padding: EdgeInsets.symmetric(horizontal: 16.w),
+    child: const Divider(color: ColorManager.border, height: 1),
+  );
 
   String _mapUserType(String type) {
     switch (type.toLowerCase()) {
@@ -238,7 +249,7 @@ class _ProfileHeroHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initials = _getInitials();
+    final String initials = _getInitials();
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -251,10 +262,10 @@ class _ProfileHeroHeader extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 28.h),
         child: Column(
-          children: [
+          children: <Widget>[
             // ── AppBar row ──────────────────────────────────────────────────
             Row(
-              children: [
+              children: <Widget>[
                 GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
                   child: Container(
@@ -350,7 +361,9 @@ class _ProfileHeroHeader extends StatelessWidget {
                 ),
               ),
               child: Text(
-                isActive ? AppStrings.profileActive : AppStrings.profileInactive,
+                isActive
+                    ? AppStrings.profileActive
+                    : AppStrings.profileInactive,
                 style: getMediumStyle(
                   color: ColorManager.white,
                   fontSize: FontSize.s12,
@@ -364,8 +377,8 @@ class _ProfileHeroHeader extends StatelessWidget {
   }
 
   String _getInitials() {
-    final f = firstName.isNotEmpty ? firstName[0].toUpperCase() : '';
-    final l = lastName.isNotEmpty ? lastName[0].toUpperCase() : '';
+    final String f = firstName.isNotEmpty ? firstName[0].toUpperCase() : '';
+    final String l = lastName.isNotEmpty ? lastName[0].toUpperCase() : '';
     return '$f$l'.isEmpty ? '?' : '$f$l';
   }
 }
@@ -404,7 +417,7 @@ class _ProfileInfoCard extends StatelessWidget {
         color: ColorManager.surface,
         borderRadius: BorderRadius.circular(AppRadius.r16.r),
         border: Border.all(color: ColorManager.border),
-        boxShadow: const [AppShadows.cardShadow],
+        boxShadow: const <BoxShadow>[AppShadows.cardShadow],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -437,7 +450,7 @@ class _InfoRow extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       child: Row(
-        children: [
+        children: <Widget>[
           // Icon
           Container(
             width: 36.r,
@@ -503,7 +516,9 @@ class _StatusChip extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: isActive ? ColorManager.successContainer : ColorManager.errorContainer,
+        color: isActive
+            ? ColorManager.successContainer
+            : ColorManager.errorContainer,
         borderRadius: BorderRadius.circular(AppRadius.r100.r),
       ),
       child: Text(
@@ -524,8 +539,8 @@ class _LogoutButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LogoutCubit, LogoutState>(
-      builder: (ctx, state) {
-        final isLoading = state.flowState is LoadingState;
+      builder: (BuildContext ctx, LogoutState state) {
+        final bool isLoading = state.flowState is LoadingState;
         return SizedBox(
           width: double.infinity,
           height: 52.h,
@@ -533,14 +548,10 @@ class _LogoutButton extends StatelessWidget {
             decoration: BoxDecoration(
               color: ColorManager.errorContainer,
               borderRadius: BorderRadius.circular(AppRadius.r14.r),
-              border: Border.all(
-                color: ColorManager.error.withAlpha(80),
-              ),
+              border: Border.all(color: ColorManager.error.withAlpha(80)),
             ),
             child: TextButton(
-              onPressed: isLoading
-                  ? null
-                  : () => _showLogoutDialog(ctx),
+              onPressed: isLoading ? null : () => _showLogoutDialog(ctx),
               style: TextButton.styleFrom(
                 foregroundColor: ColorManager.error,
                 shape: RoundedRectangleBorder(
@@ -552,14 +563,14 @@ class _LogoutButton extends StatelessWidget {
                   ? SizedBox(
                       width: 20.r,
                       height: 20.r,
-                      child: CircularProgressIndicator(
+                      child: const CircularProgressIndicator(
                         strokeWidth: 2,
                         color: ColorManager.error,
                       ),
                     )
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
+                      children: <Widget>[
                         SvgPicture.asset(
                           IconAssets.lock,
                           width: 18.r,
@@ -587,9 +598,9 @@ class _LogoutButton extends StatelessWidget {
   }
 
   void _showLogoutDialog(BuildContext context) {
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
+      builder: (BuildContext dialogCtx) => AlertDialog(
         backgroundColor: ColorManager.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.r20.r),
@@ -612,24 +623,23 @@ class _LogoutButton extends StatelessWidget {
           ),
         ),
         actionsAlignment: MainAxisAlignment.center,
-        actions: [
+        actions: <Widget>[
           Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(dialogCtx).pop(),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: ColorManager.textSecondary,
-                    side: const BorderSide(color: ColorManager.border),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.r12.r),
-                    ),
-                    padding: EdgeInsets.symmetric(vertical: 12.h),
+            children: <Widget>[
+              OutlinedButton(
+                onPressed: () => Navigator.of(dialogCtx).pop(),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: ColorManager.textSecondary,
+                  side: const BorderSide(color: ColorManager.border),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.r12.r),
                   ),
-                  child: Text(AppStrings.cancel),
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
                 ),
+                child: const Text(AppStrings.cancel),
               ),
-              SizedBox(width: 12.w),
+
+              SizedBox(width: 20.w),
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
@@ -645,6 +655,7 @@ class _LogoutButton extends StatelessWidget {
                     padding: EdgeInsets.symmetric(vertical: 12.h),
                     elevation: 0,
                   ),
+
                   child: Text(
                     AppStrings.profileLogout,
                     style: getBoldStyle(

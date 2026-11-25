@@ -1,5 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/app/app_logger.dart';
+import 'package:mizan/data/network/failure.dart';
+import 'package:mizan/domain/model/auth_session_model/auth_session_model.dart';
 import 'package:mizan/domain/use_case/select_user_type_use_case.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
@@ -10,32 +13,45 @@ class SelectUserTypeCubit extends Cubit<SelectUserTypeState> {
   final SelectUserTypeUseCase _usecase;
   SelectUserTypeCubit(this._usecase) : super(const SelectUserTypeState());
 
+  void setSelectedType(String type) {
+    emit(state.copyWith(selectedType: type));
+  }
+
+  void touchShopName() {
+    if (!state.shopNameTouched) emit(state.copyWith(shopNameTouched: true));
+  }
+
   Future<void> selectUserType({
     required String userType,
     String? shopName,
     String? address,
   }) async {
-    emit(state.copyWith(
-      flowState: LoadingState(
-        stateRendererType: StateRendererType.popupLoadingState,
-        title: "جاري الحفظ",
-        message: "جاري حفظ نوع الحساب المختار...",
+    emit(
+      state.copyWith(
+        flowState: LoadingState(
+          stateRendererType: StateRendererType.popupLoadingState,
+          title: 'جاري الحفظ',
+          message: 'جاري حفظ نوع الحساب المختار...',
+        ),
       ),
-    ));
+    );
     (await _usecase.execute(
       SelectUserTypeInput(userType, shopName: shopName, address: address),
     )).fold(
-      (failure) => emit(state.copyWith(
-        flowState: ErrorState(
-          StateRendererType.popupErrorStatete,
-          failure.message,
-          title: "تعذر حفظ البيانات",
-        ),
-      )),
-      (session) => emit(state.copyWith(
-        data: session,
-        flowState: ContentState(),
-      )),
+      (Failure failure) {
+        AppLogger.e('selectUserType failure', error: failure.message);
+        emit(
+          state.copyWith(
+            flowState: ErrorState(
+              StateRendererType.popupErrorStatete,
+              failure.message,
+              title: 'تعذر حفظ البيانات',
+            ),
+          ),
+        );
+      },
+      (AuthSession session) =>
+          emit(state.copyWith(data: session, flowState: ContentState())),
     );
   }
 }

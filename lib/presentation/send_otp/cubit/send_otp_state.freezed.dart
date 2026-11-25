@@ -14,7 +14,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SendOtpState {
 
- FlowState? get flowState; String get email; bool get isEmailValid; bool get isAllValid; bool get sendOtpSuccess;
+ FlowState? get flowState; String get email; bool get isEmailValid; bool get isAllValid; bool get sendOtpSuccess; int get secondsLeft;// كان ValueNotifier<int> في الـ view
+ bool get emailTouched;
 /// Create a copy of SendOtpState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,16 @@ $SendOtpStateCopyWith<SendOtpState> get copyWith => _$SendOtpStateCopyWithImpl<S
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SendOtpState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.email, email) || other.email == email)&&(identical(other.isEmailValid, isEmailValid) || other.isEmailValid == isEmailValid)&&(identical(other.isAllValid, isAllValid) || other.isAllValid == isAllValid)&&(identical(other.sendOtpSuccess, sendOtpSuccess) || other.sendOtpSuccess == sendOtpSuccess));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SendOtpState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.email, email) || other.email == email)&&(identical(other.isEmailValid, isEmailValid) || other.isEmailValid == isEmailValid)&&(identical(other.isAllValid, isAllValid) || other.isAllValid == isAllValid)&&(identical(other.sendOtpSuccess, sendOtpSuccess) || other.sendOtpSuccess == sendOtpSuccess)&&(identical(other.secondsLeft, secondsLeft) || other.secondsLeft == secondsLeft)&&(identical(other.emailTouched, emailTouched) || other.emailTouched == emailTouched));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,flowState,email,isEmailValid,isAllValid,sendOtpSuccess);
+int get hashCode => Object.hash(runtimeType,flowState,email,isEmailValid,isAllValid,sendOtpSuccess,secondsLeft,emailTouched);
 
 @override
 String toString() {
-  return 'SendOtpState(flowState: $flowState, email: $email, isEmailValid: $isEmailValid, isAllValid: $isAllValid, sendOtpSuccess: $sendOtpSuccess)';
+  return 'SendOtpState(flowState: $flowState, email: $email, isEmailValid: $isEmailValid, isAllValid: $isAllValid, sendOtpSuccess: $sendOtpSuccess, secondsLeft: $secondsLeft, emailTouched: $emailTouched)';
 }
 
 
@@ -45,7 +46,7 @@ abstract mixin class $SendOtpStateCopyWith<$Res>  {
   factory $SendOtpStateCopyWith(SendOtpState value, $Res Function(SendOtpState) _then) = _$SendOtpStateCopyWithImpl;
 @useResult
 $Res call({
- FlowState? flowState, String email, bool isEmailValid, bool isAllValid, bool sendOtpSuccess
+ FlowState? flowState, String email, bool isEmailValid, bool isAllValid, bool sendOtpSuccess, int secondsLeft, bool emailTouched
 });
 
 
@@ -62,13 +63,15 @@ class _$SendOtpStateCopyWithImpl<$Res>
 
 /// Create a copy of SendOtpState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? email = null,Object? isEmailValid = null,Object? isAllValid = null,Object? sendOtpSuccess = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? email = null,Object? isEmailValid = null,Object? isAllValid = null,Object? sendOtpSuccess = null,Object? secondsLeft = null,Object? emailTouched = null,}) {
   return _then(_self.copyWith(
 flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
 as FlowState?,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,isEmailValid: null == isEmailValid ? _self.isEmailValid : isEmailValid // ignore: cast_nullable_to_non_nullable
 as bool,isAllValid: null == isAllValid ? _self.isAllValid : isAllValid // ignore: cast_nullable_to_non_nullable
 as bool,sendOtpSuccess: null == sendOtpSuccess ? _self.sendOtpSuccess : sendOtpSuccess // ignore: cast_nullable_to_non_nullable
+as bool,secondsLeft: null == secondsLeft ? _self.secondsLeft : secondsLeft // ignore: cast_nullable_to_non_nullable
+as int,emailTouched: null == emailTouched ? _self.emailTouched : emailTouched // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -154,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  String email,  bool isEmailValid,  bool isAllValid,  bool sendOtpSuccess)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  String email,  bool isEmailValid,  bool isAllValid,  bool sendOtpSuccess,  int secondsLeft,  bool emailTouched)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SendOtpState() when $default != null:
-return $default(_that.flowState,_that.email,_that.isEmailValid,_that.isAllValid,_that.sendOtpSuccess);case _:
+return $default(_that.flowState,_that.email,_that.isEmailValid,_that.isAllValid,_that.sendOtpSuccess,_that.secondsLeft,_that.emailTouched);case _:
   return orElse();
 
 }
@@ -175,10 +178,10 @@ return $default(_that.flowState,_that.email,_that.isEmailValid,_that.isAllValid,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  String email,  bool isEmailValid,  bool isAllValid,  bool sendOtpSuccess)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  String email,  bool isEmailValid,  bool isAllValid,  bool sendOtpSuccess,  int secondsLeft,  bool emailTouched)  $default,) {final _that = this;
 switch (_that) {
 case _SendOtpState():
-return $default(_that.flowState,_that.email,_that.isEmailValid,_that.isAllValid,_that.sendOtpSuccess);case _:
+return $default(_that.flowState,_that.email,_that.isEmailValid,_that.isAllValid,_that.sendOtpSuccess,_that.secondsLeft,_that.emailTouched);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -195,10 +198,10 @@ return $default(_that.flowState,_that.email,_that.isEmailValid,_that.isAllValid,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  String email,  bool isEmailValid,  bool isAllValid,  bool sendOtpSuccess)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  String email,  bool isEmailValid,  bool isAllValid,  bool sendOtpSuccess,  int secondsLeft,  bool emailTouched)?  $default,) {final _that = this;
 switch (_that) {
 case _SendOtpState() when $default != null:
-return $default(_that.flowState,_that.email,_that.isEmailValid,_that.isAllValid,_that.sendOtpSuccess);case _:
+return $default(_that.flowState,_that.email,_that.isEmailValid,_that.isAllValid,_that.sendOtpSuccess,_that.secondsLeft,_that.emailTouched);case _:
   return null;
 
 }
@@ -210,7 +213,7 @@ return $default(_that.flowState,_that.email,_that.isEmailValid,_that.isAllValid,
 
 
 class _SendOtpState implements SendOtpState {
-  const _SendOtpState({this.flowState, this.email = '', this.isEmailValid = false, this.isAllValid = false, this.sendOtpSuccess = false});
+  const _SendOtpState({this.flowState, this.email = '', this.isEmailValid = false, this.isAllValid = false, this.sendOtpSuccess = false, this.secondsLeft = 0, this.emailTouched = false});
   
 
 @override final  FlowState? flowState;
@@ -218,6 +221,9 @@ class _SendOtpState implements SendOtpState {
 @override@JsonKey() final  bool isEmailValid;
 @override@JsonKey() final  bool isAllValid;
 @override@JsonKey() final  bool sendOtpSuccess;
+@override@JsonKey() final  int secondsLeft;
+// كان ValueNotifier<int> في الـ view
+@override@JsonKey() final  bool emailTouched;
 
 /// Create a copy of SendOtpState
 /// with the given fields replaced by the non-null parameter values.
@@ -229,16 +235,16 @@ _$SendOtpStateCopyWith<_SendOtpState> get copyWith => __$SendOtpStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SendOtpState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.email, email) || other.email == email)&&(identical(other.isEmailValid, isEmailValid) || other.isEmailValid == isEmailValid)&&(identical(other.isAllValid, isAllValid) || other.isAllValid == isAllValid)&&(identical(other.sendOtpSuccess, sendOtpSuccess) || other.sendOtpSuccess == sendOtpSuccess));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SendOtpState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.email, email) || other.email == email)&&(identical(other.isEmailValid, isEmailValid) || other.isEmailValid == isEmailValid)&&(identical(other.isAllValid, isAllValid) || other.isAllValid == isAllValid)&&(identical(other.sendOtpSuccess, sendOtpSuccess) || other.sendOtpSuccess == sendOtpSuccess)&&(identical(other.secondsLeft, secondsLeft) || other.secondsLeft == secondsLeft)&&(identical(other.emailTouched, emailTouched) || other.emailTouched == emailTouched));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,flowState,email,isEmailValid,isAllValid,sendOtpSuccess);
+int get hashCode => Object.hash(runtimeType,flowState,email,isEmailValid,isAllValid,sendOtpSuccess,secondsLeft,emailTouched);
 
 @override
 String toString() {
-  return 'SendOtpState(flowState: $flowState, email: $email, isEmailValid: $isEmailValid, isAllValid: $isAllValid, sendOtpSuccess: $sendOtpSuccess)';
+  return 'SendOtpState(flowState: $flowState, email: $email, isEmailValid: $isEmailValid, isAllValid: $isAllValid, sendOtpSuccess: $sendOtpSuccess, secondsLeft: $secondsLeft, emailTouched: $emailTouched)';
 }
 
 
@@ -249,7 +255,7 @@ abstract mixin class _$SendOtpStateCopyWith<$Res> implements $SendOtpStateCopyWi
   factory _$SendOtpStateCopyWith(_SendOtpState value, $Res Function(_SendOtpState) _then) = __$SendOtpStateCopyWithImpl;
 @override @useResult
 $Res call({
- FlowState? flowState, String email, bool isEmailValid, bool isAllValid, bool sendOtpSuccess
+ FlowState? flowState, String email, bool isEmailValid, bool isAllValid, bool sendOtpSuccess, int secondsLeft, bool emailTouched
 });
 
 
@@ -266,13 +272,15 @@ class __$SendOtpStateCopyWithImpl<$Res>
 
 /// Create a copy of SendOtpState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? email = null,Object? isEmailValid = null,Object? isAllValid = null,Object? sendOtpSuccess = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? email = null,Object? isEmailValid = null,Object? isAllValid = null,Object? sendOtpSuccess = null,Object? secondsLeft = null,Object? emailTouched = null,}) {
   return _then(_SendOtpState(
 flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
 as FlowState?,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,isEmailValid: null == isEmailValid ? _self.isEmailValid : isEmailValid // ignore: cast_nullable_to_non_nullable
 as bool,isAllValid: null == isAllValid ? _self.isAllValid : isAllValid // ignore: cast_nullable_to_non_nullable
 as bool,sendOtpSuccess: null == sendOtpSuccess ? _self.sendOtpSuccess : sendOtpSuccess // ignore: cast_nullable_to_non_nullable
+as bool,secondsLeft: null == secondsLeft ? _self.secondsLeft : secondsLeft // ignore: cast_nullable_to_non_nullable
+as int,emailTouched: null == emailTouched ? _self.emailTouched : emailTouched // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

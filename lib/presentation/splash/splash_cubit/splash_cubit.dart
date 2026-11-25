@@ -1,41 +1,100 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/app/app_logger.dart';
 import 'package:mizan/data/local/onboarding_local_data_source.dart';
 import 'package:mizan/data/local/token_local_data_source.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
+import 'package:mizan/presentation/get_profile/cubit/get_profile_cubit.dart';
+import 'package:mizan/presentation/resources/strings_manager.dart';
+import 'package:mizan/presentation/resources/values_manager.dart';
 import 'package:mizan/presentation/splash/splash_cubit/splash_state.dart';
+import 'package:mizan/app/notification_service.dart';
 
 @injectable
 class SplashCubit extends Cubit<SplashState> {
-  final TokenLocalDataSource _tokenLocalDataSource;
-  final OnboardingLocalDataSource _onboardingLocalDataSource;
-
   SplashCubit(
     this._tokenLocalDataSource,
     this._onboardingLocalDataSource,
+    this._getProfileCubit,
+    this._notificationService,
   ) : super(const SplashState());
 
-  Future<void> decide() async {
-    emit(state.copyWith(
-      flowState: LoadingState(
-        stateRendererType: StateRendererType.fullScreenLoadingState,
+  final TokenLocalDataSource _tokenLocalDataSource;
+  final OnboardingLocalDataSource _onboardingLocalDataSource;
+  // ignore: unused_field
+  final GetProfileCubit _getProfileCubit;
+  final NotificationService _notificationService;
+
+  Future<void> preload() async {
+    emit(
+      state.copyWith(
+        flowState: LoadingState(
+          stateRendererType: StateRendererType.fullScreenLoadingState,
+          title: AppStrings.loading,
+          message: AppStrings.loading,
+        ),
       ),
-    ));
+    );
 
-    final hasSession = await _tokenLocalDataSource.hasValidSession();
-    if (hasSession) {
-      emit(state.copyWith(
-        data: SplashDestination.home,
-        flowState: ContentState(),
-      ));
-      return;
+    final Future<void> minDelay = Future<void>.delayed(AppDuration.splashMin);
+
+    try {
+      final SplashDestination destination = await _decideDestination().timeout(
+        AppDuration.splashTimeout,
+      );
+      await minDelay;
+      if (isClosed) return;
+      emit(state.copyWith(flowState: ContentState(), data: destination));
+    } on TimeoutException {
+      AppLogger.d('splash preload timed out — using cached fallback');
+      await minDelay;
+      if (isClosed) return;
+      emit(
+        state.copyWith(
+          flowState: ContentState(),
+          data: await _fallbackDestination(),
+        ),
+      );
+    } on Object catch (e, s) {
+      AppLogger.e('splash preload failed', error: e, stackTrace: s);
+      if (isClosed) return;
+      emit(
+        state.copyWith(
+          flowState: ErrorState(
+            StateRendererType.fullScreenErrorState,
+            'حدث خطأ، يرجى المحاولة مجدداً',
+          ),
+        ),
+      );
     }
+  }
 
-    final seenOnboarding = await _onboardingLocalDataSource.hasSeenOnboarding();
-    emit(state.copyWith(
-      data: seenOnboarding ? SplashDestination.login : SplashDestination.onboarding,
-      flowState: ContentState(),
-    ));
+  Future<SplashDestination> _decideDestination() async {
+    final bool seenOnboarding = await _onboardingLocalDataSource
+        .hasSeenOnboarding();
+    if (!seenOnboarding) return SplashDestination.onboarding;
+
+    final bool hasSession = await _tokenLocalDataSource.hasValidSession();
+    if (!hasSession) return SplashDestination.login;
+
+    unawaited(_notificationService.registerDeviceToken());
+
+    // مفيش انتظار للشبكة هنا: الـ splash بيقرر الوجهة من البيانات المحلية بس،
+    // والـ Home بيحمّل بياناته بنفسه (وبيعرض loading). كده الـ splash مبيتأخرش
+    // لو السيرفر بيصحى (cold start) أو التوكن محتاج refresh.
+
+    return SplashDestination.home;
+  }
+
+  Future<SplashDestination> _fallbackDestination() async {
+    final bool seenOnboarding = await _onboardingLocalDataSource
+        .hasSeenOnboarding();
+    if (!seenOnboarding) return SplashDestination.onboarding;
+
+    final bool hasSession = await _tokenLocalDataSource.hasValidSession();
+    return hasSession ? SplashDestination.home : SplashDestination.login;
   }
 }

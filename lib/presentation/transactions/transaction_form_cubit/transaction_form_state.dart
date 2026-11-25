@@ -10,5 +10,15 @@ abstract class TransactionFormState with _$TransactionFormState {
     FlowState? flowState,
     Transaction? savedTransaction,
     @Default(false) bool isActionSuccess,
+    String? selectedContactId,
+    String? selectedPartyName,
+    @Default(false) bool isPartyVip,
+    DateTime? transactionDate,
+    @Default(true) bool isCash,
+    @Default(false) bool isInstallment,
+    @Default("Automatic") String installmentPlanMode,
+    @Default(3) int installmentCount,
+    @Default("Monthly") String frequency,
+    DateTime? firstInstallmentDate,
   }) = _TransactionFormState;
 }

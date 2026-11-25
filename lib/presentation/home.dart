@@ -3,11 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mizan/app/di.dart';
-import 'package:mizan/presentation/analytics/analytics_view.dart';
+import 'package:mizan/domain/model/get_profile_model/get_profile_model.dart';
+import 'package:mizan/domain/model/statistics_model/statistics_model.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
 import 'package:mizan/presentation/customers/customers_view.dart';
 import 'package:mizan/presentation/get_profile/cubit/get_profile_cubit.dart';
 import 'package:mizan/presentation/get_profile/cubit/get_profile_state.dart';
+import 'package:mizan/presentation/home/home_tab_cubit.dart';
 import 'package:mizan/presentation/home/widgets/custom_bottom_nav_bar.dart';
 import 'package:mizan/presentation/home/widgets/hero_balance_card.dart';
 import 'package:mizan/presentation/home/widgets/home_header.dart';
@@ -15,6 +17,7 @@ import 'package:mizan/presentation/home/widgets/home_header.dart';
 import 'package:mizan/presentation/home/widgets/quick_actions_bar.dart';
 import 'package:mizan/presentation/home/widgets/recent_transactions_section.dart';
 import 'package:mizan/presentation/installments/installments_view.dart';
+import 'package:mizan/presentation/notifications/notifications_cubit/notifications_cubit.dart';
 import 'package:mizan/presentation/resources/assets_manager.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
 import 'package:mizan/presentation/resources/font_manager.dart';
@@ -38,17 +41,49 @@ class SwitchHomeTabNotification extends Notification {
   const SwitchHomeTabNotification(this.targetIndex);
 }
 
-class HomeView extends StatelessWidget {
+class HomeView extends StatefulWidget {
   const HomeView({super.key});
 
   @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
+  late final NotificationsCubit _notificationsCubit;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _notificationsCubit = getIt<NotificationsCubit>();
+    // جلب العدد فور بناء الصفحة
+    _notificationsCubit.fetchUnreadCount();
+    // لو الـ splash ما جابش البروفايل (فشل/timeout) نجيبه هنا تلقائياً.
+    final GetProfileCubit profile = getIt<GetProfileCubit>();
+    if (profile.state.data == null) profile.getProfile();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // عند العودة للتطبيق من الخلفية → أعد مزامنة العدد فوراً
+    if (state == AppLifecycleState.resumed) {
+      _notificationsCubit.fetchUnreadCount();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
+    final DateTime now = DateTime.now();
     return MultiBlocProvider(
-      providers: [
-        BlocProvider<GetProfileCubit>(
-          create: (_) => getIt<GetProfileCubit>()..getProfile(),
-        ),
+      providers: <BlocProvider<StateStreamableSource<Object?>>>[
+        // GetProfileCubit lazySingleton: .value عشان الـ widget ما يقفلوش.
+        BlocProvider<GetProfileCubit>.value(value: getIt<GetProfileCubit>()),
         BlocProvider<StatisticsCubit>(
           create: (_) => getIt<StatisticsCubit>()
             ..getMonthlyStatistics(now.year.toString(), now.month.toString()),
@@ -57,85 +92,82 @@ class HomeView extends StatelessWidget {
           create: (_) =>
               getIt<GetListTransactionCubit>()..getListTransactions(),
         ),
+        BlocProvider<HomeTabCubit>(create: (_) => HomeTabCubit()),
+        BlocProvider<NotificationsCubit>.value(value: _notificationsCubit),
       ],
       child: const _HomeScreen(),
     );
   }
 }
 
-class _HomeScreen extends StatefulWidget {
+class _HomeScreen extends StatelessWidget {
   const _HomeScreen();
 
-  @override
-  State<_HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<_HomeScreen> {
-  int _currentTabIndex = 0;
-
-  void _onTabSelected(int index) {
-    setState(() {
-      _currentTabIndex = index;
-    });
-  }
-
-  void _openVoiceRecordDialog() {
+  void _openVoiceRecordDialog(BuildContext context) {
     Navigator.of(context).pushNamed(Routes.createVoiceNoteRoute);
   }
 
   @override
   Widget build(BuildContext context) {
+    final HomeTabCubit tabs = context.read<HomeTabCubit>();
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
+      onPopInvokedWithResult: (bool didPop, Object? result) {
         if (didPop) return;
-        if (_currentTabIndex != 0) {
-          setState(() {
-            _currentTabIndex = 0;
-          });
-        }
+        if (tabs.state.index != 0) tabs.selectTab(0);
       },
       child: NotificationListener<SwitchHomeTabNotification>(
-        onNotification: (notification) {
-          setState(() {
-            _currentTabIndex = notification.targetIndex;
-          });
+        onNotification: (SwitchHomeTabNotification notification) {
+          tabs.selectTab(notification.targetIndex);
           return true;
         },
-        child: Scaffold(
-          backgroundColor: ColorManager.background,
-          drawer: const MizanDrawer(),
-          body: IndexedStack(
-            index: _currentTabIndex,
-            children: [
-              _buildHomeDashboardTab(),
-              const TransactionsView(),
-              const CustomersView(),
-              const InstallmentsView(),
-              const AnalyticsView(),
-            ],
-          ),
-          floatingActionButton: _currentTabIndex == 0
-              ? _buildSmartVoiceFAB()
-              : null,
-          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-          bottomNavigationBar: CustomBottomNavBar(
-            currentIndex: _currentTabIndex,
-            onTap: _onTabSelected,
-          ),
+        child: BlocBuilder<HomeTabCubit, HomeTabState>(
+          builder: (BuildContext context, HomeTabState tab) {
+            return Scaffold(
+              backgroundColor: ColorManager.background,
+              drawer: const MizanDrawer(),
+              body: IndexedStack(
+                index: tab.index,
+                children: <Widget>[
+                  _buildHomeDashboardTab(context),
+                  tab.isBuilt(1)
+                      ? const TransactionsView()
+                      : const SizedBox.shrink(),
+                  tab.isBuilt(2)
+                      ? const CustomersView()
+                      : const SizedBox.shrink(),
+                  tab.isBuilt(3)
+                      ? const InstallmentsView()
+                      : const SizedBox.shrink(),
+                ],
+              ),
+              floatingActionButton: tab.index == 0
+                  ? _buildSmartVoiceFAB(context)
+                  : null,
+              floatingActionButtonLocation:
+                  FloatingActionButtonLocation.endFloat,
+              bottomNavigationBar: CustomBottomNavBar(
+                currentIndex: tab.index,
+                onTap: tabs.selectTab,
+                onAssistantTap: () {
+                  Navigator.of(context).pushNamed(Routes.assistantRoute);
+                },
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildHomeDashboardTab() {
+  Widget _buildHomeDashboardTab(BuildContext context) {
     return SafeArea(
       child: RefreshIndicator(
         color: ColorManager.primary,
         backgroundColor: ColorManager.surface,
         onRefresh: () async {
-          final now = DateTime.now();
-          await Future.wait([
+          final DateTime now = DateTime.now();
+          await Future.wait(<Future<void>>[
             context.read<GetProfileCubit>().getProfile(),
             context.read<StatisticsCubit>().getMonthlyStatistics(
               now.year.toString(),
@@ -152,16 +184,17 @@ class _HomeScreenState extends State<_HomeScreen> {
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               // 1. Top Header Bar (Real Profile & Shop data)
               BlocBuilder<GetProfileCubit, GetProfileState>(
-                builder: (context, profileState) {
-                  final profile = profileState.data;
-                  final userName =
+                builder: (BuildContext context, GetProfileState profileState) {
+                  final GetProfileModel? profile = profileState.data;
+                  final String userName =
                       (profile != null && profile.firstName.isNotEmpty)
                       ? "${profile.firstName} ${profile.lastName}".trim()
                       : "مرحباً بك";
-                  final shopName = profile?.shop?.shopName?.isNotEmpty == true
+                  final String shopName =
+                      profile?.shop?.shopName?.isNotEmpty == true
                       ? profile!.shop!.shopName!
                       : "محل ميزان التجاري";
                   return HomeHeader(userName: userName, shopName: shopName);
@@ -172,28 +205,22 @@ class _HomeScreenState extends State<_HomeScreen> {
 
               // 2 & 3 & 4. Hero Card + Quick Actions + Monthly Summary Card (Real Statistics Data)
               BlocBuilder<StatisticsCubit, StatisticsState>(
-                builder: (context, statsState) {
-                  final stats = statsState.data;
-                  final totalSales = (stats?.totalSales ?? 0).toDouble();
-                  final totalPurchases = (stats?.totalPurchases ?? 0)
+                builder: (BuildContext context, StatisticsState statsState) {
+                  final StatisticsPageModel? stats = statsState.data;
+                  final double totalSales = (stats?.totalSales ?? 0).toDouble();
+                  final double totalPurchases = (stats?.totalPurchases ?? 0)
                       .toDouble();
-                  final totalBalance = totalSales - totalPurchases;
-                  final totalTurnover = totalSales + totalPurchases;
-                  final targetAmount = totalTurnover > 0
-                      ? totalTurnover
-                      : 50000.0;
-                  final percentage = targetAmount > 0
-                      ? (totalSales / targetAmount)
-                      : 0.0;
+                  final double totalBalance = totalSales - totalPurchases;
 
                   return Column(
-                    children: [
+                    children: <Widget>[
                       // Hero Financial Balance Card (Compact & Fitted)
                       HeroBalanceCard(
                         totalBalance: totalBalance,
                         totalDebts: totalSales,
                         totalPayables: totalPurchases,
                         currency: "ج.م",
+                        statistics: stats,
                       ),
 
                       SizedBox(height: 14.h),
@@ -218,15 +245,16 @@ class _HomeScreenState extends State<_HomeScreen> {
 
               // 5. Recent Activity & Transactions Section (Real Data from API)
               BlocBuilder<GetListTransactionCubit, GetListTransactionState>(
-                builder: (context, txState) {
-                  return RecentTransactionsSection(
-                    transactions: txState.data,
-                    isLoading: txState.flowState is LoadingState,
-                  );
-                },
+                builder:
+                    (BuildContext context, GetListTransactionState txState) {
+                      return RecentTransactionsSection(
+                        transactions: txState.data,
+                        isLoading: txState.flowState is LoadingState,
+                      );
+                    },
               ),
 
-              SizedBox(height: 40.h),
+              SizedBox(height: 64.h),
             ],
           ),
         ),
@@ -234,13 +262,13 @@ class _HomeScreenState extends State<_HomeScreen> {
     );
   }
 
-  Widget _buildSmartVoiceFAB() {
+  Widget _buildSmartVoiceFAB(BuildContext context) {
     return Container(
       height: 44.h,
       decoration: BoxDecoration(
         gradient: ColorManager.primaryGradient,
         borderRadius: BorderRadius.circular(AppRadius.r28.r),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             color: Color(0x38C57B57),
             blurRadius: 14.0,
@@ -249,15 +277,15 @@ class _HomeScreenState extends State<_HomeScreen> {
         ],
       ),
       child: Material(
-        color: Colors.transparent,
+        color: ColorManager.transparent,
         child: InkWell(
-          onTap: _openVoiceRecordDialog,
+          onTap: () => _openVoiceRecordDialog(context),
           borderRadius: BorderRadius.circular(AppRadius.r28.r),
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: <Widget>[
                 SvgPicture.asset(
                   IconAssets.mic,
                   width: 18.r,

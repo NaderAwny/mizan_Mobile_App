@@ -10,6 +10,7 @@ import 'package:mizan/presentation/resources/routes_manager.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 import 'package:mizan/presentation/resources/styles_manager.dart';
 import 'package:mizan/presentation/resources/values_manager.dart';
+import 'package:mizan/app/date_utils.dart';
 import 'package:mizan/presentation/transactions/get_transaction_by_id/transaction_by_id_view.dart';
 
 class RecentTransactionsSection extends StatelessWidget {
@@ -24,16 +25,25 @@ class RecentTransactionsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final list = transactions ?? [];
+    final List<GetListTransactionsModel> list =
+        List<GetListTransactionsModel>.from(
+          transactions ?? <GetListTransactionsModel>[],
+        )..sort(
+            (GetListTransactionsModel a, GetListTransactionsModel b) =>
+                effectiveTransactionTime(b.transactionDate, b.createdAt)
+                    .compareTo(
+                      effectiveTransactionTime(a.transactionDate, a.createdAt),
+                    ),
+          );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      children: <Widget>[
         // Section Header: "آخر العمليات" + "عرض الكل"
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
+          children: <Widget>[
             Text(
               "آخر العمليات",
               style: getBoldStyle(
@@ -50,7 +60,7 @@ class RecentTransactionsSection extends StatelessWidget {
                 padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 2.w),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: [
+                  children: <Widget>[
                     Text(
                       AppStrings.viewAll,
                       style: getBoldStyle(
@@ -81,7 +91,10 @@ class RecentTransactionsSection extends StatelessWidget {
           Column(
             children: list
                 .take(5)
-                .map((tx) => _TransactionItemTile(transaction: tx))
+                .map(
+                  (GetListTransactionsModel tx) =>
+                      _TransactionItemTile(transaction: tx),
+                )
                 .toList(),
           ),
       ],
@@ -110,7 +123,7 @@ class RecentTransactionsSection extends StatelessWidget {
         border: Border.all(color: ColorManager.border),
       ),
       child: Column(
-        children: [
+        children: <Widget>[
           SvgPicture.asset(
             ImageAssets.illustrationEmpty,
             width: 70.r,
@@ -147,7 +160,7 @@ class _TransactionItemTile extends StatelessWidget {
   const _TransactionItemTile({required this.transaction});
 
   bool get _isIncome {
-    final t = transaction.type.toLowerCase();
+    final String t = transaction.type.toLowerCase();
     return t == 'sale' ||
         t == 'بيع' ||
         t == 'collect' ||
@@ -156,8 +169,8 @@ class _TransactionItemTile extends StatelessWidget {
   }
 
   String _getSubtitle() {
-    final t = transaction.type.toLowerCase();
-    final isCash =
+    final String t = transaction.type.toLowerCase();
+    final bool isCash =
         transaction.paymentMethod.toLowerCase() == 'cash' ||
         transaction.paymentMethod == 'كاش';
 
@@ -176,26 +189,26 @@ class _TransactionItemTile extends StatelessWidget {
   String _formatDate(String rawDate) {
     if (rawDate.isEmpty) return "";
     try {
-      final dt = DateTime.parse(rawDate).toLocal();
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      final txDay = DateTime(dt.year, dt.month, dt.day);
+      final DateTime dt = parseServerTime(rawDate);
+      final DateTime now = DateTime.now();
+      final DateTime today = DateTime(now.year, now.month, now.day);
+      final DateTime txDay = DateTime(dt.year, dt.month, dt.day);
 
-      final hour = dt.hour > 12
+      final int hour = dt.hour > 12
           ? dt.hour - 12
           : dt.hour == 0
           ? 12
           : dt.hour;
-      final minute = dt.minute.toString().padLeft(2, '0');
-      final period = dt.hour >= 12 ? "م" : "ص";
-      final timeStr = "$hour:$minute $period";
+      final String minute = dt.minute.toString().padLeft(2, '0');
+      final String period = dt.hour >= 12 ? "م" : "ص";
+      final String timeStr = "$hour:$minute $period";
 
       if (txDay == today) {
         return "اليوم، $timeStr";
       } else if (txDay == today.subtract(const Duration(days: 1))) {
         return "أمس، $timeStr";
       } else {
-        const monthsArabic = [
+        const List<String> monthsArabic = <String>[
           "يناير",
           "فبراير",
           "مارس",
@@ -218,25 +231,32 @@ class _TransactionItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isIncome = _isIncome;
-    final amountColor = isIncome ? ColorManager.success : ColorManager.error;
-    final iconColor = isIncome ? ColorManager.success : ColorManager.error;
-    final iconBgColor = isIncome
+    final bool isIncome = _isIncome;
+    final Color amountColor = isIncome
+        ? ColorManager.success
+        : ColorManager.error;
+    final Color iconColor = isIncome
+        ? ColorManager.success
+        : ColorManager.error;
+    final Color iconBgColor = isIncome
         ? ColorManager.successContainer
         : ColorManager.errorContainer;
-    final icon = isIncome ? IconAssets.arrowDownLeft : IconAssets.arrowUpRight;
-    final amountPrefix = isIncome ? "+ " : "- ";
-    final formattedAmount =
+    final String icon = isIncome
+        ? IconAssets.arrowDownLeft
+        : IconAssets.arrowUpRight;
+    final String amountPrefix = isIncome ? "+ " : "- ";
+    final String formattedAmount =
         "$amountPrefix${NumberFormat('#,##0.##').format(transaction.amount)} ج.م";
 
-    final title = transaction.contactName.trim().isNotEmpty
+    final String title = transaction.contactName.trim().isNotEmpty
         ? transaction.contactName.trim()
         : "معاملة بدون اسم";
 
-    final dateStr = _formatDate(
-      transaction.transactionDate.isNotEmpty
-          ? transaction.transactionDate
-          : transaction.createdAt,
+    final String dateStr = _formatDate(
+      effectiveTransactionTime(
+        transaction.transactionDate,
+        transaction.createdAt,
+      ).toUtc().toIso8601String(),
     );
 
     return Container(
@@ -245,7 +265,7 @@ class _TransactionItemTile extends StatelessWidget {
         color: ColorManager.surface,
         borderRadius: BorderRadius.circular(AppRadius.r14.r),
         border: Border.all(color: ColorManager.border, width: 1.0),
-        boxShadow: [
+        boxShadow: <BoxShadow>[
           BoxShadow(
             color: ColorManager.black.withAlpha(4),
             blurRadius: 6,
@@ -254,13 +274,13 @@ class _TransactionItemTile extends StatelessWidget {
         ],
       ),
       child: Material(
-        color: Colors.transparent,
+        color: ColorManager.transparent,
         child: InkWell(
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => TransactionDetailsView(
+              MaterialPageRoute<void>(
+                builder: (BuildContext context) => TransactionDetailsView(
                   transactionId: transaction.id,
                   id: transaction.id,
                 ),
@@ -271,7 +291,7 @@ class _TransactionItemTile extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
             child: Row(
-              children: [
+              children: <Widget>[
                 // Icon
                 Container(
                   width: 38.r,
@@ -296,13 +316,13 @@ class _TransactionItemTile extends StatelessWidget {
                 Expanded(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
+                    children: <Widget>[
                       // Title & Subtitle
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
-                          children: [
+                          children: <Widget>[
                             Text(
                               title,
                               maxLines: 1,
@@ -332,7 +352,7 @@ class _TransactionItemTile extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         mainAxisSize: MainAxisSize.min,
-                        children: [
+                        children: <Widget>[
                           Text(
                             formattedAmount,
                             style: getBoldStyle(
@@ -361,4 +381,3 @@ class _TransactionItemTile extends StatelessWidget {
     );
   }
 }
-

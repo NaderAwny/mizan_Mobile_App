@@ -15,5 +15,8 @@ abstract class RegisterState with _$RegisterState {
     @Default(false) bool isFirstNameValid,
     @Default(false) bool isAllValid,
     @Default(false) bool registerSuccess,
+    @Default(false) bool firstNameTouched,
+    @Default(false) bool lastNameTouched,
+    @Default(false) bool emailTouched,
   }) = _RegisterState;
 }

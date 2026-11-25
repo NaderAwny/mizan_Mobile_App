@@ -6,6 +6,7 @@ import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/data/network/network_info.dart';
 import 'package:mizan/data/data_source/send_otp_remote_data_source.dart';
 import 'package:mizan/data/request/send_otp.dart';
+import 'package:mizan/data/response/register_responses/register_responses.dart';
 import 'package:mizan/domain/model/register_model.dart';
 import 'package:mizan/domain/repository/send_otp_repository.dart';
 
@@ -22,7 +23,8 @@ class SendOtpRepositoryImpl implements SendOtpRepository {
   ) async {
     if (await networkInfo.isConnected) {
       try {
-        final response = await sendOtpRemoteDataSource.sendOtp(sendOtpRequest);
+        final RegisterDataResponse response = await sendOtpRemoteDataSource
+            .sendOtp(sendOtpRequest);
 
         // ignore: unrelated_type_equality_checks
         if (response.success == true) {

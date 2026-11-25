@@ -13,7 +13,7 @@ class QuickTransactionArgs {
 }
 
 String formatArabicDate(DateTime date) {
-  const months = [
+  const List<String> months = <String>[
     'يناير',
     'فبراير',
     'مارس',
@@ -25,7 +25,7 @@ String formatArabicDate(DateTime date) {
     'سبتمبر',
     'أكتوبر',
     'نوفمبر',
-    'ديسمبر'
+    'ديسمبر',
   ];
   return "${date.day} ${months[date.month - 1]} ${date.year}";
 }

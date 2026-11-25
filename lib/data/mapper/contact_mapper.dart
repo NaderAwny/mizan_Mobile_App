@@ -20,7 +20,10 @@ extension ContactResponseMapper on ContactData? {
 extension ContactsPageResponseMapper on ContactsPageData? {
   ContactsPage toDomain() {
     return ContactsPage(
-      items: (this?.items?.map((contact) => contact.toDomain()) ?? const []).toList(),
+      items:
+          (this?.items?.map((ContactData contact) => contact.toDomain()) ??
+                  const <Contact>[])
+              .toList(),
       totalCount: this?.totalCount.orZero() ?? 0,
       page: this?.page.orZero() ?? 1,
       pageSize: this?.pageSize.orZero() ?? 20,
@@ -53,7 +56,12 @@ extension ContactProfileResponseMapper on ContactProfileData? {
       isVip: this?.isVip.orFalse() ?? false,
       totalTransactions: this?.totalTransactions.orZero() ?? 0,
       totalAmount: this?.totalAmount.orZeroNum() ?? 0,
-      transactions: (this?.transactions?.map((t) => t.toDomain()) ?? const []).toList(),
+      transactions:
+          (this?.transactions?.map(
+                    (ContactTransactionData t) => t.toDomain(),
+                  ) ??
+                  const <ContactTransaction>[])
+              .toList(),
     );
   }
 }

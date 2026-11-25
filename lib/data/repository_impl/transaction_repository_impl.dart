@@ -7,6 +7,8 @@ import 'package:mizan/data/network/error_handler.dart';
 import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/data/network/network_info.dart';
 import 'package:mizan/data/request/transaction_request.dart';
+import 'package:mizan/data/response/transaction_by_id_responses/transaction_by_id_responses.dart';
+import 'package:mizan/data/response/transaction_responses/transaction_responses.dart';
 import 'package:mizan/domain/model/transaction_by_id_mode/transaction_by_id_mode.dart';
 import 'package:mizan/domain/model/transaction_model.dart';
 import 'package:mizan/domain/repository/transaction_repository.dart';
@@ -24,7 +26,9 @@ class TransactionRepositoryImpl implements TransactionRepository {
   ) async {
     if (await _networkInfo.isConnected) {
       try {
-        final response = await _remote.createTransaction(request);
+        final TransactionResponse response = await _remote.createTransaction(
+          request,
+        );
         if (response.success == true) {
           return Right(response.data.toDomain());
         } else {
@@ -49,7 +53,8 @@ class TransactionRepositoryImpl implements TransactionRepository {
   ) async {
     if (await _networkInfo.isConnected) {
       try {
-        final response = await _remote.getTransactionById(id);
+        final TransactionResponseById response = await _remote
+            .getTransactionById(id);
         if (response.success == true) {
           return Right(response.data.toDomain());
         } else {
@@ -60,6 +65,20 @@ class TransactionRepositoryImpl implements TransactionRepository {
             ),
           );
         }
+      } catch (e) {
+        return Left(ErrorHandler.handle(e).failure);
+      }
+    } else {
+      return Left(DataSource.NO_INTERNET_CONNECTION.getFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteTransaction(String transactionid) async {
+    if (await _networkInfo.isConnected) {
+      try {
+        await _remote.deleteTransaction(transactionid);
+        return const Right(null);
       } catch (e) {
         return Left(ErrorHandler.handle(e).failure);
       }

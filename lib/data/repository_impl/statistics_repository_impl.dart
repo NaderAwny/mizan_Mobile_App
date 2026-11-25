@@ -6,6 +6,7 @@ import 'package:mizan/data/mapper/statistics_mapper.dart';
 import 'package:mizan/data/network/error_handler.dart';
 import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/data/network/network_info.dart';
+import 'package:mizan/data/response/statistics_response/statistic_response.dart';
 import 'package:mizan/domain/model/statistics_model/statistics_model.dart';
 import 'package:mizan/domain/repository/statistics_repository.dart';
 
@@ -20,7 +21,8 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
   Future<Either<Failure, StatisticsPageModel>> getStatistics() async {
     if (await _networkInfo.isConnected) {
       try {
-        final response = await _statisticsRemoteDataSource.getStatistics();
+        final StatisticsResponse response = await _statisticsRemoteDataSource
+            .getStatistics();
 
         // ignore: unrelated_type_equality_checks
         if (response.success == true) {
@@ -47,9 +49,8 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
   ) async {
     if (await _networkInfo.isConnected) {
       try {
-        final response = await _statisticsRemoteDataSource.getDailyStatistics(
-          date,
-        );
+        final StatisticsResponse response = await _statisticsRemoteDataSource
+            .getDailyStatistics(date);
 
         // ignore: unrelated_type_equality_checks
         if (response.success == true) {
@@ -77,10 +78,8 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
   ) async {
     if (await _networkInfo.isConnected) {
       try {
-        final response = await _statisticsRemoteDataSource.getMonthlyStatistics(
-          year,
-          month,
-        );
+        final StatisticsResponse response = await _statisticsRemoteDataSource
+            .getMonthlyStatistics(year, month);
 
         // ignore: unrelated_type_equality_checks
         if (response.success == true) {

@@ -1,3 +1,4 @@
+import 'package:mizan/app/constants.dart';
 import 'package:mizan/app/extensions.dart';
 import 'package:mizan/data/response/voice_notes_response/voice_notes_response.dart';
 import 'package:mizan/domain/model/voice_note_model/voice_note_model.dart';
@@ -21,18 +22,34 @@ extension VoiceNoteMapper on VoiceNoteData? {
 
 extension VoiceNotesPageMapper on VoiceNotesPageData? {
   VoiceNotesPage toDomain() {
-    final totalCount = this?.totalCount.orZero() ?? 0;
-    final rawPageSize = this?.pageSize.orZero() ?? 0;
-    final pageSize = rawPageSize > 0 ? rawPageSize : 20;
+    final int totalCount = this?.totalCount.orZero() ?? 0;
+    final int rawPageSize = this?.pageSize.orZero() ?? 0;
+    final int pageSize = rawPageSize > 0 ? rawPageSize : 20;
     // الـ API مش بيرجّع totalPages فبنحسبها من totalCount / pageSize
-    final totalPages = totalCount == 0 ? 1 : (totalCount / pageSize).ceil();
+    final int totalPages = totalCount == 0 ? 1 : (totalCount / pageSize).ceil();
 
     return VoiceNotesPage(
-      items: (this?.items?.map((e) => e.toDomain()) ?? const []).toList(),
+      items:
+          (this?.items?.map((VoiceNoteData e) => e.toDomain()) ??
+                  const <VoiceNoteModel>[])
+              .toList(),
       totalCount: totalCount,
       page: this?.page.orZero() ?? 1,
       pageSize: pageSize,
       totalPages: totalPages,
+    );
+  }
+}
+
+extension VoiceNoteSummaryMapper on VoiceNoteSummaryResponse? {
+  VoiceNoteSummaryModel toDomain() {
+    final data = this?.data;
+    return VoiceNoteSummaryModel(
+      totalSales: data?.totalSales.orZeroNum().toDouble() ?? 0.0,
+      totalPurchases: data?.totalPurchases.orZeroNum().toDouble() ?? 0.0,
+      net: data?.net.orZeroNum().toDouble() ?? 0.0,
+      count: data?.count.orZero() ?? 0,
+      period: data?.period.orEmpty() ?? Constants.empty,
     );
   }
 }

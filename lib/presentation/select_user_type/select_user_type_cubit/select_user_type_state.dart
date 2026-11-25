@@ -9,5 +9,7 @@ abstract class SelectUserTypeState with _$SelectUserTypeState {
   const factory SelectUserTypeState({
     FlowState? flowState,
     AuthSession? data,
+    @Default(null) String? selectedType,
+    @Default(false) bool shopNameTouched,
   }) = _SelectUserTypeState;
 }

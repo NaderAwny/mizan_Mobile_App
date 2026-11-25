@@ -32,8 +32,12 @@ extension InstallmentPlanMapper on InstallmentPlanData? {
       isOverdue: this?.isOverdue.orFalse() ?? false,
       isDueToday: this?.isDueToday.orFalse() ?? false,
       daysOverdue: this?.daysOverdue.orZero() ?? 0,
-      installments: (this?.installments?.map((i) => i.toDomain()) ?? const [])
-          .toList(),
+      installments:
+          (this?.installments?.map(
+                    (DashboardInstallmentData i) => i.toDomain(),
+                  ) ??
+                  const <DashboardInstallmentModel>[])
+              .toList(),
     );
   }
 }
@@ -46,7 +50,10 @@ extension InstallmentsDashboardMapper on InstallmentsDashboardData? {
       totalUpcomingAmount: this?.totalUpcomingAmount.orZeroNum() ?? 0,
       totalPaidAmount: this?.totalPaidAmount.orZeroNum() ?? 0,
       totalDebtsCount: this?.totalDebtsCount.orZero() ?? 0,
-      plans: (this?.plans?.map((p) => p.toDomain()) ?? const []).toList(),
+      plans:
+          (this?.plans?.map((InstallmentPlanData p) => p.toDomain()) ??
+                  const <InstallmentPlanModel>[])
+              .toList(),
     );
   }
 }

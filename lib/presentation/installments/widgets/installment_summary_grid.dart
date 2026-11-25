@@ -18,19 +18,19 @@ import 'package:mizan/presentation/resources/values_manager.dart';
 class InstallmentSummaryGrid extends StatelessWidget {
   final InstallmentsDashboardModel data;
 
-  const InstallmentSummaryGrid({
-    super.key,
-    required this.data,
-  });
+  const InstallmentSummaryGrid({super.key, required this.data});
 
   String _getUpcomingSubtitle() {
     // Find earliest nextDueDate among plans that are not overdue and not due today
-    final upcomingPlans = data.plans
-        .where((p) => !p.isOverdue && !p.isDueToday && p.nextDueDate.isNotEmpty)
+    final List<InstallmentPlanModel> upcomingPlans = data.plans
+        .where(
+          (InstallmentPlanModel p) =>
+              !p.isOverdue && !p.isDueToday && p.nextDueDate.isNotEmpty,
+        )
         .toList();
 
     if (upcomingPlans.isNotEmpty) {
-      final earliest = upcomingPlans.first.nextDueDate;
+      final String earliest = upcomingPlans.first.nextDueDate;
       return '${AppStrings.earliestDueDatePrefix} ${InstallmentFormatters.formatArabicDate(earliest)}';
     }
     return AppStrings.upcomingInstallmentsPeriod;
@@ -39,9 +39,9 @@ class InstallmentSummaryGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: [
+      children: <Widget>[
         Row(
-          children: [
+          children: <Widget>[
             // 1. Overdue Card (متأخر)
             Expanded(
               child: _SummaryCard(
@@ -69,7 +69,7 @@ class InstallmentSummaryGrid extends StatelessWidget {
         ),
         SizedBox(height: 12.h),
         Row(
-          children: [
+          children: <Widget>[
             // 3. Upcoming Card (قادم)
             Expanded(
               child: _SummaryCard(
@@ -124,11 +124,8 @@ class _SummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: ColorManager.surface,
         borderRadius: BorderRadius.circular(AppRadius.r16.r),
-        border: Border.all(
-          color: ColorManager.border,
-          width: 1.0,
-        ),
-        boxShadow: const [
+        border: Border.all(color: ColorManager.border, width: 1.0),
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             color: Color(0x081C1816),
             blurRadius: 8.0,
@@ -138,10 +135,10 @@ class _SummaryCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           // Header: Icon badge & Title
           Row(
-            children: [
+            children: <Widget>[
               Container(
                 width: 32.r,
                 height: 32.r,
@@ -154,10 +151,7 @@ class _SummaryCard extends StatelessWidget {
                     iconPath,
                     width: 16.r,
                     height: 16.r,
-                    colorFilter: ColorFilter.mode(
-                      accentColor,
-                      BlendMode.srcIn,
-                    ),
+                    colorFilter: ColorFilter.mode(accentColor, BlendMode.srcIn),
                   ),
                 ),
               ),
@@ -180,7 +174,7 @@ class _SummaryCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
-            children: [
+            children: <Widget>[
               Flexible(
                 child: Text(
                   InstallmentFormatters.formatAmount(amount),

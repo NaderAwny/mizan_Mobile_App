@@ -13,5 +13,6 @@ abstract class StatisticsState with _$StatisticsState {
 
     @Default(false) bool isMonthlyMode,
     String? selectedMonthYear, // Format: "YYYY-MM"
+    @Default(1) int selectedTabIndex,
   }) = _StatisticsState;
 }

@@ -23,95 +23,41 @@ class MizanDrawer extends StatelessWidget {
       width: 0.75.sw,
       child: SafeArea(
         child: Column(
-          children: [
+          children: <Widget>[
             // ── Header / Logo area ───────────────────────────────────────────
             _DrawerHeader(),
 
-            Divider(color: ColorManager.border, height: 1),
+            const Divider(color: ColorManager.border, height: 1),
 
             // ── Navigation items ─────────────────────────────────────────────
             Expanded(
-              child: ListView(
+              child: ListView.separated(
                 padding: EdgeInsets.symmetric(vertical: 8.h),
                 physics: const BouncingScrollPhysics(),
-                children: [
-                  _DrawerItem(
-                    icon: IconAssets.home,
-                    label: AppStrings.home,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pushNamedAndRemoveUntil(
-                        Routes.homeRoute,
-                        (route) => false,
-                      );
-                    },
-                  ),
-                  _DrawerItem(
-                    icon: IconAssets.receiptText,
-                    label: AppStrings.transactions,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pushNamed(Routes.transactionsRoute);
-                    },
-                  ),
-                  _DrawerItem(
-                    icon: IconAssets.users,
-                    label: AppStrings.contacts,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pushNamed(Routes.customersRoute);
-                    },
-                  ),
-                  _DrawerItem(
-                    icon: IconAssets.walletCards,
-                    label: AppStrings.installments,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pushNamed(Routes.installmentsRoute);
-                    },
-                  ),
-                  _DrawerItem(
-                    icon: IconAssets.chartNetwork,
-                    label: AppStrings.analytics,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pushNamed(Routes.analyticsRoute);
-                    },
-                  ),
-                  _DrawerItem(
-                    icon: IconAssets.mic,
-                    label: AppStrings.voiceNotesTitle,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pushNamed(Routes.voiceNotesListRoute);
-                    },
-                  ),
-
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 8.h,
-                    ),
-                    child: Divider(color: ColorManager.border, height: 1),
-                  ),
-
-                  _DrawerItem(
-                    icon: IconAssets.user,
-                    label: AppStrings.profile,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pushNamed(Routes.profileRoute);
-                    },
-                  ),
-                  _DrawerItem(
-                    icon: IconAssets.bell,
-                    label: AppStrings.notifications,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pushNamed(Routes.notificationsRoute);
-                    },
-                  ),
-                ],
+                itemCount: _getDrawerItems(context).length,
+                separatorBuilder: (BuildContext context, int index) {
+                  if (index == 5) {
+                    return Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 8.h,
+                      ),
+                      child: const Divider(
+                        color: ColorManager.border,
+                        height: 1,
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+                itemBuilder: (BuildContext context, int index) {
+                  final _DrawerItemModel item = _getDrawerItems(context)[index];
+                  return _DrawerItem(
+                    icon: item.icon,
+                    label: item.label,
+                    onTap: item.onTap,
+                  );
+                },
               ),
             ),
 
@@ -122,6 +68,97 @@ class MizanDrawer extends StatelessWidget {
       ),
     );
   }
+
+  List<_DrawerItemModel> _getDrawerItems(BuildContext context) =>
+      <_DrawerItemModel>[
+        _DrawerItemModel(
+          icon: IconAssets.home,
+          label: AppStrings.home,
+          onTap: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              Routes.homeRoute,
+              (Route<dynamic> route) => false,
+            );
+          },
+        ),
+        _DrawerItemModel(
+          icon: IconAssets.mic,
+          label: AppStrings.assistantTitle,
+          onTap: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pushNamed(Routes.assistantRoute);
+          },
+        ),
+        _DrawerItemModel(
+          icon: IconAssets.receiptText,
+          label: AppStrings.transactions,
+          onTap: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pushNamed(Routes.transactionsRoute);
+          },
+        ),
+        _DrawerItemModel(
+          icon: IconAssets.users,
+          label: AppStrings.contacts,
+          onTap: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pushNamed(Routes.customersRoute);
+          },
+        ),
+        _DrawerItemModel(
+          icon: IconAssets.walletCards,
+          label: AppStrings.installments,
+          onTap: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pushNamed(Routes.installmentsRoute);
+          },
+        ),
+        _DrawerItemModel(
+          icon: IconAssets.chartNetwork,
+          label: AppStrings.analytics,
+          onTap: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pushNamed(Routes.analyticsRoute);
+          },
+        ),
+        _DrawerItemModel(
+          icon: IconAssets.mic,
+          label: AppStrings.voiceNotesTitle,
+          onTap: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pushNamed(Routes.voiceNotesListRoute);
+          },
+        ),
+        _DrawerItemModel(
+          icon: IconAssets.user,
+          label: AppStrings.profile,
+          onTap: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pushNamed(Routes.profileRoute);
+          },
+        ),
+        _DrawerItemModel(
+          icon: IconAssets.bell,
+          label: AppStrings.notifications,
+          onTap: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pushNamed(Routes.notificationsRoute);
+          },
+        ),
+      ];
+}
+
+class _DrawerItemModel {
+  final String icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _DrawerItemModel({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -133,11 +170,9 @@ class _DrawerHeader extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-      decoration: BoxDecoration(
-        gradient: ColorManager.primaryGradient,
-      ),
+      decoration: const BoxDecoration(gradient: ColorManager.primaryGradient),
       child: Row(
-        children: [
+        children: <Widget>[
           // Logo
           Image.asset(
             ImageAssets.logoBoxFigmaPng,
@@ -149,7 +184,7 @@ class _DrawerHeader extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: [
+            children: <Widget>[
               Text(
                 AppStrings.appName,
                 style: getExtraBoldStyle(
@@ -189,14 +224,14 @@ class _DrawerItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent,
+      color: ColorManager.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.r12.r),
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 13.h),
           child: Row(
-            children: [
+            children: <Widget>[
               Container(
                 width: 38.r,
                 height: 38.r,

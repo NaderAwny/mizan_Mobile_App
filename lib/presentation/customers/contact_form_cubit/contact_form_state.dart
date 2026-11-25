@@ -11,5 +11,6 @@ abstract class ContactFormState with _$ContactFormState {
     Contact? savedContact,
     @Default(false) bool isActionSuccess,
     @Default(false) bool isEditMode,
+    @Default(false) bool isVip,
   }) = _ContactFormState;
 }

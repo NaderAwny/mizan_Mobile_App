@@ -11,5 +11,11 @@ abstract class GetListVoiceNotesState with _$GetListVoiceNotesState {
     List<VoiceNoteModel>? data,
     @Default(false) bool isLoadingMore,
     @Default(true) bool hasMore,
+    @Default(0) int selectedFilterIndex,
+    @Default('') String searchQuery,
+    String? currentlyPlayingId,
+    @Default(0.0) double playbackProgress,
+    @Default(Duration.zero) Duration currentPosition,
+    @Default(Duration.zero) Duration currentAudioDuration,
   }) = _GetListVoiceNotesState;
 }

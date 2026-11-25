@@ -6,6 +6,7 @@ import 'package:mizan/data/mapper/get_list_trasaction_mapper.dart';
 import 'package:mizan/data/network/error_handler.dart';
 import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/data/network/network_info.dart';
+import 'package:mizan/data/response/get_list_transaction_responses/get_list_transaction_responses.dart';
 import 'package:mizan/domain/model/get_list_transactions_model.dart';
 import 'package:mizan/domain/repository/get_list_%20transaction_repository.dart';
 
@@ -28,14 +29,15 @@ class GetListTransactionsRepositoryImpl
   }) async {
     if (await _networkInfo.isConnected) {
       try {
-        final response = await _remote.getListTransactions(
-          page: page,
-          pageSize: pageSize,
-          contactId: contactId,
-          type: type,
-          dateFrom: dateFrom,
-          dateTo: dateTo,
-        );
+        final GetListTransactionsResponse response = await _remote
+            .getListTransactions(
+              page: page,
+              pageSize: pageSize,
+              contactId: contactId,
+              type: type,
+              dateFrom: dateFrom,
+              dateTo: dateTo,
+            );
         if (response.success == true) {
           return Right(response.data!.toDomain());
         } else {

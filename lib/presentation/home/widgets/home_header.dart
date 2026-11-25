@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mizan/presentation/notifications/notifications_cubit/notifications_cubit.dart';
+import 'package:mizan/presentation/notifications/notifications_cubit/notifications_state.dart';
 import 'package:mizan/presentation/resources/assets_manager.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
 import 'package:mizan/presentation/resources/font_manager.dart';
@@ -23,11 +26,11 @@ class HomeHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
+      children: <Widget>[
         // User & Shop Profile Section (Right side in RTL)
         Expanded(
           child: Row(
-            children: [
+            children: <Widget>[
               // Store / Avatar Profile Box - Tapping opens Drawer
               GestureDetector(
                 child: Container(
@@ -40,7 +43,7 @@ class HomeHeader extends StatelessWidget {
                       color: ColorManager.primary.withAlpha(40),
                       width: 1.5,
                     ),
-                    boxShadow: [
+                    boxShadow: <BoxShadow>[
                       BoxShadow(
                         color: ColorManager.primary.withAlpha(18),
                         blurRadius: 10,
@@ -69,9 +72,9 @@ class HomeHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
-                  children: [
+                  children: <Widget>[
                     Row(
-                      children: [
+                      children: <Widget>[
                         Text(
                           userName,
                           style: getMediumStyle(
@@ -110,19 +113,23 @@ class HomeHeader extends StatelessWidget {
         // Action Icons: Drawer Menu & Notifications Bell with Unread Badge
         Row(
           mainAxisSize: MainAxisSize.min,
-          children: [
+          children: <Widget>[
             // Drawer Menu Button
             _HeaderIconButton(
               iconData: Icons.menu_rounded,
               onTap: () => Scaffold.of(context).openDrawer(),
             ),
             SizedBox(width: 8.w),
-            // Notifications Icon with Badge
-            _HeaderIconButton(
-              icon: IconAssets.bell,
-              hasBadge: true,
-              onTap: () {
-                Navigator.pushNamed(context, Routes.notificationsRoute);
+            // Notifications Icon with Facebook-style Unread Badge
+            BlocBuilder<NotificationsCubit, NotificationsState>(
+              builder: (BuildContext context, NotificationsState state) {
+                return _HeaderIconButton(
+                  icon: IconAssets.bell,
+                  badgeCount: state.unreadCount,
+                  onTap: () {
+                    Navigator.pushNamed(context, Routes.notificationsRoute);
+                  },
+                );
               },
             ),
           ],
@@ -135,20 +142,20 @@ class HomeHeader extends StatelessWidget {
 class _HeaderIconButton extends StatelessWidget {
   final String? icon;
   final IconData? iconData;
-  final bool hasBadge;
+  final int badgeCount;
   final VoidCallback onTap;
 
   const _HeaderIconButton({
     this.icon,
     this.iconData,
-    this.hasBadge = false,
+    this.badgeCount = 0,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent,
+      color: ColorManager.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.r12.r),
@@ -159,7 +166,7 @@ class _HeaderIconButton extends StatelessWidget {
             color: ColorManager.surface,
             borderRadius: BorderRadius.circular(AppRadius.r12.r),
             border: Border.all(color: ColorManager.border, width: 1.0),
-            boxShadow: [
+            boxShadow: <BoxShadow>[
               BoxShadow(
                 color: ColorManager.black.withAlpha(8),
                 blurRadius: 8,
@@ -169,7 +176,8 @@ class _HeaderIconButton extends StatelessWidget {
           ),
           child: Stack(
             alignment: Alignment.center,
-            children: [
+            clipBehavior: Clip.none,
+            children: <Widget>[
               if (icon != null)
                 SvgPicture.asset(
                   icon!,
@@ -182,19 +190,44 @@ class _HeaderIconButton extends StatelessWidget {
                 )
               else if (iconData != null)
                 Icon(iconData, size: 22.r, color: ColorManager.textPrimary),
-              if (hasBadge)
+              if (badgeCount > 0)
                 Positioned(
-                  top: 9.r,
-                  left: 10.r,
+                  top: 2.r,
+                  right: 2.r,
                   child: Container(
-                    width: 8.r,
-                    height: 8.r,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: badgeCount > 9 ? 4.w : 1.w,
+                      vertical: 1.h,
+                    ),
+                    constraints: BoxConstraints(
+                      minWidth: 16.r,
+                      minHeight: 16.r,
+                    ),
                     decoration: BoxDecoration(
-                      color: ColorManager.error,
-                      shape: BoxShape.circle,
+                      color: const Color(0xFFE41E3F), // Red badge (Facebook red)
+                      borderRadius: BorderRadius.circular(9.r),
                       border: Border.all(
                         color: ColorManager.surface,
-                        width: 1.5,
+                        width: 1.5.r,
+                      ),
+                      boxShadow: <BoxShadow>[
+                        BoxShadow(
+                          color: const Color(0xFFE41E3F).withValues(alpha: 0.45),
+                          blurRadius: 4.r,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        badgeCount > 99 ? '99+' : '$badgeCount',
+                        style: TextStyle(
+                          color: ColorManager.white,
+                          fontSize: badgeCount > 99 ? 8.sp : 9.5.sp,
+                          fontWeight: FontWeight.bold,
+                          height: 1.1,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),

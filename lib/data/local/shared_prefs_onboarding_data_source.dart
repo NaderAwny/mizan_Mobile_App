@@ -7,7 +7,7 @@ class SharedPrefsOnboardingDataSource implements OnboardingLocalDataSource {
   final SharedPreferences _prefs;
   SharedPrefsOnboardingDataSource(this._prefs);
 
-  static const _kSeen = 'seen_onboarding';
+  static const String _kSeen = 'seen_onboarding';
 
   @override
   Future<bool> hasSeenOnboarding() async => _prefs.getBool(_kSeen) ?? false;

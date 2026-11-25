@@ -3,8 +3,11 @@ import 'package:emails_validator/emails_validator.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/app/app_logger.dart';
 import 'package:mizan/app/funcation.dart';
+import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/data/request/register_request.dart';
+import 'package:mizan/domain/model/register_model.dart';
 import 'package:mizan/domain/use_case/register_use_case.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
@@ -33,7 +36,7 @@ class RegisterCubit extends Cubit<RegisterState> {
         lastName: state.lastName,
       ),
     )).fold(
-      (failure) => {
+      (Failure failure) => <void>{
         // left -> failure
         emit(
           state.copyWith(
@@ -44,17 +47,11 @@ class RegisterCubit extends Cubit<RegisterState> {
             ),
           ),
         ),
-        // ignore: avoid_print
-        print(failure.message),
+        AppLogger.e('register failure', error: failure.message),
       },
-      (data) => {
+      (RegisterModel data) => <void>{
         // right -> data (success)
-        emit(
-          state.copyWith(
-            flowState: ContentState(),
-            registerSuccess: true,
-          ),
-        ),
+        emit(state.copyWith(flowState: ContentState(), registerSuccess: true)),
       },
     );
   }
@@ -63,9 +60,21 @@ class RegisterCubit extends Cubit<RegisterState> {
     emit(state.copyWith(registerSuccess: false, flowState: ContentState()));
   }
 
+  void touchFirstName() {
+    if (!state.firstNameTouched) emit(state.copyWith(firstNameTouched: true));
+  }
+
+  void touchLastName() {
+    if (!state.lastNameTouched) emit(state.copyWith(lastNameTouched: true));
+  }
+
+  void touchEmail() {
+    if (!state.emailTouched) emit(state.copyWith(emailTouched: true));
+  }
+
   void setEmail(String email) {
-    final valid = isEmailValid(email);
-    final newState = state.copyWith(
+    final bool valid = isEmailValid(email);
+    final RegisterState newState = state.copyWith(
       email: email,
       isEmailValid: valid,
       registerSuccess: false,
@@ -87,7 +96,7 @@ class RegisterCubit extends Cubit<RegisterState> {
   }
 
   void setFirstName(String firstName) {
-    final valid = validateFirstName(firstName);
+    final bool valid = validateFirstName(firstName);
     emit(
       state.copyWith(
         firstName: firstName,
@@ -101,7 +110,7 @@ class RegisterCubit extends Cubit<RegisterState> {
   }
 
   void setLastName(String lastName) {
-    final valid = validateLastName(lastName);
+    final bool valid = validateLastName(lastName);
     emit(
       state.copyWith(
         lastName: lastName,

@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$GetTransactionByIdState {
 
- FlowState? get flowState; TransactionbyidModel? get data;
+ FlowState? get flowState; TransactionbyidModel? get data; bool get isDeleted;
 /// Create a copy of GetTransactionByIdState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $GetTransactionByIdStateCopyWith<GetTransactionByIdState> get copyWith => _$GetT
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GetTransactionByIdState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.data, data) || other.data == data));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GetTransactionByIdState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.data, data) || other.data == data)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,flowState,data);
+int get hashCode => Object.hash(runtimeType,flowState,data,isDeleted);
 
 @override
 String toString() {
-  return 'GetTransactionByIdState(flowState: $flowState, data: $data)';
+  return 'GetTransactionByIdState(flowState: $flowState, data: $data, isDeleted: $isDeleted)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $GetTransactionByIdStateCopyWith<$Res>  {
   factory $GetTransactionByIdStateCopyWith(GetTransactionByIdState value, $Res Function(GetTransactionByIdState) _then) = _$GetTransactionByIdStateCopyWithImpl;
 @useResult
 $Res call({
- FlowState? flowState, TransactionbyidModel? data
+ FlowState? flowState, TransactionbyidModel? data, bool isDeleted
 });
 
 
@@ -62,11 +62,12 @@ class _$GetTransactionByIdStateCopyWithImpl<$Res>
 
 /// Create a copy of GetTransactionByIdState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? data = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? flowState = freezed,Object? data = freezed,Object? isDeleted = null,}) {
   return _then(_self.copyWith(
 flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
 as FlowState?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as TransactionbyidModel?,
+as TransactionbyidModel?,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -151,10 +152,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  TransactionbyidModel? data)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( FlowState? flowState,  TransactionbyidModel? data,  bool isDeleted)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _GetTransactionByIdState() when $default != null:
-return $default(_that.flowState,_that.data);case _:
+return $default(_that.flowState,_that.data,_that.isDeleted);case _:
   return orElse();
 
 }
@@ -172,10 +173,10 @@ return $default(_that.flowState,_that.data);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  TransactionbyidModel? data)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( FlowState? flowState,  TransactionbyidModel? data,  bool isDeleted)  $default,) {final _that = this;
 switch (_that) {
 case _GetTransactionByIdState():
-return $default(_that.flowState,_that.data);case _:
+return $default(_that.flowState,_that.data,_that.isDeleted);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -192,10 +193,10 @@ return $default(_that.flowState,_that.data);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  TransactionbyidModel? data)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( FlowState? flowState,  TransactionbyidModel? data,  bool isDeleted)?  $default,) {final _that = this;
 switch (_that) {
 case _GetTransactionByIdState() when $default != null:
-return $default(_that.flowState,_that.data);case _:
+return $default(_that.flowState,_that.data,_that.isDeleted);case _:
   return null;
 
 }
@@ -207,11 +208,12 @@ return $default(_that.flowState,_that.data);case _:
 
 
 class _GetTransactionByIdState implements GetTransactionByIdState {
-  const _GetTransactionByIdState({this.flowState, this.data});
+  const _GetTransactionByIdState({this.flowState, this.data, this.isDeleted = false});
   
 
 @override final  FlowState? flowState;
 @override final  TransactionbyidModel? data;
+@override@JsonKey() final  bool isDeleted;
 
 /// Create a copy of GetTransactionByIdState
 /// with the given fields replaced by the non-null parameter values.
@@ -223,16 +225,16 @@ _$GetTransactionByIdStateCopyWith<_GetTransactionByIdState> get copyWith => __$G
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GetTransactionByIdState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.data, data) || other.data == data));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GetTransactionByIdState&&(identical(other.flowState, flowState) || other.flowState == flowState)&&(identical(other.data, data) || other.data == data)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,flowState,data);
+int get hashCode => Object.hash(runtimeType,flowState,data,isDeleted);
 
 @override
 String toString() {
-  return 'GetTransactionByIdState(flowState: $flowState, data: $data)';
+  return 'GetTransactionByIdState(flowState: $flowState, data: $data, isDeleted: $isDeleted)';
 }
 
 
@@ -243,7 +245,7 @@ abstract mixin class _$GetTransactionByIdStateCopyWith<$Res> implements $GetTran
   factory _$GetTransactionByIdStateCopyWith(_GetTransactionByIdState value, $Res Function(_GetTransactionByIdState) _then) = __$GetTransactionByIdStateCopyWithImpl;
 @override @useResult
 $Res call({
- FlowState? flowState, TransactionbyidModel? data
+ FlowState? flowState, TransactionbyidModel? data, bool isDeleted
 });
 
 
@@ -260,11 +262,12 @@ class __$GetTransactionByIdStateCopyWithImpl<$Res>
 
 /// Create a copy of GetTransactionByIdState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? data = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? flowState = freezed,Object? data = freezed,Object? isDeleted = null,}) {
   return _then(_GetTransactionByIdState(
 flowState: freezed == flowState ? _self.flowState : flowState // ignore: cast_nullable_to_non_nullable
 as FlowState?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as TransactionbyidModel?,
+as TransactionbyidModel?,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

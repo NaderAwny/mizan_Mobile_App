@@ -1,5 +1,11 @@
+import 'dart:async';
+
+import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/app/data_refresh_manager.dart';
+import 'package:mizan/data/network/failure.dart';
+import 'package:mizan/domain/model/statistics_model/statistics_model.dart';
 import 'package:mizan/domain/use_case/get_statistics_use_case.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
@@ -11,37 +17,50 @@ class StatisticsCubit extends Cubit<StatisticsState> {
   final StatisticsUseCase _statisticsUseCase;
   final DailyStatisticsUseCase _dailyStatisticsUseCase;
   final MonthlyStatisticsUseCase _monthlyStatisticsUseCase;
+  final DataRefreshManager _dataRefreshManager;
+  StreamSubscription<void>? _refreshSubscription;
 
   StatisticsCubit(
     this._statisticsUseCase,
     this._dailyStatisticsUseCase,
     this._monthlyStatisticsUseCase,
-  ) : super(const StatisticsState());
+    this._dataRefreshManager,
+  ) : super(const StatisticsState()) {
+    _refreshSubscription = _dataRefreshManager.onTransactionsChanged.listen((
+      _,
+    ) {
+      refreshSilently();
+    });
+  }
 
   // Selected filter mode: 'summary' | 'daily' | 'monthly'
   String selectedMode = 'summary';
 
   /// Load overall summary statistics (no date filter)
-  Future<void> getSummaryStatistics() async {
+  Future<void> getSummaryStatistics({bool silent = false}) async {
+    if (isClosed) return;
     selectedMode = 'summary';
-    emit(
-      state.copyWith(
-        flowState: LoadingState(
-          stateRendererType: StateRendererType.fullScreenLoadingState,
-          title: AppStrings.loading,
-          message: 'جاري جلب الإحصائيات العامة...',
+    if (!silent || state.data == null) {
+      emit(
+        state.copyWith(
+          flowState: LoadingState(
+            stateRendererType: StateRendererType.fullScreenLoadingState,
+            title: AppStrings.loading,
+            message: 'جاري جلب الإحصائيات العامة...',
+          ),
+          selectedDate: null,
+          selectedMonthYear: null,
+          isMonthlyMode: false,
         ),
-        selectedDate: null,
-        selectedMonthYear: null,
-        isMonthlyMode: false,
-      ),
-    );
+      );
+    }
 
-    final result = await _statisticsUseCase.execute(null);
+    final Either<Failure, StatisticsPageModel> result = await _statisticsUseCase
+        .execute(null);
 
     result.fold(
-      (failure) {
-        if (isClosed) return;
+      (Failure failure) {
+        if (isClosed || (silent && state.data != null)) return;
         emit(
           state.copyWith(
             flowState: ErrorState(
@@ -52,34 +71,48 @@ class StatisticsCubit extends Cubit<StatisticsState> {
           ),
         );
       },
-      (data) {
+      (StatisticsPageModel data) {
         if (isClosed) return;
         emit(state.copyWith(flowState: ContentState(), data: data));
       },
     );
   }
 
-  /// Load daily statistics for a specific date (format: YYYY-MM-DD)
-  Future<void> getDailyStatistics(String date) async {
-    selectedMode = 'daily';
-    emit(
-      state.copyWith(
-        flowState: LoadingState(
-          stateRendererType: StateRendererType.fullScreenLoadingState,
-          title: AppStrings.loading,
-          message: 'جاري جلب إحصائيات يوم $date...',
-        ),
-        selectedDate: date,
-        selectedMonthYear: null,
-        isMonthlyMode: false,
-      ),
-    );
+  void selectTab(int index) {
+    if (isClosed) return;
+    emit(state.copyWith(selectedTabIndex: index));
+  }
 
-    final result = await _dailyStatisticsUseCase.execute(date);
+  /// Load daily statistics for a specific date (format: YYYY-MM-DD)
+  Future<void> getDailyStatistics(
+    String date, {
+    int? tabIndex,
+    bool silent = false,
+  }) async {
+    if (isClosed) return;
+    selectedMode = 'daily';
+    if (!silent || state.data == null) {
+      emit(
+        state.copyWith(
+          flowState: LoadingState(
+            stateRendererType: StateRendererType.fullScreenLoadingState,
+            title: AppStrings.loading,
+            message: 'جاري جلب إحصائيات يوم $date...',
+          ),
+          selectedDate: date,
+          selectedMonthYear: null,
+          isMonthlyMode: false,
+          selectedTabIndex: tabIndex ?? state.selectedTabIndex,
+        ),
+      );
+    }
+
+    final Either<Failure, StatisticsPageModel> result =
+        await _dailyStatisticsUseCase.execute(date);
 
     result.fold(
-      (failure) {
-        if (isClosed) return;
+      (Failure failure) {
+        if (isClosed || (silent && state.data != null)) return;
         emit(
           state.copyWith(
             flowState: ErrorState(
@@ -90,7 +123,7 @@ class StatisticsCubit extends Cubit<StatisticsState> {
           ),
         );
       },
-      (data) {
+      (StatisticsPageModel data) {
         if (isClosed) return;
         emit(state.copyWith(flowState: ContentState(), data: data));
       },
@@ -98,30 +131,40 @@ class StatisticsCubit extends Cubit<StatisticsState> {
   }
 
   /// Load monthly statistics for a specific month and year
-  Future<void> getMonthlyStatistics(String year, String month) async {
-    final yearStr = year;
-    final monthStr = month.padLeft(2, '0');
+  Future<void> getMonthlyStatistics(
+    String year,
+    String month, {
+    int? tabIndex,
+    bool silent = false,
+  }) async {
+    if (isClosed) return;
+    final String yearStr = year;
+    final String monthStr = month.padLeft(2, '0');
     selectedMode = 'monthly';
-    emit(
-      state.copyWith(
-        flowState: LoadingState(
-          stateRendererType: StateRendererType.fullScreenLoadingState,
-          title: AppStrings.loading,
-          message: 'جاري جلب إحصائيات الشهر...',
+    if (!silent || state.data == null) {
+      emit(
+        state.copyWith(
+          flowState: LoadingState(
+            stateRendererType: StateRendererType.fullScreenLoadingState,
+            title: AppStrings.loading,
+            message: 'جاري جلب إحصائيات الشهر...',
+          ),
+          isMonthlyMode: true,
+          selectedMonthYear: '$yearStr-$monthStr',
+          selectedDate: null,
+          selectedTabIndex: tabIndex ?? state.selectedTabIndex,
         ),
-        isMonthlyMode: true,
-        selectedMonthYear: '$yearStr-$monthStr',
-        selectedDate: null,
-      ),
-    );
+      );
+    }
 
-    final result = await _monthlyStatisticsUseCase.execute(
-      MonthlyStatisticsInput(year: yearStr, month: monthStr),
-    );
+    final Either<Failure, StatisticsPageModel> result =
+        await _monthlyStatisticsUseCase.execute(
+          MonthlyStatisticsInput(year: yearStr, month: monthStr),
+        );
 
     result.fold(
-      (failure) {
-        if (isClosed) return;
+      (Failure failure) {
+        if (isClosed || (silent && state.data != null)) return;
         emit(
           state.copyWith(
             flowState: ErrorState(
@@ -132,7 +175,7 @@ class StatisticsCubit extends Cubit<StatisticsState> {
           ),
         );
       },
-      (data) {
+      (StatisticsPageModel data) {
         if (isClosed) return;
         emit(state.copyWith(flowState: ContentState(), data: data));
       },
@@ -141,7 +184,7 @@ class StatisticsCubit extends Cubit<StatisticsState> {
 
   void changeMonthMode(bool isMonthly) {
     if (isMonthly) {
-      final now = DateTime.now();
+      final DateTime now = DateTime.now();
       getMonthlyStatistics(now.year.toString(), now.month.toString());
     } else {
       getSummaryStatistics();
@@ -152,12 +195,28 @@ class StatisticsCubit extends Cubit<StatisticsState> {
     getDailyStatistics(date);
   }
 
+  void refreshSilently() {
+    if (isClosed) return;
+    if (state.selectedDate != null) {
+      getDailyStatistics(state.selectedDate!, silent: true);
+    } else if (state.isMonthlyMode && state.selectedMonthYear != null) {
+      final List<String> parts = state.selectedMonthYear!.split('-');
+      if (parts.length == 2) {
+        getMonthlyStatistics(parts[0], parts[1], silent: true);
+      } else {
+        getSummaryStatistics(silent: true);
+      }
+    } else {
+      getSummaryStatistics(silent: true);
+    }
+  }
+
   /// Handle retry logic after error
   void retry() {
     if (state.selectedDate != null) {
       getDailyStatistics(state.selectedDate!);
     } else if (state.isMonthlyMode && state.selectedMonthYear != null) {
-      final parts = state.selectedMonthYear!.split('-');
+      final List<String> parts = state.selectedMonthYear!.split('-');
       if (parts.length == 2) {
         getMonthlyStatistics(parts[0], parts[1]);
       } else {
@@ -166,5 +225,11 @@ class StatisticsCubit extends Cubit<StatisticsState> {
     } else {
       getSummaryStatistics();
     }
+  }
+
+  @override
+  Future<void> close() {
+    _refreshSubscription?.cancel();
+    return super.close();
   }
 }

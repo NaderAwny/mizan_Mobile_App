@@ -8,19 +8,25 @@ import 'package:mizan/presentation/resources/strings_manager.dart';
 class ErrorHandler implements Exception {
   late Failure failure;
 
-  ErrorHandler.handle(dynamic error) {
+  ErrorHandler.handle(Object error) {
     if (error is DioException) {
       failure = _handleError(error);
     } else if (error is Failure) {
       failure = error;
     } else if (error is Exception) {
-      final msg = error.toString().replaceFirst('Exception: ', '').trim();
+      final String msg = error
+          .toString()
+          .replaceFirst('Exception: ', '')
+          .trim();
       failure = Failure(
         ResponseCode.DEAFULT,
         msg.isNotEmpty ? _localizeErrorMessage(msg) : ResponseMessage.DEAFULT,
       );
     } else if (error is String && error.trim().isNotEmpty) {
-      failure = Failure(ResponseCode.DEAFULT, _localizeErrorMessage(error.trim()));
+      failure = Failure(
+        ResponseCode.DEAFULT,
+        _localizeErrorMessage(error.trim()),
+      );
     } else {
       failure = DataSource.DEFAULT.getFailure();
     }
@@ -39,11 +45,11 @@ Failure _handleError(DioException error) {
     case DioExceptionType.badCertificate:
       return DataSource.DEFAULT.getFailure();
     case DioExceptionType.badResponse:
-      final statusCode = error.response?.statusCode ?? 0;
-      final responseData = error.response?.data;
+      final int statusCode = error.response?.statusCode ?? 0;
+      final Object? responseData = error.response?.data;
 
       // 1. Try to extract server-provided error or validation message
-      final extractedMessage = _extractErrorMessage(responseData);
+      final String? extractedMessage = _extractErrorMessage(responseData);
       if (extractedMessage != null && extractedMessage.trim().isNotEmpty) {
         return Failure(
           statusCode,
@@ -66,16 +72,16 @@ Failure _handleError(DioException error) {
 }
 
 /// Extract clean, readable error message from API response data (Map, List, or String)
-String? _extractErrorMessage(dynamic data) {
+String? _extractErrorMessage(Object? data) {
   if (data == null) return null;
 
   if (data is Map) {
     // Check validation errors dictionary first if message is generic
-    final rawMsg = data['message']?.toString();
-    final hasSpecificErrors = data['errors'] != null;
+    final String? rawMsg = data['message']?.toString();
+    final bool hasSpecificErrors = data['errors'] != null;
 
     if (hasSpecificErrors) {
-      final errorsMsg = _extractFromErrors(data['errors']);
+      final String? errorsMsg = _extractFromErrors(data['errors']);
       if (errorsMsg != null && errorsMsg.isNotEmpty) {
         return errorsMsg;
       }
@@ -87,7 +93,7 @@ String? _extractErrorMessage(dynamic data) {
     }
 
     // Check error field
-    final err = data['error'];
+    final Object? err = data['error'];
     if (err is String && err.trim().isNotEmpty) {
       return err.trim();
     } else if (err is Map && err['message'] != null) {
@@ -102,7 +108,7 @@ String? _extractErrorMessage(dynamic data) {
       return data['msg'].toString().trim();
     }
   } else if (data is String) {
-    final trimmed = data.trim();
+    final String trimmed = data.trim();
     if (trimmed.isNotEmpty &&
         !trimmed.startsWith('<!DOCTYPE') &&
         !trimmed.startsWith('<html')) {
@@ -113,13 +119,13 @@ String? _extractErrorMessage(dynamic data) {
 }
 
 /// Extract errors from validation errors payload (e.g. Laravel {"email": ["..."]})
-String? _extractFromErrors(dynamic errors) {
+String? _extractFromErrors(Object? errors) {
   if (errors is Map) {
-    final messages = <String>[];
-    for (final entry in errors.entries) {
-      final val = entry.value;
+    final List<String> messages = <String>[];
+    for (final MapEntry<Object?, Object?> entry in errors.entries) {
+      final Object? val = entry.value;
       if (val is List && val.isNotEmpty) {
-        messages.addAll(val.map((e) => e.toString().trim()));
+        messages.addAll(val.map((Object? e) => e.toString().trim()));
       } else if (val is String && val.trim().isNotEmpty) {
         messages.add(val.trim());
       }
@@ -128,14 +134,14 @@ String? _extractFromErrors(dynamic errors) {
       return messages.join('\n');
     }
   } else if (errors is List && errors.isNotEmpty) {
-    return errors.map((e) => e.toString().trim()).join('\n');
+    return errors.map((Object? e) => e.toString().trim()).join('\n');
   }
   return null;
 }
 
 /// Translate or map common technical/English messages into friendly Arabic
 String _localizeErrorMessage(String rawMsg) {
-  final lower = rawMsg.toLowerCase();
+  final String lower = rawMsg.toLowerCase();
 
   // Email validation errors
   if (lower.contains('email') &&
@@ -206,10 +212,7 @@ Failure _getFailureByStatusCode(int statusCode) {
         "غير مصرح بالدخول، يرجى التحقق من بياناتك أو إعادة تسجيل الدخول.",
       );
     case ResponseCode.FORBIDDEN: // 403
-      return Failure(
-        statusCode,
-        "ليس لديك الصلاحية لتنفيذ هذا الإجراء.",
-      );
+      return Failure(statusCode, "ليس لديك الصلاحية لتنفيذ هذا الإجراء.");
     case ResponseCode.NOT_FOUND: // 404
       return Failure(
         statusCode,
@@ -338,24 +341,19 @@ class ResponseMessage {
   static String NO_CONTENT = AppStrings.noContent;
   static String BAD_REQUEST =
       "البيانات المدخلة غير صحيحة، يرجى مراجعة الحقول والمحاولة مجدداً.";
-  static String UNAUTORISED =
-      "غير مصرح بالدخول، يرجى تسجيل الدخول مجدداً.";
-  static String FORBIDDEN =
-      "ليس لديك الصلاحية لتنفيذ هذا الإجراء.";
+  static String UNAUTORISED = "غير مصرح بالدخول، يرجى تسجيل الدخول مجدداً.";
+  static String FORBIDDEN = "ليس لديك الصلاحية لتنفيذ هذا الإجراء.";
   static String INTERNAL_SERVER_ERROR =
       "حدث خطأ في خادم النظام، يرجى المحاولة لاحقاً.";
-  static String NOT_FOUND =
-      "الحساب أو العنصر المطلوب غير موجود.";
+  static String NOT_FOUND = "الحساب أو العنصر المطلوب غير موجود.";
   static String CONNECT_TIMEOUT =
       "انتهت مهلة الاتصال بالخادم، يرجى التأكد من اتصال الإنترنت.";
-  static String CANCEL =
-      "تم إلغاء العملية.";
+  static String CANCEL = "تم إلغاء العملية.";
   static String RECIEVE_TIMEOUT =
       "استغرق الخادم وقتاً أطول للاستجابة، يرجى إعادة المحاولة.";
   static String SEND_TIMEOUT =
       "انتهت مهلة إرسال البيانات، يرجى إعادة المحاولة.";
-  static String CACHE_ERROR =
-      AppStrings.cacheError;
+  static String CACHE_ERROR = AppStrings.cacheError;
   static String NO_INTERNET_CONNECTION =
       "لا يوجد اتصال بالإنترنت، يرجى التحقق من الشبكة.";
   static String DEAFULT =

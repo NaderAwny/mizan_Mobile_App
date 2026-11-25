@@ -110,29 +110,29 @@ class ColorManager {
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.centerRight,
     end: Alignment.centerLeft,
-    colors: [Color(0xFFA8623B), Color(0xFFD1A153), Color(0xFFC57B57)],
-    stops: [0.0, 0.5, 1.0],
+    colors: <Color>[Color(0xFFA8623B), Color(0xFFD1A153), Color(0xFFC57B57)],
+    stops: <double>[0.0, 0.5, 1.0],
   );
 
   /// Splash screen warm cream gradient
   static const LinearGradient splashGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFFF9F5EC), Color(0xFFF3EBDA), Color(0xFFEEE1C2)],
+    colors: <Color>[Color(0xFFF9F5EC), Color(0xFFF3EBDA), Color(0xFFEEE1C2)],
   );
 
   /// Brand Dark Green to Gold gradient
   static const LinearGradient brandGradient = LinearGradient(
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
-    colors: [Color(0xFF1C4A38), Color(0xFFC29A4E)],
+    colors: <Color>[Color(0xFF1C4A38), Color(0xFFC29A4E)],
   );
 
   /// Radial glow for onboarding illustrations
   static const RadialGradient heroRadialGlow = RadialGradient(
     center: Alignment.center,
     radius: 0.8,
-    colors: [
+    colors: <Color>[
       Color(0x26D1A153), // 15% opacity Gold
       Color(0x00FCFAF7),
     ],
@@ -150,4 +150,27 @@ class ColorManager {
 
   /// Home indicator bar color - 20% opacity
   static const Color homeIndicator = Color(0x331C1816);
+
+  // --- Transparent ---
+  static const Color transparent = Colors.transparent;
+
+  // --- Voice Note ---
+  static const Color voiceNotePurple = Color(0xFF5E48B8);
+  static const Color voiceNoteContainer = Color(0xFFF0EDFC);
+
+  // --- Transaction Type ---
+  static const Color transactionTypeBg = Color(0xFFEEF2FF);
+  static const Color transactionTypeText = Color(0xFF4F46E5);
+
+  // --- Error / Warning / Success variants ---
+  static const Color errorRedVariant = Color(0xFFE53935);
+  static const Color warningBg = Color(0xFFFFF9EE);
+  static const Color warningBorder = Color(0xFFE8D8B7);
+  static const Color successBg = Color(0xFFEBF3EC);
+
+  // --- Shadows ---
+  static const Color shadowLight = Color(0x06000000);
+  static const Color shadowMedium = Color(0x0A000000);
+  static const Color shadowDark = Color(0x1A000000);
+  static const Color shadowWarm = Color(0x061C1816);
 }

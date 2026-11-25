@@ -12,6 +12,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:mizan/app/di.dart';
+import 'package:mizan/app/date_utils.dart';
+import 'package:mizan/app/voice_note_audio_service.dart';
 import 'package:mizan/data/request/voice_note_request.dart';
 import 'package:mizan/domain/model/voice_note_model/voice_note_model.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
@@ -25,14 +27,25 @@ import 'package:mizan/presentation/voice_note/create_voice_note_cubit/create_voi
 import 'package:mizan/presentation/voice_note/get_voice_note_by_id_cubit/get_voice_note_by_id_view.dart';
 import 'package:mizan/presentation/voice_note/get_voice_note_cubit/get_voice_note_cubit.dart';
 import 'package:mizan/presentation/voice_note/get_voice_note_cubit/get_voice_note_state.dart';
+import 'package:mizan/presentation/voice_note/voice_notes_summary_cubit/voice_notes_summary_cubit.dart';
+import 'package:mizan/presentation/voice_note/voice_notes_summary_cubit/voice_notes_summary_state.dart';
+import 'package:mizan/presentation/voice_note/widgets/voice_notes_period_tabs.dart';
+import 'package:mizan/presentation/voice_note/widgets/voice_notes_summary_card.dart';
 
 class GetVoiceNoteView extends StatelessWidget {
   const GetVoiceNoteView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<GetListVoiceNotesCubit>(
-      create: (_) => getIt<GetListVoiceNotesCubit>()..getListVoiceNotes(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<GetListVoiceNotesCubit>(
+          create: (_) => getIt<GetListVoiceNotesCubit>()..getListVoiceNotes(),
+        ),
+        BlocProvider<VoiceNotesSummaryCubit>(
+          create: (_) => getIt<VoiceNotesSummaryCubit>()..getSummary(),
+        ),
+      ],
       child: const _GetVoiceNoteScreen(),
     );
   }
@@ -49,11 +62,8 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
 
-  int _selectedFilterIndex = 0;
-  String _searchQuery = '';
-
   // Filter tab definitions
-  static const List<String> _filterTabs = [
+  static const List<String> _filterTabs = <String>[
     AppStrings.allTransactions,
     AppStrings.quickSale,
     AppStrings.quickPurchase,
@@ -61,7 +71,7 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
     "سداد قسط",
   ];
 
-  static const List<String?> _filterTypeValues = [
+  static const List<String?> _filterTypeValues = <String?>[
     null,
     VoiceNoteOperationType.sale,
     VoiceNoteOperationType.purchase,
@@ -69,12 +79,7 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
     VoiceNoteOperationType.installmentPayment,
   ];
 
-  // Global active audio player preview tracker
-  String? _currentlyPlayingId;
-  double _playbackProgress = 0.0;
   Timer? _playbackTimer;
-  Duration _currentAudioDuration = Duration.zero;
-  Duration _currentPosition = Duration.zero;
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
@@ -82,36 +87,40 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
     super.initState();
     _scrollController.addListener(_onScroll);
 
-    _audioPlayer.onDurationChanged.listen((dur) {
-      if (mounted) setState(() => _currentAudioDuration = dur);
+    _audioPlayer.onDurationChanged.listen((Duration dur) {
+      if (mounted) {
+        context
+            .read<GetListVoiceNotesCubit>()
+            .updatePlayback(currentAudioDuration: dur);
+      }
     });
 
-    _audioPlayer.onPositionChanged.listen((pos) {
+    _audioPlayer.onPositionChanged.listen((Duration pos) {
       if (!mounted) return;
-      final totalMs = _currentAudioDuration.inMilliseconds;
-      setState(() {
-        _currentPosition = pos;
-        if (totalMs > 0) {
-          _playbackProgress = (pos.inMilliseconds / totalMs).clamp(0.0, 1.0);
-        }
-      });
+      final GetListVoiceNotesCubit cubit =
+          context.read<GetListVoiceNotesCubit>();
+      final int totalMs = cubit.state.currentAudioDuration.inMilliseconds;
+      final double progress = totalMs > 0
+          ? (pos.inMilliseconds / totalMs).clamp(0.0, 1.0)
+          : 0.0;
+      cubit.updatePlayback(currentPosition: pos, playbackProgress: progress);
     });
 
     _audioPlayer.onPlayerComplete.listen((_) {
       if (!mounted) return;
-      setState(() {
-        _currentlyPlayingId = null;
-        _playbackProgress = 0.0;
-        _currentAudioDuration = Duration.zero;
-        _currentPosition = Duration.zero;
-      });
+      context.read<GetListVoiceNotesCubit>().updatePlayback(
+            clearPlayingId: true,
+            playbackProgress: 0.0,
+            currentAudioDuration: Duration.zero,
+            currentPosition: Duration.zero,
+          );
     });
   }
 
   void _onScroll() {
     if (_scrollController.hasClients) {
-      final maxScroll = _scrollController.position.maxScrollExtent;
-      final currentScroll = _scrollController.position.pixels;
+      final double maxScroll = _scrollController.position.maxScrollExtent;
+      final double currentScroll = _scrollController.position.pixels;
       if (currentScroll >= (maxScroll * 0.8)) {
         context.read<GetListVoiceNotesCubit>().loadMoreVoiceNotes();
       }
@@ -127,64 +136,73 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
     super.dispose();
   }
 
-  Future<void> _toggleAudioPreview(String id, String audioUrl) async {
-    if (_currentlyPlayingId == id) {
+  Future<void> _toggleAudioPreview(VoiceNoteModel item) async {
+    final GetListVoiceNotesCubit cubit =
+        context.read<GetListVoiceNotesCubit>();
+    if (cubit.state.currentlyPlayingId == item.id) {
       // إيقاف التشغيل
       await _audioPlayer.stop();
-      setState(() {
-        _currentlyPlayingId = null;
-        _playbackProgress = 0.0;
-        _currentAudioDuration = Duration.zero;
-        _currentPosition = Duration.zero;
-      });
+      cubit.updatePlayback(
+        clearPlayingId: true,
+        playbackProgress: 0.0,
+        currentAudioDuration: Duration.zero,
+        currentPosition: Duration.zero,
+      );
     } else {
       // إيقاف أي تشغيل سابق
       await _audioPlayer.stop();
-      setState(() {
-        _currentlyPlayingId = id;
-        _playbackProgress = 0.0;
-        _currentAudioDuration = Duration.zero;
-        _currentPosition = Duration.zero;
-      });
+      cubit.updatePlayback(
+        currentlyPlayingId: item.id,
+        playbackProgress: 0.0,
+        currentAudioDuration: Duration.zero,
+        currentPosition: Duration.zero,
+      );
 
-      if (audioUrl.isEmpty) {
+      if (item.audioPath.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('لا يوجد ملف صوتي لهذه الملاحظة')),
           );
         }
-        setState(() => _currentlyPlayingId = null);
+        cubit.updatePlayback(clearPlayingId: true);
         return;
       }
 
       try {
-        await _audioPlayer.play(UrlSource(audioUrl));
+        final Source source = await VoiceNoteAudioService.resolveSource(
+          voiceNoteId: item.id,
+          audioPath: item.audioPath,
+          audioUrl: item.audioUrl,
+        );
+        await _audioPlayer.play(source);
       } catch (e) {
-        debugPrint('Audio playback error: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تعذّر تشغيل الملف الصوتي')),
+            const SnackBar(
+              content: Text('تعذّر تشغيل الملف الصوتي (الملف غير متاح على السيرفر حالياً)'),
+            ),
           );
-          setState(() {
-            _currentlyPlayingId = null;
-            _playbackProgress = 0.0;
-          });
+          cubit.updatePlayback(clearPlayingId: true, playbackProgress: 0.0);
         }
       }
     }
   }
 
-  List<VoiceNoteModel> _filterItems(List<VoiceNoteModel> allItems) {
-    final selectedType = _filterTypeValues[_selectedFilterIndex];
-    return allItems.where((item) {
+  List<VoiceNoteModel> _filterItems(
+    List<VoiceNoteModel> allItems,
+    int selectedFilterIndex,
+    String searchQuery,
+  ) {
+    final String? selectedType = _filterTypeValues[selectedFilterIndex];
+    return allItems.where((VoiceNoteModel item) {
       // Type match
-      final matchesType =
+      final bool matchesType =
           selectedType == null ||
           item.operationType.toLowerCase() == selectedType.toLowerCase();
 
       // Search match
-      final query = _searchQuery.trim().toLowerCase();
-      final matchesSearch =
+      final String query = searchQuery.trim().toLowerCase();
+      final bool matchesSearch =
           query.isEmpty ||
           item.contactName.toLowerCase().contains(query) ||
           item.notes.toLowerCase().contains(query) ||
@@ -196,18 +214,107 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
   }
 
   Future<void> _navigateToCreate() async {
-    final result = await Navigator.of(
+    final bool? result = await Navigator.of(
       context,
-    ).push(MaterialPageRoute(builder: (_) => const CreateVoiceNoteView()));
+    ).push<bool>(MaterialPageRoute<bool>(builder: (_) => const CreateVoiceNoteView()));
     if (result == true && mounted) {
       context.read<GetListVoiceNotesCubit>().getListVoiceNotes();
+      context.read<VoiceNotesSummaryCubit>().getSummary();
     }
   }
 
-  void _navigateToDetails(String id) {
-    Navigator.of(
+  void _navigateToDetails(String id) async {
+    final bool? result = await Navigator.of(
       context,
-    ).push(MaterialPageRoute(builder: (_) => GetVoiceNoteByIdView(id: id)));
+    ).push<bool>(MaterialPageRoute<bool>(builder: (_) => GetVoiceNoteByIdView(id: id)));
+    if (result == true && mounted) {
+      context.read<GetListVoiceNotesCubit>().getListVoiceNotes();
+      context.read<VoiceNotesSummaryCubit>().getSummary();
+    }
+  }
+
+  Future<void> _onPeriodSelected(BuildContext context, String period) async {
+    final summaryCubit = context.read<VoiceNotesSummaryCubit>();
+    if (period != 'custom') {
+      await summaryCubit.getSummary(period: period);
+      return;
+    }
+
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 3),
+      lastDate: now,
+      helpText: AppStrings.voiceSummarySelectDateRange,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: ColorManager.primary,
+              onPrimary: ColorManager.white,
+              surface: ColorManager.surface,
+              onSurface: ColorManager.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked == null || !mounted) return;
+    final dateFmt = intl.DateFormat('yyyy-MM-dd', 'en_US');
+    await summaryCubit.getSummary(
+      period: 'custom',
+      from: dateFmt.format(picked.start),
+      to: dateFmt.format(picked.end),
+    );
+  }
+
+  Widget _buildPeriodTabsBar() {
+    return Container(
+      width: double.infinity,
+      color: ColorManager.surface,
+      padding: EdgeInsets.only(top: 10.h, bottom: 10.h),
+      child: BlocBuilder<VoiceNotesSummaryCubit, VoiceNotesSummaryState>(
+        buildWhen: (VoiceNotesSummaryState p, VoiceNotesSummaryState c) =>
+            p.selectedPeriod != c.selectedPeriod,
+        builder: (BuildContext context, VoiceNotesSummaryState state) {
+          return VoiceNotesPeriodTabs(
+            selectedPeriod: state.selectedPeriod,
+            onPeriodSelected: (period) => _onPeriodSelected(context, period),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSummaryCardSliver() {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: EdgeInsets.only(top: 12.h, bottom: 12.h),
+        child: BlocBuilder<VoiceNotesSummaryCubit, VoiceNotesSummaryState>(
+          builder: (BuildContext context, VoiceNotesSummaryState state) {
+            final bool isLoading = state.flowState is LoadingState;
+            final String? errorMessage = state.flowState is ErrorState
+                ? (state.flowState as ErrorState).message
+                : null;
+
+            return VoiceNotesSummaryCard(
+              summary: state.summary,
+              selectedPeriod: state.selectedPeriod,
+              isLoading: isLoading,
+              errorMessage: errorMessage,
+              isBalanceVisible: state.isBalanceVisible,
+              onToggleVisibility: () => context
+                  .read<VoiceNotesSummaryCubit>()
+                  .toggleBalanceVisibility(),
+              onRetry: () =>
+                  context.read<VoiceNotesSummaryCubit>().getSummary(),
+            );
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -220,97 +327,136 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         body: SafeArea(
           child: Column(
-            children: [
+            children: <Widget>[
               // ── Top Header ──────────────────────────────────────────────────
               _buildHeader(context),
 
-              // ── Search & Filter Tabs ────────────────────────────────────────
-              _buildSearchAndFilters(),
+              // ── Period Selector Tabs ────────────────────────────────────────
+              _buildPeriodTabsBar(),
 
-              // ── Main List Content ───────────────────────────────────────────
+              // ── Scrollable Summary Card + Filters + Operations List ─────────
               Expanded(
-                child:
-                    BlocBuilder<GetListVoiceNotesCubit, GetListVoiceNotesState>(
-                      builder: (context, state) {
-                        if (state.flowState is LoadingState &&
-                            (state.data == null || state.data!.isEmpty)) {
-                          return const Center(
-                            child: CircularProgressIndicator(
-                              color: ColorManager.primary,
+                child: RefreshIndicator(
+                  color: ColorManager.primary,
+                  backgroundColor: ColorManager.surface,
+                  onRefresh: () async {
+                    await Future.wait([
+                      context.read<GetListVoiceNotesCubit>().getListVoiceNotes(),
+                      context.read<VoiceNotesSummaryCubit>().getSummary(),
+                    ]);
+                  },
+                  child: BlocBuilder<GetListVoiceNotesCubit,
+                      GetListVoiceNotesState>(
+                    builder:
+                        (BuildContext context, GetListVoiceNotesState state) {
+                      final List<Widget> slivers = <Widget>[
+                        _buildSummaryCardSliver(),
+                        SliverToBoxAdapter(
+                          child: _buildSearchAndFilters(),
+                        ),
+                      ];
+
+                      if (state.flowState is LoadingState &&
+                          (state.data == null || state.data!.isEmpty)) {
+                        slivers.add(
+                          const SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: ColorManager.primary,
+                              ),
+                            ),
+                          ),
+                        );
+                      } else if (state.flowState is ErrorState &&
+                          (state.data == null || state.data!.isEmpty)) {
+                        final ErrorState error = state.flowState as ErrorState;
+                        slivers.add(
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: _buildErrorState(error.message),
+                          ),
+                        );
+                      } else {
+                        final List<VoiceNoteModel> allItems =
+                            state.data ?? <VoiceNoteModel>[];
+                        final List<VoiceNoteModel> filteredItems = _filterItems(
+                          allItems,
+                          state.selectedFilterIndex,
+                          state.searchQuery,
+                        );
+
+                        if (filteredItems.isEmpty) {
+                          slivers.add(
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: _buildEmptyState(),
+                            ),
+                          );
+                        } else {
+                          slivers.add(
+                            SliverPadding(
+                              padding: EdgeInsets.fromLTRB(
+                                16.w,
+                                12.h,
+                                16.w,
+                                90.h,
+                              ),
+                              sliver: SliverList.separated(
+                                itemCount: filteredItems.length +
+                                    (state.isLoadingMore ? 1 : 0),
+                                separatorBuilder: (_, _) =>
+                                    SizedBox(height: 12.h),
+                                itemBuilder: (BuildContext context, int index) {
+                                  if (index == filteredItems.length) {
+                                    return const Center(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(16.0),
+                                        child: CircularProgressIndicator(
+                                          color: ColorManager.primary,
+                                        ),
+                                      ),
+                                    );
+                                  }
+
+                                  final VoiceNoteModel item =
+                                      filteredItems[index];
+                                  final bool isPlaying =
+                                      state.currentlyPlayingId == item.id;
+
+                                  return _VoiceNoteCard(
+                                    item: item,
+                                    isPlaying: isPlaying,
+                                    playbackProgress: isPlaying
+                                        ? state.playbackProgress
+                                        : 0.0,
+                                    currentPosition: isPlaying
+                                        ? state.currentPosition
+                                        : Duration.zero,
+                                    totalDuration: isPlaying
+                                        ? state.currentAudioDuration
+                                        : Duration.zero,
+                                    onTogglePlay: () =>
+                                        _toggleAudioPreview(item),
+                                    onTap: () => _navigateToDetails(item.id),
+                                  );
+                                },
+                              ),
                             ),
                           );
                         }
+                      }
 
-                        if (state.flowState is ErrorState &&
-                            (state.data == null || state.data!.isEmpty)) {
-                          final error = state.flowState as ErrorState;
-                          return _buildErrorState(error.message);
-                        }
-
-                        final allItems = state.data ?? [];
-                        final filteredItems = _filterItems(allItems);
-
-                        if (filteredItems.isEmpty) {
-                          return _buildEmptyState();
-                        }
-
-                        return RefreshIndicator(
-                          color: ColorManager.primary,
-                          backgroundColor: ColorManager.surface,
-                          onRefresh: () => context
-                              .read<GetListVoiceNotesCubit>()
-                              .getListVoiceNotes(),
-                          child: ListView.separated(
-                            controller: _scrollController,
-                            physics: const AlwaysScrollableScrollPhysics(
-                              parent: BouncingScrollPhysics(),
-                            ),
-                            padding: EdgeInsets.fromLTRB(
-                              16.w,
-                              12.h,
-                              16.w,
-                              90.h,
-                            ),
-                            itemCount:
-                                filteredItems.length +
-                                (state.isLoadingMore ? 1 : 0),
-                            separatorBuilder: (_, _) => SizedBox(height: 12.h),
-                            itemBuilder: (context, index) {
-                              if (index == filteredItems.length) {
-                                return const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(16.0),
-                                    child: CircularProgressIndicator(
-                                      color: ColorManager.primary,
-                                    ),
-                                  ),
-                                );
-                              }
-
-                              final item = filteredItems[index];
-                              final isPlaying = _currentlyPlayingId == item.id;
-
-                              return _VoiceNoteCard(
-                                item: item,
-                                isPlaying: isPlaying,
-                                playbackProgress: isPlaying
-                                    ? _playbackProgress
-                                    : 0.0,
-                                currentPosition: isPlaying
-                                    ? _currentPosition
-                                    : Duration.zero,
-                                totalDuration: isPlaying
-                                    ? _currentAudioDuration
-                                    : Duration.zero,
-                                onTogglePlay: () =>
-                                    _toggleAudioPreview(item.id, item.audioUrl),
-                                onTap: () => _navigateToDetails(item.id),
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    ),
+                      return CustomScrollView(
+                        controller: _scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(
+                          parent: BouncingScrollPhysics(),
+                        ),
+                        slivers: slivers,
+                      );
+                    },
+                  ),
+                ),
               ),
             ],
           ),
@@ -323,14 +469,14 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
   Widget _buildHeader(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: ColorManager.surface,
         border: Border(
           bottom: BorderSide(color: ColorManager.border, width: 1),
         ),
       ),
       child: Row(
-        children: [
+        children: <Widget>[
           IconButton(
             onPressed: () {
               if (Navigator.of(context).canPop()) {
@@ -356,7 +502,7 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: <Widget>[
                 Text(
                   AppStrings.voiceNotesTitle,
                   style: getBoldStyle(
@@ -383,7 +529,7 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: <Widget>[
                 SvgPicture.asset(
                   IconAssets.mic,
                   width: 14.r,
@@ -395,16 +541,17 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
                 ),
                 SizedBox(width: 4.w),
                 BlocBuilder<GetListVoiceNotesCubit, GetListVoiceNotesState>(
-                  builder: (context, state) {
-                    final count = state.data?.length ?? 0;
-                    return Text(
-                      "$count ملاحظة",
-                      style: getBoldStyle(
-                        color: ColorManager.primary,
-                        fontSize: FontSize.s11,
-                      ),
-                    );
-                  },
+                  builder:
+                      (BuildContext context, GetListVoiceNotesState state) {
+                        final int count = state.data?.length ?? 0;
+                        return Text(
+                          "$count ملاحظة",
+                          style: getBoldStyle(
+                            color: ColorManager.primary,
+                            fontSize: FontSize.s11,
+                          ),
+                        );
+                      },
                 ),
               ],
             ),
@@ -420,7 +567,7 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
       color: ColorManager.surface,
       padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 12.h),
       child: Column(
-        children: [
+        children: <Widget>[
           // Search Field
           Container(
             decoration: BoxDecoration(
@@ -430,10 +577,8 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
             ),
             child: TextField(
               controller: _searchController,
-              onChanged: (val) {
-                setState(() {
-                  _searchQuery = val;
-                });
+              onChanged: (String val) {
+                context.read<GetListVoiceNotesCubit>().onSearchChanged(val);
               },
               style: getRegularStyle(
                 color: ColorManager.textPrimary,
@@ -462,9 +607,9 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
                         icon: const Icon(Icons.clear_rounded, size: 16),
                         onPressed: () {
                           _searchController.clear();
-                          setState(() {
-                            _searchQuery = '';
-                          });
+                          context
+                              .read<GetListVoiceNotesCubit>()
+                              .onSearchChanged('');
                         },
                       )
                     : null,
@@ -480,51 +625,61 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
           SizedBox(height: 10.h),
 
           // Filter Tabs
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            child: Row(
-              children: List.generate(_filterTabs.length, (index) {
-                final isSelected = _selectedFilterIndex == index;
-                return Padding(
-                  padding: EdgeInsets.only(left: 6.w),
-                  child: ChoiceChip(
-                    label: Text(_filterTabs[index]),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      if (selected) {
-                        setState(() {
-                          _selectedFilterIndex = index;
-                        });
-                      }
-                    },
-                    selectedColor: ColorManager.primary,
-                    backgroundColor: ColorManager.surfaceVariant,
-                    labelStyle: isSelected
-                        ? getBoldStyle(
-                            color: ColorManager.white,
-                            fontSize: FontSize.s12,
-                          )
-                        : getMediumStyle(
-                            color: ColorManager.textSecondary,
-                            fontSize: FontSize.s12,
+          BlocBuilder<GetListVoiceNotesCubit, GetListVoiceNotesState>(
+            buildWhen:
+                (GetListVoiceNotesState p, GetListVoiceNotesState c) =>
+                    p.selectedFilterIndex != c.selectedFilterIndex,
+            builder: (BuildContext context, GetListVoiceNotesState state) {
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  children:
+                      List<Widget>.generate(_filterTabs.length, (int index) {
+                    final bool isSelected =
+                        state.selectedFilterIndex == index;
+                    return Padding(
+                      padding: EdgeInsets.only(left: 6.w),
+                      child: ChoiceChip(
+                        label: Text(_filterTabs[index]),
+                        selected: isSelected,
+                        onSelected: (bool selected) {
+                          if (selected) {
+                            context
+                                .read<GetListVoiceNotesCubit>()
+                                .changeFilter(index);
+                          }
+                        },
+                        selectedColor: ColorManager.primary,
+                        backgroundColor: ColorManager.surfaceVariant,
+                        labelStyle: isSelected
+                            ? getBoldStyle(
+                                color: ColorManager.white,
+                                fontSize: FontSize.s12,
+                              )
+                            : getMediumStyle(
+                                color: ColorManager.textSecondary,
+                                fontSize: FontSize.s12,
+                              ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 6.h,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppRadius.r20.r),
+                          side: BorderSide(
+                            color: isSelected
+                                ? ColorManager.primary
+                                : ColorManager.border,
                           ),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 6.h,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.r20.r),
-                      side: BorderSide(
-                        color: isSelected
-                            ? ColorManager.primary
-                            : ColorManager.border,
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              }),
-            ),
+                    );
+                  }),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -537,7 +692,7 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
       decoration: BoxDecoration(
         gradient: ColorManager.primaryGradient,
         borderRadius: BorderRadius.circular(AppRadius.r28.r),
-        boxShadow: [
+        boxShadow: <BoxShadow>[
           BoxShadow(
             color: ColorManager.primary.withAlpha(90),
             blurRadius: 16,
@@ -546,7 +701,7 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
         ],
       ),
       child: Material(
-        color: Colors.transparent,
+        color: ColorManager.transparent,
         child: InkWell(
           onTap: _navigateToCreate,
           borderRadius: BorderRadius.circular(AppRadius.r28.r),
@@ -554,7 +709,7 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
             padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 12.h),
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: <Widget>[
                 SvgPicture.asset(
                   IconAssets.mic,
                   width: 20.r,
@@ -587,11 +742,11 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
         padding: EdgeInsets.all(24.r),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+          children: <Widget>[
             Container(
               width: 72.r,
               height: 72.r,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: ColorManager.lightPrimary,
                 shape: BoxShape.circle,
               ),
@@ -657,7 +812,7 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
         padding: EdgeInsets.all(24.r),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+          children: <Widget>[
             const Icon(
               Icons.error_outline_rounded,
               color: ColorManager.error,
@@ -759,10 +914,16 @@ class _VoiceNoteCardState extends State<_VoiceNoteCard>
     if (!widget.isPlaying || widget.totalDuration == Duration.zero) {
       return '--:--';
     }
-    final remaining = widget.totalDuration - widget.currentPosition;
+    final Duration remaining = widget.totalDuration - widget.currentPosition;
     if (remaining.isNegative || remaining == Duration.zero) return '00:00';
-    final mins = remaining.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final secs = remaining.inSeconds.remainder(60).toString().padLeft(2, '0');
+    final String mins = remaining.inMinutes
+        .remainder(60)
+        .toString()
+        .padLeft(2, '0');
+    final String secs = remaining.inSeconds
+        .remainder(60)
+        .toString()
+        .padLeft(2, '0');
     return '$mins:$secs';
   }
 
@@ -794,8 +955,8 @@ class _VoiceNoteCardState extends State<_VoiceNoteCard>
       case 'payment':
         return _TypeVisuals(
           label: "سداد قسط",
-          color: const Color(0xFF5E48B8),
-          container: const Color(0xFFF0EDFC),
+          color: ColorManager.voiceNotePurple,
+          container: ColorManager.voiceNoteContainer,
           icon: IconAssets.walletCards,
         );
       default:
@@ -810,10 +971,12 @@ class _VoiceNoteCardState extends State<_VoiceNoteCard>
     }
   }
 
+  DateTime _parseToLocal(String raw) => parseServerTime(raw);
+
   String _formatDate(String dateString) {
     if (dateString.isEmpty) return '';
     try {
-      final parsed = DateTime.parse(dateString);
+      final DateTime parsed = _parseToLocal(dateString);
       return intl.DateFormat('yyyy/MM/dd', 'ar').format(parsed);
     } catch (_) {
       return dateString;
@@ -822,8 +985,8 @@ class _VoiceNoteCardState extends State<_VoiceNoteCard>
 
   @override
   Widget build(BuildContext context) {
-    final visuals = _getTypeVisuals(widget.item.operationType);
-    final formattedDate = _formatDate(
+    final _TypeVisuals visuals = _getTypeVisuals(widget.item.operationType);
+    final String formattedDate = _formatDate(
       widget.item.operationDate.isNotEmpty
           ? widget.item.operationDate
           : widget.item.createdAt,
@@ -839,16 +1002,16 @@ class _VoiceNoteCardState extends State<_VoiceNoteCard>
               : ColorManager.border,
           width: widget.isPlaying ? 1.5 : 1,
         ),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
-            color: Color(0x06000000),
+            color: ColorManager.shadowLight,
             blurRadius: 10,
             offset: Offset(0, 3),
           ),
         ],
       ),
       child: Material(
-        color: Colors.transparent,
+        color: ColorManager.transparent,
         child: InkWell(
           onTap: widget.onTap,
           borderRadius: BorderRadius.circular(AppRadius.r16.r),
@@ -856,13 +1019,13 @@ class _VoiceNoteCardState extends State<_VoiceNoteCard>
             padding: EdgeInsets.all(14.r),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: <Widget>[
                 // Top Row: Type Badge + Date + Amount
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
+                    children: <Widget>[
                       Container(
                         padding: EdgeInsets.symmetric(
                           horizontal: 8.w,
@@ -874,7 +1037,7 @@ class _VoiceNoteCardState extends State<_VoiceNoteCard>
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: [
+                          children: <Widget>[
                             SvgPicture.asset(
                               visuals.icon,
                               width: 12.r,
@@ -896,8 +1059,8 @@ class _VoiceNoteCardState extends State<_VoiceNoteCard>
                         ),
                       ),
                       Column(
-                        children: [
-                          if (formattedDate.isNotEmpty) ...[
+                        children: <Widget>[
+                          if (formattedDate.isNotEmpty) ...<Widget>[
                             Text(
                               formattedDate,
                               style: getRegularStyle(
@@ -924,7 +1087,7 @@ class _VoiceNoteCardState extends State<_VoiceNoteCard>
 
                 // Middle: Contact / Party
                 Row(
-                  children: [
+                  children: <Widget>[
                     Container(
                       width: 32.r,
                       height: 32.r,
@@ -961,7 +1124,7 @@ class _VoiceNoteCardState extends State<_VoiceNoteCard>
                   ],
                 ),
 
-                if (widget.item.notes.isNotEmpty) ...[
+                if (widget.item.notes.isNotEmpty) ...<Widget>[
                   SizedBox(height: 6.h),
                   Padding(
                     padding: EdgeInsets.only(right: 40.w),
@@ -998,7 +1161,7 @@ class _VoiceNoteCardState extends State<_VoiceNoteCard>
                     ),
                   ),
                   child: Row(
-                    children: [
+                    children: <Widget>[
                       // زر تشغيل/إيقاف
                       GestureDetector(
                         onTap: widget.onTogglePlay,
@@ -1009,14 +1172,14 @@ class _VoiceNoteCardState extends State<_VoiceNoteCard>
                             color: ColorManager.primary,
                             shape: BoxShape.circle,
                             boxShadow: widget.isPlaying
-                                ? [
+                                ? <BoxShadow>[
                                     BoxShadow(
                                       color: ColorManager.primary.withAlpha(80),
                                       blurRadius: 8,
                                       spreadRadius: 1,
                                     ),
                                   ]
-                                : [],
+                                : <BoxShadow>[],
                           ),
                           child: Center(
                             child: Icon(
@@ -1036,21 +1199,22 @@ class _VoiceNoteCardState extends State<_VoiceNoteCard>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
-                          children: [
+                          children: <Widget>[
                             // Animated Waveform Bars
                             SizedBox(
                               height: 24.h,
                               child: AnimatedBuilder(
                                 animation: _waveController,
-                                builder: (context, _) {
+                                builder: (BuildContext context, _) {
                                   return Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceEvenly,
                                     crossAxisAlignment:
                                         CrossAxisAlignment.center,
-                                    children: List.generate(18, (i) {
-                                      final phase = (i / 18) * 2 * math.pi;
-                                      final sinVal = widget.isPlaying
+                                    children: List<Widget>.generate(18, (int i) {
+                                      final double phase =
+                                          (i / 18) * 2 * math.pi;
+                                      final double sinVal = widget.isPlaying
                                           ? (math.sin(
                                                       _waveController.value *
                                                               2 *
@@ -1060,10 +1224,8 @@ class _VoiceNoteCardState extends State<_VoiceNoteCard>
                                                     1) /
                                                 2
                                           : 0.25;
-                                      final barH = (3.h + sinVal * 18.h).clamp(
-                                        3.h,
-                                        21.h,
-                                      );
+                                      final double barH = (3.h + sinVal * 18.h)
+                                          .clamp(3.h, 21.h);
                                       return AnimatedContainer(
                                         duration: const Duration(
                                           milliseconds: 80,
@@ -1096,7 +1258,7 @@ class _VoiceNoteCardState extends State<_VoiceNoteCard>
                                     ? widget.playbackProgress
                                     : 0.0,
                                 backgroundColor: ColorManager.borderDark,
-                                valueColor: AlwaysStoppedAnimation<Color>(
+                                valueColor: const AlwaysStoppedAnimation<Color>(
                                   ColorManager.primary,
                                 ),
                                 minHeight: 2.5.h,
@@ -1111,7 +1273,7 @@ class _VoiceNoteCardState extends State<_VoiceNoteCard>
                       Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
+                        children: <Widget>[
                           Text(
                             _formatRemaining(),
                             style: getMediumStyle(

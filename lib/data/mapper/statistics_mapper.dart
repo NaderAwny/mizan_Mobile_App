@@ -27,7 +27,9 @@ extension StatisticsPageMapper on StatisticsResponse {
       totalSales: data?.totalSales?.orZeroNum() ?? 0,
       totalPurchases: data?.totalPurchases?.orZeroNum() ?? 0,
       operationsCount: data?.operationsCount?.orZero() ?? 0,
-      transactions: data?.transactions?.map((e) => e.toDomain()).toList(),
+      transactions: data?.transactions
+          ?.map((TransactionStatisticsData e) => e.toDomain())
+          .toList(),
     );
   }
 }

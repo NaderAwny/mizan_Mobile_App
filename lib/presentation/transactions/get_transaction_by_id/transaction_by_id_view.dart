@@ -9,6 +9,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'package:mizan/app/di.dart';
+import 'package:mizan/app/date_utils.dart';
 import 'package:mizan/domain/model/transaction_by_id_mode/transaction_by_id_mode.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
@@ -18,6 +19,7 @@ import 'package:mizan/presentation/resources/styles_manager.dart';
 import 'package:mizan/presentation/resources/values_manager.dart';
 import 'package:mizan/presentation/transactions/get_transaction_by_id/get_transaction_by_id_cubit.dart';
 import 'package:mizan/presentation/transactions/get_transaction_by_id/get_transaction_by_id_state.dart';
+import 'package:mizan/presentation/transactions/get_transaction_by_id/transaction_type_style.dart';
 import 'package:mizan/presentation/transactions/pay_installment/pay_installment_sheet.dart';
 
 class TransactionDetailsView extends StatelessWidget {
@@ -51,8 +53,17 @@ class _TransactionDetailsScreen extends StatelessWidget {
       child: Scaffold(
         backgroundColor: ColorManager.background,
         body: SafeArea(
-          child: BlocBuilder<GetTransactionByIdCubit, GetTransactionByIdState>(
-            builder: (context, state) {
+          child: BlocConsumer<GetTransactionByIdCubit, GetTransactionByIdState>(
+            listenWhen: (GetTransactionByIdState prev, GetTransactionByIdState curr) =>
+                curr.isDeleted && !prev.isDeleted,
+            listener: (BuildContext context, GetTransactionByIdState state) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (context.mounted) {
+                  Navigator.of(context).pop(true);
+                }
+              });
+            },
+            builder: (BuildContext context, GetTransactionByIdState state) {
               return state.flowState?.getScreenWidget(
                     context,
                     _buildContent(context, state.data),
@@ -78,7 +89,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
     }
 
     return Column(
-      children: [
+      children: <Widget>[
         _buildHeader(context, data),
 
         Expanded(
@@ -87,7 +98,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
             padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 24.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+              children: <Widget>[
                 // Amount Card
                 _buildAmountCard(data),
 
@@ -99,7 +110,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
                 // Installments Tracking Section
                 if (data.isInstallment == true ||
                     (data.installments != null &&
-                        data.installments!.isNotEmpty)) ...[
+                        data.installments!.isNotEmpty)) ...<Widget>[
                   SizedBox(height: 14.h),
                   _buildInstallmentTrackingSection(context, data),
                 ],
@@ -107,7 +118,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
                 // Notes & Voice Note
                 if ((data.noteText != null &&
                         data.noteText!.trim().isNotEmpty) ||
-                    data.hasVoiceNote == true) ...[
+                    data.hasVoiceNote == true) ...<Widget>[
                   SizedBox(height: 14.h),
                   _buildNotesCard(data),
                 ],
@@ -134,7 +145,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
       child: SizedBox(
         height: 56.h,
         child: Row(
-          children: [
+          children: <Widget>[
             // Back Button
             SizedBox(
               width: 42.w,
@@ -191,7 +202,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
         color: ColorManager.surface,
         borderRadius: BorderRadius.circular(AppRadius.r20.r),
         border: Border.all(color: ColorManager.border, width: 1),
-        boxShadow: [
+        boxShadow: <BoxShadow>[
           BoxShadow(
             color: ColorManager.black.withAlpha(5),
             blurRadius: 10,
@@ -201,12 +212,12 @@ class _TransactionDetailsScreen extends StatelessWidget {
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
+        children: <Widget>[
           // Amount & Subtitle
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: <Widget>[
                 Text(
                   _getAmountSubtitle(data),
                   maxLines: 2,
@@ -236,14 +247,14 @@ class _TransactionDetailsScreen extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
             decoration: BoxDecoration(
-              color: _getBadgeBackgroundColor(data.type),
+              color: data.type.typeStyle.background,
               borderRadius: BorderRadius.circular(AppRadius.r100.r),
             ),
             child: Text(
               _getBadgeText(data.type),
               textAlign: TextAlign.center,
               style: getBoldStyle(
-                color: _getBadgeTextColor(data.type),
+                color: data.type.typeStyle.text,
                 fontSize: FontSize.s12.sp,
               ),
             ),
@@ -258,8 +269,8 @@ class _TransactionDetailsScreen extends StatelessWidget {
   // ─────────────────────────────────────────────────────────────
 
   Widget _buildDetailsTable(TransactionbyidModel data) {
-    final partyLabel = _getPartyLabel(data.type);
-    final partyValue = data.contactName?.isNotEmpty == true
+    final String partyLabel = _getPartyLabel(data.type);
+    final String partyValue = data.contactName?.isNotEmpty == true
         ? data.contactName!
         : (data.partyName?.isNotEmpty == true ? data.partyName! : "—");
 
@@ -270,7 +281,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
         color: ColorManager.surface,
         borderRadius: BorderRadius.circular(AppRadius.r20.r),
         border: Border.all(color: ColorManager.border, width: 1),
-        boxShadow: [
+        boxShadow: <BoxShadow>[
           BoxShadow(
             color: ColorManager.black.withAlpha(5),
             blurRadius: 10,
@@ -279,7 +290,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
         ],
       ),
       child: Column(
-        children: [
+        children: <Widget>[
           _buildMetaRow(
             label: partyLabel,
             value: partyValue,
@@ -334,7 +345,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
             ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Expanded(
             flex: 4,
             child: Text(
@@ -375,14 +386,14 @@ class _TransactionDetailsScreen extends StatelessWidget {
     BuildContext context,
     TransactionbyidModel data,
   ) {
-    final totalPaid = data.totalPaid ?? 0;
-    final totalAmount = data.amount ?? 0;
-    final totalRemaining =
-        data.totalRemaining ?? (totalAmount - totalPaid);
+    final num totalPaid = data.totalPaid ?? 0;
+    final num totalAmount = data.amount ?? 0;
+    final num totalRemaining = data.totalRemaining ?? (totalAmount - totalPaid);
     final double progressRatio = totalAmount > 0
         ? (totalPaid / totalAmount).clamp(0.0, 1.0)
         : 0.0;
-    final installments = data.installments ?? [];
+    final List<InstallmentbyidModel> installments =
+        data.installments ?? <InstallmentbyidModel>[];
 
     return Container(
       width: double.infinity,
@@ -391,7 +402,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
         color: ColorManager.surface,
         borderRadius: BorderRadius.circular(AppRadius.r20.r),
         border: Border.all(color: ColorManager.border, width: 1),
-        boxShadow: [
+        boxShadow: <BoxShadow>[
           BoxShadow(
             color: ColorManager.black.withAlpha(5),
             blurRadius: 10,
@@ -401,10 +412,10 @@ class _TransactionDetailsScreen extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+        children: <Widget>[
           // Section Title
           Row(
-            children: [
+            children: <Widget>[
               Expanded(
                 child: Text(
                   AppStrings.txDetailsInstallmentsTitle,
@@ -453,7 +464,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               itemCount: installments.length,
               separatorBuilder: (_, _) => SizedBox(height: 10.h),
-              itemBuilder: (ctx, index) {
+              itemBuilder: (BuildContext ctx, int index) {
                 return _buildInstallmentItem(
                   context,
                   installments[index],
@@ -476,7 +487,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
     required num totalRemaining,
     required double progressRatio,
   }) {
-    final percent = (progressRatio * 100).toInt();
+    final int percent = (progressRatio * 100).toInt();
 
     return Container(
       padding: EdgeInsets.all(12.w),
@@ -487,9 +498,9 @@ class _TransactionDetailsScreen extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+        children: <Widget>[
           Row(
-            children: [
+            children: <Widget>[
               Expanded(
                 child: _buildSummaryValue(
                   label: AppStrings.txDetailsRemaining,
@@ -549,7 +560,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
   }) {
     return Column(
       crossAxisAlignment: alignment,
-      children: [
+      children: <Widget>[
         Text(
           label,
           maxLines: 1,
@@ -586,12 +597,12 @@ class _TransactionDetailsScreen extends StatelessWidget {
     int index,
     TransactionbyidModel txData,
   ) {
-    final installmentNumber = inst.installmentNumber ?? (index + 1);
-    final statusStr = inst.status?.toLowerCase() ?? '';
-    final isPaid =
+    final int installmentNumber = inst.installmentNumber ?? (index + 1);
+    final String statusStr = inst.status?.toLowerCase() ?? '';
+    final bool isPaid =
         inst.isPaid == true || statusStr == 'paid' || statusStr == 'مدفوع';
 
-    final partyName = txData.contactName?.isNotEmpty == true
+    final String partyName = txData.contactName?.isNotEmpty == true
         ? txData.contactName!
         : (txData.partyName?.isNotEmpty == true ? txData.partyName! : '—');
 
@@ -599,26 +610,24 @@ class _TransactionDetailsScreen extends StatelessWidget {
       onTap: isPaid
           ? null
           : () => showPayInstallmentSheet(
-                context: context,
-                installment: inst,
-                contactName: partyName,
-                transactionType: txData.type,
-                totalInstallments: txData.installments?.length,
-                onSuccess: () {
-                  // Reload transaction to update full UI
-                  context
-                      .read<GetTransactionByIdCubit>()
-                      .getTransactionById(transactionId);
-                },
-              ),
+              context: context,
+              installment: inst,
+              contactName: partyName,
+              transactionType: txData.type,
+              totalInstallments: txData.installments?.length,
+              onSuccess: () {
+                // Reload transaction to update full UI
+                context.read<GetTransactionByIdCubit>().getTransactionById(
+                  transactionId,
+                );
+              },
+            ),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: double.infinity,
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
         decoration: BoxDecoration(
-          color: isPaid
-              ? ColorManager.background
-              : ColorManager.surface,
+          color: isPaid ? ColorManager.background : ColorManager.surface,
           borderRadius: BorderRadius.circular(AppRadius.r16.r),
           border: Border.all(
             color: isPaid
@@ -629,11 +638,11 @@ class _TransactionDetailsScreen extends StatelessWidget {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+          children: <Widget>[
             // First Row: Header + Status
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
+              children: <Widget>[
                 Expanded(
                   child: Text(
                     'قسط $installmentNumber',
@@ -648,7 +657,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
                 ),
                 SizedBox(width: 8.w),
                 _buildInstallmentStatusBadge(inst),
-                if (!isPaid) ...[
+                if (!isPaid) ...<Widget>[
                   SizedBox(width: 6.w),
                   Icon(
                     Icons.arrow_back_ios_new_rounded,
@@ -662,17 +671,14 @@ class _TransactionDetailsScreen extends StatelessWidget {
             SizedBox(height: 10.h),
 
             // Divider
-            Container(
-              height: 1,
-              color: ColorManager.border.withAlpha(120),
-            ),
+            Container(height: 1, color: ColorManager.border.withAlpha(120)),
 
             SizedBox(height: 10.h),
 
             // Details Row: Due Date & Amount
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: <Widget>[
                 Expanded(
                   child: _buildInstallmentInfo(
                     icon: Icons.calendar_today_outlined,
@@ -686,8 +692,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
                   child: _buildInstallmentInfo(
                     icon: Icons.payments_outlined,
                     label: 'قيمة القسط',
-                    value:
-                        '${_formatAmount(inst.amount)} ${AppStrings.egp}',
+                    value: '${_formatAmount(inst.amount)} ${AppStrings.egp}',
                     textAlign: TextAlign.right,
                   ),
                 ),
@@ -695,7 +700,9 @@ class _TransactionDetailsScreen extends StatelessWidget {
             ),
 
             // Paid Date if paid
-            if (isPaid && inst.paidAt != null && inst.paidAt!.isNotEmpty) ...[
+            if (isPaid &&
+                inst.paidAt != null &&
+                inst.paidAt!.isNotEmpty) ...<Widget>[
               SizedBox(height: 8.h),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
@@ -704,7 +711,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadius.r8.r),
                 ),
                 child: Row(
-                  children: [
+                  children: <Widget>[
                     Icon(
                       Icons.check_circle_rounded,
                       size: 14.r,
@@ -726,20 +733,17 @@ class _TransactionDetailsScreen extends StatelessWidget {
             ],
 
             // Action hint for unpaid
-            if (!isPaid) ...[
+            if (!isPaid) ...<Widget>[
               SizedBox(height: 10.h),
               Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 10.w,
-                  vertical: 6.h,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
                 decoration: BoxDecoration(
                   color: ColorManager.lightPrimary,
                   borderRadius: BorderRadius.circular(AppRadius.r8.r),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: [
+                  children: <Widget>[
                     Icon(
                       Icons.touch_app_outlined,
                       size: 14.r,
@@ -775,9 +779,9 @@ class _TransactionDetailsScreen extends StatelessWidget {
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
+      children: <Widget>[
         Row(
-          children: [
+          children: <Widget>[
             Icon(icon, size: 14.r, color: ColorManager.textSecondary),
             SizedBox(width: 4.w),
             Expanded(
@@ -813,15 +817,18 @@ class _TransactionDetailsScreen extends StatelessWidget {
   // ─────────────────────────────────────────────────────────────
 
   Widget _buildInstallmentStatusBadge(InstallmentbyidModel inst) {
-    final statusStr = inst.status?.toLowerCase() ?? "";
-    final isPaid =
+    final String statusStr = inst.status?.toLowerCase() ?? "";
+    final bool isPaid =
         inst.isPaid == true || statusStr == "paid" || statusStr == "مدفوع";
 
     bool isOverdue = statusStr == "overdue" || statusStr == "متأخر";
 
-    if (!isPaid && !isOverdue && inst.dueDate != null && inst.dueDate!.isNotEmpty) {
+    if (!isPaid &&
+        !isOverdue &&
+        inst.dueDate != null &&
+        inst.dueDate!.isNotEmpty) {
       try {
-        final due = DateTime.parse(inst.dueDate!);
+        final DateTime due = parseBusinessDate(inst.dueDate!);
         if (due.isBefore(DateTime.now())) {
           isOverdue = true;
         }
@@ -890,7 +897,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
         color: ColorManager.surface,
         borderRadius: BorderRadius.circular(AppRadius.r20.r),
         border: Border.all(color: ColorManager.border, width: 1),
-        boxShadow: [
+        boxShadow: <BoxShadow>[
           BoxShadow(
             color: ColorManager.black.withAlpha(5),
             blurRadius: 10,
@@ -900,9 +907,9 @@ class _TransactionDetailsScreen extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+        children: <Widget>[
           Row(
-            children: [
+            children: <Widget>[
               Icon(
                 Icons.sticky_note_2_outlined,
                 size: 18.r,
@@ -920,7 +927,8 @@ class _TransactionDetailsScreen extends StatelessWidget {
             ],
           ),
 
-          if (data.noteText != null && data.noteText!.trim().isNotEmpty) ...[
+          if (data.noteText != null &&
+              data.noteText!.trim().isNotEmpty) ...<Widget>[
             SizedBox(height: 8.h),
             Text(
               data.noteText!,
@@ -933,7 +941,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
             ),
           ],
 
-          if (data.hasVoiceNote == true) ...[
+          if (data.hasVoiceNote == true) ...<Widget>[
             SizedBox(height: 10.h),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
@@ -942,7 +950,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppRadius.r10.r),
               ),
               child: Row(
-                children: [
+                children: <Widget>[
                   Icon(
                     Icons.mic_rounded,
                     size: 18.r,
@@ -983,7 +991,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+            children: <Widget>[
               Icon(
                 Icons.delete_outline_rounded,
                 size: 18.r,
@@ -1008,54 +1016,101 @@ class _TransactionDetailsScreen extends StatelessWidget {
     BuildContext context,
     TransactionbyidModel data,
   ) {
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: ColorManager.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.r20.r),
-          ),
-          title: Text(
-            AppStrings.delete,
-            textAlign: TextAlign.right,
-            style: getBoldStyle(
-              color: ColorManager.textPrimary,
-              fontSize: FontSize.s16.sp,
+      builder: (BuildContext dialogContext) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            backgroundColor: ColorManager.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.r20.r),
             ),
-          ),
-          content: Text(
-            "هل أنت متأكد من رغبتك في حذف هذه المعاملة؟",
-            textAlign: TextAlign.right,
-            style: getMediumStyle(
-              color: ColorManager.textSecondary,
-              fontSize: FontSize.s14.sp,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(
-                AppStrings.cancel,
-                style: getMediumStyle(
-                  color: ColorManager.textSecondary,
-                  fontSize: FontSize.s14.sp,
+            title: Row(
+              children: <Widget>[
+                Container(
+                  padding: EdgeInsets.all(8.r),
+                  decoration: const BoxDecoration(
+                    color: ColorManager.errorContainer,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: ColorManager.error,
+                    size: 20,
+                  ),
                 ),
+                SizedBox(width: 10.w),
+                Text(
+                  AppStrings.txDetailsDelete,
+                  style: getBoldStyle(
+                    color: ColorManager.textPrimary,
+                    fontSize: FontSize.s16.sp,
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              "هل أنت متأكد من رغبتك في حذف هذه المعاملة نهائياً؟ لا يمكن التراجع عن هذا الإجراء.",
+              style: getRegularStyle(
+                color: ColorManager.textSecondary,
+                fontSize: FontSize.s13.sp,
+                height: 1.5,
               ),
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-              },
-              child: Text(
-                AppStrings.delete,
-                style: getBoldStyle(
-                  color: ColorManager.error,
-                  fontSize: FontSize.s14.sp,
-                ),
+            actionsAlignment: MainAxisAlignment.center,
+            actions: <Widget>[
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: ColorManager.textSecondary,
+                        side: const BorderSide(color: ColorManager.border),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.r12.r),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                      ),
+                      child: Text(
+                        AppStrings.cancel,
+                        style: getSemiBoldStyle(
+                          color: ColorManager.textSecondary,
+                          fontSize: FontSize.s14.sp,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 14.w),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(dialogContext).pop();
+                        context.read<GetTransactionByIdCubit>().deleteTransaction();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: ColorManager.error,
+                        foregroundColor: ColorManager.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.r12.r),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                      ),
+                      child: Text(
+                        AppStrings.delete,
+                        style: getBoldStyle(
+                          color: ColorManager.white,
+                          fontSize: FontSize.s14.sp,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -1065,33 +1120,9 @@ class _TransactionDetailsScreen extends StatelessWidget {
   // Badge Helpers
   // ─────────────────────────────────────────────────────────────
 
-  Color _getBadgeBackgroundColor(String? type) {
-    if (type == null) return const Color(0xFFEEF2FF);
-    final lower = type.toLowerCase();
-    if (lower == "collect" || lower == "تحصيل" || lower == "sale" || lower == "بيع") {
-      return ColorManager.successContainer;
-    }
-    if (lower == "pay" || lower == "دفع" || lower == "purchase" || lower == "شراء") {
-      return ColorManager.errorContainer;
-    }
-    return const Color(0xFFEEF2FF);
-  }
-
-  Color _getBadgeTextColor(String? type) {
-    if (type == null) return const Color(0xFF4F46E5);
-    final lower = type.toLowerCase();
-    if (lower == "collect" || lower == "تحصيل" || lower == "sale" || lower == "بيع") {
-      return ColorManager.success;
-    }
-    if (lower == "pay" || lower == "دفع" || lower == "purchase" || lower == "شراء") {
-      return ColorManager.error;
-    }
-    return const Color(0xFF4F46E5);
-  }
-
   String _getBadgeText(String? type) {
     if (type == null || type.isEmpty) return "معاملة";
-    final lower = type.toLowerCase();
+    final String lower = type.toLowerCase();
     if (lower == "sale" || lower == "بيع") return "مبيعات";
     if (lower == "purchase" || lower == "شراء") return "مشتريات";
     if (lower == "collect" || lower == "تحصيل") return "تحصيل";
@@ -1100,7 +1131,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
   }
 
   String _getAmountSubtitle(TransactionbyidModel data) {
-    final lower = data.type?.toLowerCase() ?? "";
+    final String lower = data.type?.toLowerCase() ?? "";
     if (lower == "sale" || lower == "بيع") return "إجمالي قيمة المبيعات";
     if (lower == "purchase" || lower == "شراء") return "إجمالي قيمة المشتريات";
     if (lower == "collect" || lower == "تحصيل") return "المبلغ المحصل";
@@ -1109,14 +1140,14 @@ class _TransactionDetailsScreen extends StatelessWidget {
   }
 
   String _getPartyLabel(String? type) {
-    final lower = type?.toLowerCase() ?? "";
+    final String lower = type?.toLowerCase() ?? "";
     if (lower == "purchase" || lower == "شراء") return "اسم المورد";
     return "اسم العميل";
   }
 
   String _getTransactionTypeLabel(String? type) {
     if (type == null || type.isEmpty) return "—";
-    final lower = type.toLowerCase();
+    final String lower = type.toLowerCase();
     if (lower == "sale") return "بيع";
     if (lower == "purchase") return "شراء";
     if (lower == "collect") return "تحصيل";
@@ -1126,7 +1157,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
 
   String _getPaymentMethodLabel(String? method) {
     if (method == null || method.isEmpty) return "—";
-    final lower = method.toLowerCase();
+    final String lower = method.toLowerCase();
     if (lower == "cash") return "نقدي";
     if (lower == "bank") return "تحويل بنكي";
     if (lower == "wallet") return "محفظة إلكترونية";
@@ -1136,7 +1167,7 @@ class _TransactionDetailsScreen extends StatelessWidget {
 
   String _getInstallmentPlanModeLabel(String? mode) {
     if (mode == null || mode.isEmpty) return "أقساط";
-    final lower = mode.toLowerCase();
+    final String lower = mode.toLowerCase();
     if (lower == "automatic") return "تقسيط تلقائي";
     if (lower == "custom") return "تقسيط مخصص";
     return mode;
@@ -1144,11 +1175,11 @@ class _TransactionDetailsScreen extends StatelessWidget {
 
   String _formatAmount(num? value) {
     if (value == null) return '0.00';
-    final formatter = intl.NumberFormat('#,##0.##', 'en');
+    final intl.NumberFormat formatter = intl.NumberFormat('#,##0.##', 'en');
     return formatter.format(value);
   }
 
-  static const List<String> _arabicMonths = [
+  static const List<String> _arabicMonths = <String>[
     'يناير',
     'فبراير',
     'مارس',
@@ -1163,31 +1194,13 @@ class _TransactionDetailsScreen extends StatelessWidget {
     'ديسمبر',
   ];
 
-  DateTime _parseToLocal(String raw) {
-    final trimmed = raw.trim();
-    try {
-      if (trimmed.endsWith('Z')) {
-        return DateTime.parse(trimmed).toLocal();
-      }
-      if (trimmed.contains('+') ||
-          (trimmed.length > 19 && trimmed.substring(19).contains('-'))) {
-        return DateTime.parse(trimmed).toLocal();
-      }
-      return DateTime.parse('${trimmed}Z').toLocal();
-    } catch (_) {
-      try {
-        return DateTime.parse(trimmed).toLocal();
-      } catch (_) {
-        return DateTime.now();
-      }
-    }
-  }
+  DateTime _parseToLocal(String raw) => parseServerTime(raw);
 
   String _formatDate(String? raw) {
     if (raw == null || raw.isEmpty) return "—";
     try {
-      final dt = DateTime.parse(raw);
-      final month = _arabicMonths[(dt.month - 1).clamp(0, 11)];
+      final DateTime dt = parseBusinessDate(raw);
+      final String month = _arabicMonths[(dt.month - 1).clamp(0, 11)];
       return '${dt.day} $month ${dt.year}';
     } catch (_) {
       return raw;
@@ -1197,11 +1210,11 @@ class _TransactionDetailsScreen extends StatelessWidget {
   String _formatDateTime(String? raw) {
     if (raw == null || raw.isEmpty) return "—";
     try {
-      final dt = _parseToLocal(raw);
-      final month = _arabicMonths[(dt.month - 1).clamp(0, 11)];
-      final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
-      final minute = dt.minute.toString().padLeft(2, '0');
-      final period = dt.hour >= 12 ? 'م' : 'ص';
+      final DateTime dt = _parseToLocal(raw);
+      final String month = _arabicMonths[(dt.month - 1).clamp(0, 11)];
+      final int hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+      final String minute = dt.minute.toString().padLeft(2, '0');
+      final String period = dt.hour >= 12 ? 'م' : 'ص';
       return '${dt.day} $month ${dt.year} - $hour:$minute $period';
     } catch (_) {
       return raw;
