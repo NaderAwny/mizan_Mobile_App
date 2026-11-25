@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mizan/domain/model/contact_model.dart';
 import 'package:mizan/presentation/analytics/analytics_view.dart';
+import 'package:mizan/presentation/assistant/view/assistant_chat_view.dart';
 import 'package:mizan/presentation/auth_verification/auth_verification.dart';
 import 'package:mizan/presentation/customers/contact_form_view.dart';
 import 'package:mizan/presentation/customers/contact_profile_view.dart';
@@ -65,6 +66,9 @@ class Routes {
   static const String voiceNotesListRoute = "/voiceNotes";
   static const String createVoiceNoteRoute = "/createVoiceNote";
   static const String voiceNoteDetailsRoute = "/voiceNoteDetails";
+
+  // AI Assistant (يا ميزان)
+  static const String assistantRoute = "/assistant";
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -185,6 +189,8 @@ class RouteGenerator {
             ? settings.arguments as String
             : "";
         return MaterialPageRoute<void>(builder: (_) => GetVoiceNoteByIdView(id: id));
+      case Routes.assistantRoute:
+        return MaterialPageRoute<void>(builder: (_) => const AssistantChatView());
       default:
         return unDefinedRoute();
     }

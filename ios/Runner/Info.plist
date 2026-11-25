@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>يحتاج تطبيق ميزان إلى استخدام الميكروفون للتسجيل الصوتي والمساعد الذكي يا ميزان.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>يحتاج تطبيق ميزان إلى التعرف على الصوت لتحويل أوامرك الصوتية إلى نصوص للمساعد الذكي يا ميزان.</string>
 </dict>
 </plist>

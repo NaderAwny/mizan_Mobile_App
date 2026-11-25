@@ -85,3 +85,41 @@ Map<String, dynamic> _$VoiceNotesPageResponseToJson(
   'message': instance.message,
   'data': instance.data,
 };
+
+VoiceNoteSummaryData _$VoiceNoteSummaryDataFromJson(
+  Map<String, dynamic> json,
+) => VoiceNoteSummaryData(
+  totalSales: json['totalSales'] as num?,
+  totalPurchases: json['totalPurchases'] as num?,
+  net: json['net'] as num?,
+  count: (json['count'] as num?)?.toInt(),
+  period: json['period'] as String?,
+);
+
+Map<String, dynamic> _$VoiceNoteSummaryDataToJson(
+  VoiceNoteSummaryData instance,
+) => <String, dynamic>{
+  'totalSales': instance.totalSales,
+  'totalPurchases': instance.totalPurchases,
+  'net': instance.net,
+  'count': instance.count,
+  'period': instance.period,
+};
+
+VoiceNoteSummaryResponse _$VoiceNoteSummaryResponseFromJson(
+  Map<String, dynamic> json,
+) => VoiceNoteSummaryResponse(
+  success: json['success'] as bool?,
+  message: json['message'] as String?,
+  data: json['data'] == null
+      ? null
+      : VoiceNoteSummaryData.fromJson(json['data'] as Map<String, dynamic>),
+);
+
+Map<String, dynamic> _$VoiceNoteSummaryResponseToJson(
+  VoiceNoteSummaryResponse instance,
+) => <String, dynamic>{
+  'success': instance.success,
+  'message': instance.message,
+  'data': instance.data,
+};

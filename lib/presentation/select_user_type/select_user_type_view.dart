@@ -111,6 +111,7 @@ class _SelectUserTypeScreenState extends State<_SelectUserTypeScreen>
     );
   }
 
+  // ignore: unused_element
   void _onSkip(BuildContext context) {
     FocusScope.of(context).unfocus();
     Navigator.of(context).pushNamedAndRemoveUntil(

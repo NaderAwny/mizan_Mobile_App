@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/app/data_refresh_manager.dart';
 import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/data/request/transaction_request.dart';
 import 'package:mizan/domain/model/transaction_model.dart';
@@ -12,9 +13,12 @@ import 'package:mizan/presentation/transactions/transaction_form_cubit/transacti
 @injectable
 class TransactionFormCubit extends Cubit<TransactionFormState> {
   final CreateTransactionUseCase _createTransactionUseCase;
+  final DataRefreshManager? _dataRefreshManager;
 
-  TransactionFormCubit(this._createTransactionUseCase)
-    : super(const TransactionFormState());
+  TransactionFormCubit(
+    this._createTransactionUseCase, [
+    this._dataRefreshManager,
+  ]) : super(const TransactionFormState());
 
   /// نقطة تحقق واحدة موحّدة بدل تكرار عدة ErrorState متتالية.
   /// بترجع أول رسالة خطأ لو فيه، أو null لو البيانات سليمة.
@@ -104,6 +108,7 @@ class TransactionFormCubit extends Cubit<TransactionFormState> {
         );
       },
       (Transaction transaction) {
+        _dataRefreshManager?.notifyTransactionsChanged();
         if (isClosed) return;
         emit(
           state.copyWith(

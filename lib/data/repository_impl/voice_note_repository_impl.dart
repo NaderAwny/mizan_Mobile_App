@@ -109,4 +109,35 @@ class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       return Left(DataSource.NO_INTERNET_CONNECTION.getFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, VoiceNoteSummaryModel>> getVoiceNotesSummary({
+    required String period,
+    String? from,
+    String? to,
+  }) async {
+    if (await _networkInfo.isConnected) {
+      try {
+        final response = await _remote.getVoiceNotesSummary(
+          period: period,
+          from: from,
+          to: to,
+        );
+        if (response.success == true) {
+          return Right(response.toDomain());
+        } else {
+          return Left(
+            Failure(
+              ApiInternalStatus.FAILURE,
+              response.message ?? ResponseMessage.DEAFULT,
+            ),
+          );
+        }
+      } catch (e) {
+        return Left(ErrorHandler.handle(e).failure);
+      }
+    } else {
+      return Left(DataSource.NO_INTERNET_CONNECTION.getFailure());
+    }
+  }
 }

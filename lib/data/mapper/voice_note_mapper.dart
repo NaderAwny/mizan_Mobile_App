@@ -1,3 +1,4 @@
+import 'package:mizan/app/constants.dart';
 import 'package:mizan/app/extensions.dart';
 import 'package:mizan/data/response/voice_notes_response/voice_notes_response.dart';
 import 'package:mizan/domain/model/voice_note_model/voice_note_model.dart';
@@ -36,6 +37,19 @@ extension VoiceNotesPageMapper on VoiceNotesPageData? {
       page: this?.page.orZero() ?? 1,
       pageSize: pageSize,
       totalPages: totalPages,
+    );
+  }
+}
+
+extension VoiceNoteSummaryMapper on VoiceNoteSummaryResponse? {
+  VoiceNoteSummaryModel toDomain() {
+    final data = this?.data;
+    return VoiceNoteSummaryModel(
+      totalSales: data?.totalSales.orZeroNum().toDouble() ?? 0.0,
+      totalPurchases: data?.totalPurchases.orZeroNum().toDouble() ?? 0.0,
+      net: data?.net.orZeroNum().toDouble() ?? 0.0,
+      count: data?.count.orZero() ?? 0,
+      period: data?.period.orEmpty() ?? Constants.empty,
     );
   }
 }

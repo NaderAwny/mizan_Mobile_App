@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/app/data_refresh_manager.dart';
 import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/domain/model/get_list_transactions_model.dart';
 import 'package:mizan/domain/use_case/get_list_transaction_use_case.dart';
@@ -13,9 +14,19 @@ import 'package:mizan/presentation/transactions/get_list_transaction/get_list_tr
 @injectable
 class GetListTransactionCubit extends Cubit<GetListTransactionState> {
   final GetListTransactionsUseCase _getListTransactionsUseCase;
+  final DataRefreshManager _dataRefreshManager;
+  StreamSubscription<void>? _refreshSubscription;
 
-  GetListTransactionCubit(this._getListTransactionsUseCase)
-    : super(const GetListTransactionState());
+  GetListTransactionCubit(
+    this._getListTransactionsUseCase,
+    this._dataRefreshManager,
+  ) : super(const GetListTransactionState()) {
+    _refreshSubscription = _dataRefreshManager.onTransactionsChanged.listen((
+      _,
+    ) {
+      if (!isClosed) getListTransactions();
+    });
+  }
 
   int currentPage = 1;
   final int pageSize = 20;
@@ -166,6 +177,7 @@ class GetListTransactionCubit extends Cubit<GetListTransactionState> {
   @override
   Future<void> close() {
     _debounceTimer?.cancel();
+    _refreshSubscription?.cancel();
     return super.close();
   }
 }

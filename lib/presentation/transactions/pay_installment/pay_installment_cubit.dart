@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/app/data_refresh_manager.dart';
 import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/domain/model/transaction_by_id_mode/transaction_by_id_mode.dart';
 import 'package:mizan/domain/use_case/pay_installment_use_case.dart';
@@ -11,9 +12,12 @@ import 'package:mizan/presentation/transactions/pay_installment/pay_installment_
 @injectable
 class PayInstallmentCubit extends Cubit<PayInstallmentState> {
   final PayInstallmentUseCase _payInstallmentUseCase;
+  final DataRefreshManager? _dataRefreshManager;
 
-  PayInstallmentCubit(this._payInstallmentUseCase)
-    : super(PayInstallmentState(flowState: ContentState()));
+  PayInstallmentCubit(
+    this._payInstallmentUseCase, [
+    this._dataRefreshManager,
+  ]) : super(PayInstallmentState(flowState: ContentState()));
 
   Future<void> pay(String installmentId) async {
     emit(
@@ -44,6 +48,7 @@ class PayInstallmentCubit extends Cubit<PayInstallmentState> {
         );
       },
       (TransactionbyidModel transactionModel) {
+        _dataRefreshManager?.notifyTransactionsChanged();
         if (isClosed) return;
         emit(
           state.copyWith(

@@ -5,7 +5,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mizan/app/di.dart';
 import 'package:mizan/domain/model/get_profile_model/get_profile_model.dart';
 import 'package:mizan/domain/model/statistics_model/statistics_model.dart';
-import 'package:mizan/presentation/analytics/analytics_view.dart';
 import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart';
 import 'package:mizan/presentation/customers/customers_view.dart';
 import 'package:mizan/presentation/get_profile/cubit/get_profile_cubit.dart';
@@ -75,7 +74,6 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _notificationsCubit.close();
     super.dispose();
   }
 
@@ -95,15 +93,12 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
               getIt<GetListTransactionCubit>()..getListTransactions(),
         ),
         BlocProvider<HomeTabCubit>(create: (_) => HomeTabCubit()),
-        BlocProvider<NotificationsCubit>.value(
-          value: _notificationsCubit,
-        ),
+        BlocProvider<NotificationsCubit>.value(value: _notificationsCubit),
       ],
       child: const _HomeScreen(),
     );
   }
 }
-
 
 class _HomeScreen extends StatelessWidget {
   const _HomeScreen();
@@ -144,18 +139,19 @@ class _HomeScreen extends StatelessWidget {
                   tab.isBuilt(3)
                       ? const InstallmentsView()
                       : const SizedBox.shrink(),
-                  tab.isBuilt(4)
-                      ? const AnalyticsView()
-                      : const SizedBox.shrink(),
                 ],
               ),
               floatingActionButton: tab.index == 0
                   ? _buildSmartVoiceFAB(context)
                   : null,
-              floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+              floatingActionButtonLocation:
+                  FloatingActionButtonLocation.endFloat,
               bottomNavigationBar: CustomBottomNavBar(
                 currentIndex: tab.index,
                 onTap: tabs.selectTab,
+                onAssistantTap: () {
+                  Navigator.of(context).pushNamed(Routes.assistantRoute);
+                },
               ),
             );
           },
@@ -224,6 +220,7 @@ class _HomeScreen extends StatelessWidget {
                         totalDebts: totalSales,
                         totalPayables: totalPurchases,
                         currency: "ج.م",
+                        statistics: stats,
                       ),
 
                       SizedBox(height: 14.h),

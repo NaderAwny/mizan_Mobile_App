@@ -121,3 +121,62 @@ class VoiceNotesPageResponse extends BaseResponse {
   @override
   Map<String, dynamic> toJson() => _$VoiceNotesPageResponseToJson(this);
 }
+
+@JsonSerializable()
+class VoiceNoteSummaryData {
+  @JsonKey(name: 'totalSales')
+  num? totalSales;
+
+  @JsonKey(name: 'totalPurchases')
+  num? totalPurchases;
+
+  @JsonKey(name: 'net')
+  num? net;
+
+  @JsonKey(name: 'count')
+  int? count;
+
+  @JsonKey(name: 'period')
+  String? period;
+
+  VoiceNoteSummaryData({
+    this.totalSales,
+    this.totalPurchases,
+    this.net,
+    this.count,
+    this.period,
+  });
+
+  factory VoiceNoteSummaryData.fromJson(Map<String, dynamic> json) =>
+      _$VoiceNoteSummaryDataFromJson(json);
+
+  Map<String, dynamic> toJson() => _$VoiceNoteSummaryDataToJson(this);
+}
+
+@JsonSerializable()
+class VoiceNoteSummaryResponse extends BaseResponse {
+  @JsonKey(name: 'data')
+  VoiceNoteSummaryData? data;
+
+  VoiceNoteSummaryResponse({
+    super.success,
+    super.message,
+    this.data,
+  });
+
+  factory VoiceNoteSummaryResponse.fromJson(Map<String, dynamic> json) {
+    final base = _$VoiceNoteSummaryResponseFromJson(json);
+    if (base.data == null &&
+        (json.containsKey('net') || json.containsKey('totalSales'))) {
+      return VoiceNoteSummaryResponse(
+        success: base.success ?? true,
+        message: base.message,
+        data: VoiceNoteSummaryData.fromJson(json),
+      );
+    }
+    return base;
+  }
+
+  @override
+  Map<String, dynamic> toJson() => _$VoiceNoteSummaryResponseToJson(this);
+}

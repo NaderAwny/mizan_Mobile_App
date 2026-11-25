@@ -27,14 +27,25 @@ import 'package:mizan/presentation/voice_note/create_voice_note_cubit/create_voi
 import 'package:mizan/presentation/voice_note/get_voice_note_by_id_cubit/get_voice_note_by_id_view.dart';
 import 'package:mizan/presentation/voice_note/get_voice_note_cubit/get_voice_note_cubit.dart';
 import 'package:mizan/presentation/voice_note/get_voice_note_cubit/get_voice_note_state.dart';
+import 'package:mizan/presentation/voice_note/voice_notes_summary_cubit/voice_notes_summary_cubit.dart';
+import 'package:mizan/presentation/voice_note/voice_notes_summary_cubit/voice_notes_summary_state.dart';
+import 'package:mizan/presentation/voice_note/widgets/voice_notes_period_tabs.dart';
+import 'package:mizan/presentation/voice_note/widgets/voice_notes_summary_card.dart';
 
 class GetVoiceNoteView extends StatelessWidget {
   const GetVoiceNoteView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<GetListVoiceNotesCubit>(
-      create: (_) => getIt<GetListVoiceNotesCubit>()..getListVoiceNotes(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<GetListVoiceNotesCubit>(
+          create: (_) => getIt<GetListVoiceNotesCubit>()..getListVoiceNotes(),
+        ),
+        BlocProvider<VoiceNotesSummaryCubit>(
+          create: (_) => getIt<VoiceNotesSummaryCubit>()..getSummary(),
+        ),
+      ],
       child: const _GetVoiceNoteScreen(),
     );
   }
@@ -208,6 +219,7 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
     ).push<bool>(MaterialPageRoute<bool>(builder: (_) => const CreateVoiceNoteView()));
     if (result == true && mounted) {
       context.read<GetListVoiceNotesCubit>().getListVoiceNotes();
+      context.read<VoiceNotesSummaryCubit>().getSummary();
     }
   }
 
@@ -217,7 +229,92 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
     ).push<bool>(MaterialPageRoute<bool>(builder: (_) => GetVoiceNoteByIdView(id: id)));
     if (result == true && mounted) {
       context.read<GetListVoiceNotesCubit>().getListVoiceNotes();
+      context.read<VoiceNotesSummaryCubit>().getSummary();
     }
+  }
+
+  Future<void> _onPeriodSelected(BuildContext context, String period) async {
+    final summaryCubit = context.read<VoiceNotesSummaryCubit>();
+    if (period != 'custom') {
+      await summaryCubit.getSummary(period: period);
+      return;
+    }
+
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 3),
+      lastDate: now,
+      helpText: AppStrings.voiceSummarySelectDateRange,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: ColorManager.primary,
+              onPrimary: ColorManager.white,
+              surface: ColorManager.surface,
+              onSurface: ColorManager.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked == null || !mounted) return;
+    final dateFmt = intl.DateFormat('yyyy-MM-dd', 'en_US');
+    await summaryCubit.getSummary(
+      period: 'custom',
+      from: dateFmt.format(picked.start),
+      to: dateFmt.format(picked.end),
+    );
+  }
+
+  Widget _buildPeriodTabsBar() {
+    return Container(
+      width: double.infinity,
+      color: ColorManager.surface,
+      padding: EdgeInsets.only(top: 10.h, bottom: 10.h),
+      child: BlocBuilder<VoiceNotesSummaryCubit, VoiceNotesSummaryState>(
+        buildWhen: (VoiceNotesSummaryState p, VoiceNotesSummaryState c) =>
+            p.selectedPeriod != c.selectedPeriod,
+        builder: (BuildContext context, VoiceNotesSummaryState state) {
+          return VoiceNotesPeriodTabs(
+            selectedPeriod: state.selectedPeriod,
+            onPeriodSelected: (period) => _onPeriodSelected(context, period),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSummaryCardSliver() {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: EdgeInsets.only(top: 12.h, bottom: 12.h),
+        child: BlocBuilder<VoiceNotesSummaryCubit, VoiceNotesSummaryState>(
+          builder: (BuildContext context, VoiceNotesSummaryState state) {
+            final bool isLoading = state.flowState is LoadingState;
+            final String? errorMessage = state.flowState is ErrorState
+                ? (state.flowState as ErrorState).message
+                : null;
+
+            return VoiceNotesSummaryCard(
+              summary: state.summary,
+              selectedPeriod: state.selectedPeriod,
+              isLoading: isLoading,
+              errorMessage: errorMessage,
+              isBalanceVisible: state.isBalanceVisible,
+              onToggleVisibility: () => context
+                  .read<VoiceNotesSummaryCubit>()
+                  .toggleBalanceVisibility(),
+              onRetry: () =>
+                  context.read<VoiceNotesSummaryCubit>().getSummary(),
+            );
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -234,63 +331,79 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
               // ── Top Header ──────────────────────────────────────────────────
               _buildHeader(context),
 
-              // ── Search & Filter Tabs ────────────────────────────────────────
-              _buildSearchAndFilters(),
+              // ── Period Selector Tabs ────────────────────────────────────────
+              _buildPeriodTabsBar(),
 
-              // ── Main List Content ───────────────────────────────────────────
+              // ── Scrollable Summary Card + Filters + Operations List ─────────
               Expanded(
-                child:
-                    BlocBuilder<GetListVoiceNotesCubit, GetListVoiceNotesState>(
-                      builder:
-                          (BuildContext context, GetListVoiceNotesState state) {
-                            if (state.flowState is LoadingState &&
-                                (state.data == null || state.data!.isEmpty)) {
-                              return const Center(
-                                child: CircularProgressIndicator(
-                                  color: ColorManager.primary,
-                                ),
-                              );
-                            }
+                child: RefreshIndicator(
+                  color: ColorManager.primary,
+                  backgroundColor: ColorManager.surface,
+                  onRefresh: () async {
+                    await Future.wait([
+                      context.read<GetListVoiceNotesCubit>().getListVoiceNotes(),
+                      context.read<VoiceNotesSummaryCubit>().getSummary(),
+                    ]);
+                  },
+                  child: BlocBuilder<GetListVoiceNotesCubit,
+                      GetListVoiceNotesState>(
+                    builder:
+                        (BuildContext context, GetListVoiceNotesState state) {
+                      final List<Widget> slivers = <Widget>[
+                        _buildSummaryCardSliver(),
+                        SliverToBoxAdapter(
+                          child: _buildSearchAndFilters(),
+                        ),
+                      ];
 
-                            if (state.flowState is ErrorState &&
-                                (state.data == null || state.data!.isEmpty)) {
-                              final ErrorState error =
-                                  state.flowState as ErrorState;
-                              return _buildErrorState(error.message);
-                            }
+                      if (state.flowState is LoadingState &&
+                          (state.data == null || state.data!.isEmpty)) {
+                        slivers.add(
+                          const SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: ColorManager.primary,
+                              ),
+                            ),
+                          ),
+                        );
+                      } else if (state.flowState is ErrorState &&
+                          (state.data == null || state.data!.isEmpty)) {
+                        final ErrorState error = state.flowState as ErrorState;
+                        slivers.add(
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: _buildErrorState(error.message),
+                          ),
+                        );
+                      } else {
+                        final List<VoiceNoteModel> allItems =
+                            state.data ?? <VoiceNoteModel>[];
+                        final List<VoiceNoteModel> filteredItems = _filterItems(
+                          allItems,
+                          state.selectedFilterIndex,
+                          state.searchQuery,
+                        );
 
-                            final List<VoiceNoteModel> allItems =
-                                state.data ?? <VoiceNoteModel>[];
-                            final List<VoiceNoteModel> filteredItems =
-                                _filterItems(
-                              allItems,
-                              state.selectedFilterIndex,
-                              state.searchQuery,
-                            );
-
-                            if (filteredItems.isEmpty) {
-                              return _buildEmptyState();
-                            }
-
-                            return RefreshIndicator(
-                              color: ColorManager.primary,
-                              backgroundColor: ColorManager.surface,
-                              onRefresh: () => context
-                                  .read<GetListVoiceNotesCubit>()
-                                  .getListVoiceNotes(),
-                              child: ListView.separated(
-                                controller: _scrollController,
-                                physics: const AlwaysScrollableScrollPhysics(
-                                  parent: BouncingScrollPhysics(),
-                                ),
-                                padding: EdgeInsets.fromLTRB(
-                                  16.w,
-                                  12.h,
-                                  16.w,
-                                  90.h,
-                                ),
-                                itemCount:
-                                    filteredItems.length +
+                        if (filteredItems.isEmpty) {
+                          slivers.add(
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: _buildEmptyState(),
+                            ),
+                          );
+                        } else {
+                          slivers.add(
+                            SliverPadding(
+                              padding: EdgeInsets.fromLTRB(
+                                16.w,
+                                12.h,
+                                16.w,
+                                90.h,
+                              ),
+                              sliver: SliverList.separated(
+                                itemCount: filteredItems.length +
                                     (state.isLoadingMore ? 1 : 0),
                                 separatorBuilder: (_, _) =>
                                     SizedBox(height: 12.h),
@@ -323,14 +436,27 @@ class _GetVoiceNoteScreenState extends State<_GetVoiceNoteScreen> {
                                     totalDuration: isPlaying
                                         ? state.currentAudioDuration
                                         : Duration.zero,
-                                    onTogglePlay: () => _toggleAudioPreview(item),
+                                    onTogglePlay: () =>
+                                        _toggleAudioPreview(item),
                                     onTap: () => _navigateToDetails(item.id),
                                   );
                                 },
                               ),
-                            );
-                          },
-                    ),
+                            ),
+                          );
+                        }
+                      }
+
+                      return CustomScrollView(
+                        controller: _scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(
+                          parent: BouncingScrollPhysics(),
+                        ),
+                        slivers: slivers,
+                      );
+                    },
+                  ),
+                ),
               ),
             ],
           ),

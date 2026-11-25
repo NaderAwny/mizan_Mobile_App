@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 const String imagesPath = "assets/images";
 const String iconsPath = "assets/icons";
 const String jsonPath = "assets/json";
+const String audioPath = "assets/audio";
 
 /// Type-safe asset constants for Mizan (ميزان)
 class ImageAssets {
@@ -207,4 +208,11 @@ extension ResponsiveAssetExtension on String {
       alignment: alignment,
     );
   }
+}
+
+class AudioAssets {
+  static const String welcome = "assets/audio/welcome.mp3";
+  static const String listeningStart = "assets/audio/listening_start.wav";
+  static const String listeningEnd = "assets/audio/listening_end.wav";
+  static const String assistantError = "assets/audio/assistant_error.wav";
 }

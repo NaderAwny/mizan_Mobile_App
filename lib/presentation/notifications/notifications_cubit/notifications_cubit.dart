@@ -12,7 +12,7 @@ import 'package:mizan/presentation/common/state_randrer/state_randrer_impl.dart'
 import 'package:mizan/presentation/notifications/notifications_cubit/notifications_state.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 
-@injectable
+@lazySingleton
 class NotificationsCubit extends Cubit<NotificationsState> {
   final GetNotificationsUseCase _getNotificationsUseCase;
   final MarkNotificationReadUseCase _markNotificationReadUseCase;
@@ -95,8 +95,9 @@ class NotificationsCubit extends Cubit<NotificationsState> {
             ? page.totalCount
             : page.items.where((NotificationModel n) => !n.isRead).length;
 
-        final int newUnread =
-            targetUnreadOnly ? page.totalCount : calculatedUnread;
+        final int newUnread = targetUnreadOnly
+            ? page.totalCount
+            : calculatedUnread;
         emit(
           state.copyWith(
             flowState: page.items.isEmpty
@@ -245,8 +246,9 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     final List<NotificationModel>? currentList = state.data;
     // Capture a deep copy of the original list so the revert is independent
     // of any future optimistic mutations applied to state.data.
-    final List<NotificationModel>? originalList =
-        currentList?.map((NotificationModel n) => n).toList();
+    final List<NotificationModel>? originalList = currentList
+        ?.map((NotificationModel n) => n)
+        .toList();
     final int previousUnreadCount = state.unreadCount;
 
     // Optimistically mark all current items as read and set unreadCount to 0
@@ -276,8 +278,8 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       );
     }
 
-    final Either<Failure, void> result =
-        await _markAllNotificationsReadUseCase.execute(null);
+    final Either<Failure, void> result = await _markAllNotificationsReadUseCase
+        .execute(null);
 
     await result.fold(
       (Failure failure) async {

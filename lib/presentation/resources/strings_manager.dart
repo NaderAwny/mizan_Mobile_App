@@ -366,4 +366,39 @@ class AppStrings {
   static const String noHistoryItems = "لا توجد أقساط في هذه الحالة";
   static const String earliestDueDatePrefix = "أقرب استحقاق:";
   static const String upcomingInstallmentsPeriod = "استحقاقات قادمة";
+
+  // --- Assistant Feature (يا ميزان) ---
+  static const String assistantTitle = "يا ميزان";
+  static const String assistantThinking = "جاري التفكير...";
+  static const String assistantExecuting = "جاري تنفيذ العملية...";
+  static const String assistantErrorRateLimit = "تم تجاوز حد الطلبات، يرجى الانتظار قليلاً ثم المحاولة مجدداً.";
+  static const String assistantEmptyTextError = "لا يمكن إرسال رسالة فارغة.";
+  static const String assistantMaxCharsError = "لا يمكن أن تتجاوز الرسالة 500 حرف.";
+  static const String assistantActionExpired = "انتهت مهلة تأكيد العملية، يرجى إعادة الطلب.";
+  static const String assistantSessionReset = "تم مسح سياق المحادثة وبدأت جلسة جديدة.";
+  static const String assistantRetry = "إعادة المحاولة";
+  static const String assistantConfirmSuccess = "تم تنفيذ الإجراء بنجاح.";
+  static const String assistantConfirmCancelled = "تم إلغاء الإجراء.";
+  static const String assistantMicBusy = "الميكروفون قيد الاستخدام حالياً.";
+  static const String assistantPermissionDenied = "يرجى منح إذن استخدام الميكروفون لاستخدام الإدخال الصوتي.";
+  static const String assistantPermissionPermanentlyDenied = "تم رفض إذن الميكروفون بشكل دائم، يرجى تفعيله من إعدادات الهاتف.";
+  static const String assistantSpeechInitError = "تعذر تهيئة التعرف على الصوت.";
+  static const String assistantListening = "جاري الاستماع...";
+  static const String assistantReviewing = "مراجعة النص الصوتي...";
+
+  // --- Voice Notes Summary Feature ---
+  static const String voiceSummaryPeriodToday = "اليوم";
+  static const String voiceSummaryPeriodYesterday = "أمس";
+  static const String voiceSummaryPeriodThisWeek = "هذا الأسبوع";
+  static const String voiceSummaryPeriodLastWeek = "الأسبوع الماضي";
+  static const String voiceSummaryPeriodThisMonth = "هذا الشهر";
+  static const String voiceSummaryPeriodLastMonth = "الشهر الماضي";
+  static const String voiceSummaryPeriodCustom = "فترة مخصصة";
+  static const String voiceSummaryNetTitle = "صافي الملاحظات الصوتية";
+  static const String voiceSummarySalesLabel = "المبيعات";
+  static const String voiceSummaryPurchasesLabel = "المشتريات";
+  static const String voiceSummaryOperationsSuffix = "عملية";
+  static const String voiceSummaryCurrencyEgp = "EGP";
+  static const String voiceSummaryCurrencyAr = "ج.م";
+  static const String voiceSummarySelectDateRange = "اختر الفترة المخصصة";
 }

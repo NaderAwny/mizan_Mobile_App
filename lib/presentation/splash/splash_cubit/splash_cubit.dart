@@ -11,9 +11,7 @@ import 'package:mizan/presentation/get_profile/cubit/get_profile_cubit.dart';
 import 'package:mizan/presentation/resources/strings_manager.dart';
 import 'package:mizan/presentation/resources/values_manager.dart';
 import 'package:mizan/presentation/splash/splash_cubit/splash_state.dart';
-import 'package:mizan/presentation/statistics/cubit/statistics_cubit.dart';
 import 'package:mizan/app/notification_service.dart';
-import 'package:mizan/presentation/transactions/get_list_transaction/get_list_transaction_cubit.dart';
 
 @injectable
 class SplashCubit extends Cubit<SplashState> {
@@ -21,8 +19,6 @@ class SplashCubit extends Cubit<SplashState> {
     this._tokenLocalDataSource,
     this._onboardingLocalDataSource,
     this._getProfileCubit,
-    this._statisticsCubit,
-    this._getListTransactionCubit,
     this._notificationService,
   ) : super(const SplashState());
 
@@ -30,12 +26,6 @@ class SplashCubit extends Cubit<SplashState> {
   final OnboardingLocalDataSource _onboardingLocalDataSource;
   // ignore: unused_field
   final GetProfileCubit _getProfileCubit;
-  // TODO: شيل الاتنين من الـ constructor وشغّل build_runner. الـ Home بيعمل
-  // instances خاصة بيه (factory) فتحميلهم هنا كان طلب ضايع ومكرر.
-  // ignore: unused_field
-  final StatisticsCubit _statisticsCubit;
-  // ignore: unused_field
-  final GetListTransactionCubit _getListTransactionCubit;
   final NotificationService _notificationService;
 
   Future<void> preload() async {
@@ -49,12 +39,12 @@ class SplashCubit extends Cubit<SplashState> {
       ),
     );
 
-    final Future<void> minDelay =
-        Future<void>.delayed(AppDuration.splashMin);
+    final Future<void> minDelay = Future<void>.delayed(AppDuration.splashMin);
 
     try {
-      final SplashDestination destination =
-          await _decideDestination().timeout(AppDuration.splashTimeout);
+      final SplashDestination destination = await _decideDestination().timeout(
+        AppDuration.splashTimeout,
+      );
       await minDelay;
       if (isClosed) return;
       emit(state.copyWith(flowState: ContentState(), data: destination));
@@ -83,12 +73,11 @@ class SplashCubit extends Cubit<SplashState> {
   }
 
   Future<SplashDestination> _decideDestination() async {
-    final bool seenOnboarding =
-        await _onboardingLocalDataSource.hasSeenOnboarding();
+    final bool seenOnboarding = await _onboardingLocalDataSource
+        .hasSeenOnboarding();
     if (!seenOnboarding) return SplashDestination.onboarding;
 
-    final bool hasSession =
-        await _tokenLocalDataSource.hasValidSession();
+    final bool hasSession = await _tokenLocalDataSource.hasValidSession();
     if (!hasSession) return SplashDestination.login;
 
     unawaited(_notificationService.registerDeviceToken());
@@ -101,12 +90,11 @@ class SplashCubit extends Cubit<SplashState> {
   }
 
   Future<SplashDestination> _fallbackDestination() async {
-    final bool seenOnboarding =
-        await _onboardingLocalDataSource.hasSeenOnboarding();
+    final bool seenOnboarding = await _onboardingLocalDataSource
+        .hasSeenOnboarding();
     if (!seenOnboarding) return SplashDestination.onboarding;
 
-    final bool hasSession =
-        await _tokenLocalDataSource.hasValidSession();
+    final bool hasSession = await _tokenLocalDataSource.hasValidSession();
     return hasSession ? SplashDestination.home : SplashDestination.login;
   }
 }

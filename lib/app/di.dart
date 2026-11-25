@@ -1,8 +1,9 @@
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'assistant_audio_service.dart';
 import 'di.config.dart';
+import 'domain_text_normalizer.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -16,4 +17,15 @@ Future<void> configureDependencies() async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
   getIt.registerLazySingleton<SharedPreferences>(() => prefs);
   getIt.init();
+
+  if (!getIt.isRegistered<AssistantAudioService>()) {
+    getIt.registerLazySingleton<AssistantAudioService>(
+      () => AssistantAudioServiceImpl(prefs),
+    );
+  }
+  if (!getIt.isRegistered<DomainTextNormalizer>()) {
+    getIt.registerLazySingleton<DomainTextNormalizer>(
+      () => DomainTextNormalizer(),
+    );
+  }
 }

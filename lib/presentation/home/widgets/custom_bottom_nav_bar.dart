@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:mizan/presentation/assistant/view/widgets/assistant_orb.dart';
 import 'package:mizan/presentation/resources/assets_manager.dart';
 import 'package:mizan/presentation/resources/color_manager.dart';
 import 'package:mizan/presentation/resources/font_manager.dart';
@@ -17,11 +18,13 @@ import 'package:mizan/presentation/resources/values_manager.dart';
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final VoidCallback? onAssistantTap;
 
   const CustomBottomNavBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.onAssistantTap,
   });
 
   @override
@@ -83,6 +86,19 @@ class CustomBottomNavBar extends StatelessWidget {
                           icon: IconAssets.home,
                         ),
                       ),
+                      // Destination 1: المعاملات (Transactions)
+                      Expanded(
+                        child: _buildItem(
+                          index: 1,
+                          label: AppStrings.transactions,
+                          icon: IconAssets.receiptText,
+                        ),
+                      ),
+
+                      // Reserved space for the center raised button & label
+                      SizedBox(width: centerReservedWidth),
+
+                      // Left side of center (in RTL):
                       // Destination 2: العملاء (Customers)
                       Expanded(
                         child: _buildItem(
@@ -91,11 +107,6 @@ class CustomBottomNavBar extends StatelessWidget {
                           icon: IconAssets.users,
                         ),
                       ),
-
-                      // Reserved space for the center raised button & label
-                      SizedBox(width: centerReservedWidth),
-
-                      // Left side of center (in RTL):
                       // Destination 3: الأقساط (Installments)
                       Expanded(
                         child: _buildItem(
@@ -104,27 +115,18 @@ class CustomBottomNavBar extends StatelessWidget {
                           icon: IconAssets.walletCards,
                         ),
                       ),
-                      // Destination 4: التقارير (Reports / Analytics)
-                      Expanded(
-                        child: _buildItem(
-                          index: 4,
-                          label: AppStrings.analytics,
-                          icon: IconAssets.chartNetwork,
-                        ),
-                      ),
                     ],
                   ),
                 ),
               ),
 
-              // 3. Center Destination: المعاملات (Transactions, tab index 1)
+              // 3. Center Destination: «يا ميزان» (Assistant Orb)
               Align(
                 alignment: Alignment.topCenter,
                 child: SizedBox(
                   width: 72.w,
-                  child: _CenterNavItem(
-                    isSelected: currentIndex == 1,
-                    onTap: () => onTap(1),
+                  child: _CenterAssistantOrbItem(
+                    onTap: onAssistantTap ?? () => onTap(-1),
                   ),
                 ),
               ),
@@ -281,20 +283,21 @@ class FloatingPillPainter extends CustomPainter {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _CenterNavItem — Raised Circular Center Button for "المعاملات" (Transactions)
-// Features deep gold/amber gradient, light border rim, and warm shadow.
+// _CenterAssistantOrbItem — Living Animated Sphere for "يا ميزان" in Capsule
 // ─────────────────────────────────────────────────────────────────────────────
-class _CenterNavItem extends StatefulWidget {
-  final bool isSelected;
+class _CenterAssistantOrbItem extends StatefulWidget {
   final VoidCallback onTap;
 
-  const _CenterNavItem({required this.isSelected, required this.onTap});
+  const _CenterAssistantOrbItem({
+    required this.onTap,
+  });
 
   @override
-  State<_CenterNavItem> createState() => _CenterNavItemState();
+  State<_CenterAssistantOrbItem> createState() =>
+      _CenterAssistantOrbItemState();
 }
 
-class _CenterNavItemState extends State<_CenterNavItem>
+class _CenterAssistantOrbItemState extends State<_CenterAssistantOrbItem>
     with SingleTickerProviderStateMixin {
   late final AnimationController _bounceController;
   late final Animation<double> _scaleAnim;
@@ -332,87 +335,31 @@ class _CenterNavItemState extends State<_CenterNavItem>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          SizedBox(height: 2.h),
-          // Circular raised button
+          SizedBox(height: 1.h),
+          // Raised Living Celestial Orb with gentle spring on tap
           ScaleTransition(
             scale: _scaleAnim,
-            child: Container(
-              width: 50.r,
-              height: 50.r,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: <Color>[
-                    Color(0xFFD4A359), // warm luminous gold
-                    Color(0xFFB87F40), // rich amber gold
-                    Color(0xFFA8623B), // deep terracotta bronze
-                  ],
-                  stops: <double>[0.0, 0.45, 1.0],
-                ),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.35),
-                  width: 1.2,
-                ),
-                boxShadow: <BoxShadow>[
-                  BoxShadow(
-                    color: widget.isSelected
-                        ? const Color(0x66A8623B)
-                        : const Color(0x3AA8623B),
-                    blurRadius: widget.isSelected ? 14 : 9,
-                    offset: const Offset(0, 4),
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: SvgPicture.asset(
-                  IconAssets.receiptText,
-                  width: 21.r,
-                  height: 21.r,
-                  colorFilter: const ColorFilter.mode(
-                    ColorManager.white,
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ),
+            child: AssistantOrb(
+              size: OrbSize.small,
+              heroTag: 'assistant_orb',
+              diameter: 48.r,
             ),
           ),
-          SizedBox(height: 6.h),
-          // Label "المعاملات"
+          SizedBox(height: 5.h),
+          // Label "يا ميزان"
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              AppStrings.transactions,
+              AppStrings.assistantTitle,
               maxLines: 1,
               softWrap: false,
-              style: widget.isSelected
-                  ? getBoldStyle(
-                      color: ColorManager.primary,
-                      fontSize: FontSize.s11,
-                    )
-                  : getMediumStyle(
-                      color: ColorManager.textSecondary,
-                      fontSize: FontSize.s11,
-                    ),
+              style: getBoldStyle(
+                color: ColorManager.primary,
+                fontSize: FontSize.s11,
+              ),
             ),
           ),
           SizedBox(height: 2.h),
-          // Animated indicator dot
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            width: widget.isSelected ? 3.5.r : 0,
-            height: widget.isSelected ? 3.5.r : 0,
-            decoration: const BoxDecoration(
-              color: ColorManager.primary,
-              shape: BoxShape.circle,
-            ),
-          ),
         ],
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mizan/app/data_refresh_manager.dart';
 import 'package:mizan/data/network/failure.dart';
 import 'package:mizan/domain/model/transaction_by_id_mode/transaction_by_id_mode.dart';
 import 'package:mizan/domain/use_case/delete_transaction_use_case.dart';
@@ -14,11 +15,13 @@ import 'package:mizan/presentation/transactions/get_transaction_by_id/get_transa
 class GetTransactionByIdCubit extends Cubit<GetTransactionByIdState> {
   final GetTransactionByIdUseCase _getTransactionByIdUseCase;
   final DeleteTransactionUseCase _deleteTransactionUseCase;
+  final DataRefreshManager? _dataRefreshManager;
 
   GetTransactionByIdCubit(
     this._getTransactionByIdUseCase,
-    this._deleteTransactionUseCase,
-  ) : super(const GetTransactionByIdState());
+    this._deleteTransactionUseCase, [
+    this._dataRefreshManager,
+  ]) : super(const GetTransactionByIdState());
 
   Future<void> getTransactionById(String id) async {
     emit(
@@ -87,6 +90,7 @@ class GetTransactionByIdCubit extends Cubit<GetTransactionByIdState> {
         return false;
       },
       (_) {
+        _dataRefreshManager?.notifyTransactionsChanged();
         if (isClosed) return true;
         emit(state.copyWith(isDeleted: true, flowState: ContentState()));
         return true;

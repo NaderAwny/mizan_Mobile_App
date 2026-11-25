@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:mizan/app/constants.dart';
+import 'package:mizan/data/response/assistant_responses/assistant_responses.dart';
 import 'package:mizan/data/response/auth_session_responses/auth_session_responses.dart';
 import 'package:mizan/data/response/base_responses/base_responses.dart';
 import 'package:mizan/data/response/contact_responses/contact_responses.dart';
@@ -160,6 +161,13 @@ abstract class AppServiceClient {
     @Query("pageSize") int pageSize,
   );
 
+  @GET("/api/voice-notes/summary")
+  Future<VoiceNoteSummaryResponse> getVoiceNotesSummary(
+    @Query("period") String period,
+    @Query("from") String? from,
+    @Query("to") String? to,
+  );
+
   @GET("/api/voice-notes/{id}")
   Future<VoiceNoteResponse> getVoiceNoteById(@Path("id") String id);
   //Delete voice note
@@ -199,4 +207,35 @@ abstract class AppServiceClient {
   /// POST /api/notifications/run-reminders-scan — تشغيل فحص التذكيرات
   @POST("/api/notifications/run-reminders-scan")
   Future<RunRemindersScanResponse> runRemindersScan();
+
+  // ======================== Assistant Endpoints (يا ميزان) ========================
+  /// POST /api/assistant/sessions — بدء جلسة مساعد جديدة
+  @POST("/api/assistant/sessions")
+  Future<AssistantSessionResponse> startAssistantSession();
+
+  /// POST /api/assistant/command — إرسال أمر نصي للمساعد
+  @POST("/api/assistant/command")
+  Future<AssistantCommandResponse> sendAssistantCommand(
+    @Body() Map<String, dynamic> body,
+  );
+
+  /// POST /api/assistant/sessions/{sessionId}/actions/{actionId}/confirm — تأكيد عملية معلقة
+  @POST("/api/assistant/sessions/{sessionId}/actions/{actionId}/confirm")
+  Future<AssistantCommandResponse> confirmAssistantAction(
+    @Path("sessionId") String sessionId,
+    @Path("actionId") String actionId,
+  );
+
+  /// POST /api/assistant/sessions/{sessionId}/actions/{actionId}/cancel — إلغاء عملية معلقة
+  @POST("/api/assistant/sessions/{sessionId}/actions/{actionId}/cancel")
+  Future<AssistantCommandResponse> cancelAssistantAction(
+    @Path("sessionId") String sessionId,
+    @Path("actionId") String actionId,
+  );
+
+  /// DELETE /api/assistant/sessions/{sessionId} — إنهاء جلسة المساعد
+  @DELETE("/api/assistant/sessions/{sessionId}")
+  Future<BaseResponse> endAssistantSession(
+    @Path("sessionId") String sessionId,
+  );
 }

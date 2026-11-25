@@ -18,6 +18,7 @@ import 'package:internet_connection_checker/internet_connection_checker.dart'
     as _i973;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
 
+import '../data/data_source/assistant_remote_data_source.dart' as _i85;
 import '../data/data_source/auth_remote_data_source.dart' as _i1010;
 import '../data/data_source/contact_remote_data_source.dart' as _i1006;
 import '../data/data_source/device_remote_data_source.dart' as _i838;
@@ -38,6 +39,7 @@ import '../data/local/token_local_data_source.dart' as _i1028;
 import '../data/network/app_api.dart' as _i563;
 import '../data/network/dio_client.dart' as _i765;
 import '../data/network/network_info.dart' as _i371;
+import '../data/repository_impl/assistant_repository_impl.dart' as _i667;
 import '../data/repository_impl/auth_repository_impl.dart' as _i970;
 import '../data/repository_impl/contact_repository_impl.dart' as _i956;
 import '../data/repository_impl/device_repository_impl.dart' as _i131;
@@ -51,6 +53,7 @@ import '../data/repository_impl/send_otp_repository_impl.dart' as _i1060;
 import '../data/repository_impl/statistics_repository_impl.dart' as _i1006;
 import '../data/repository_impl/transaction_repository_impl.dart' as _i905;
 import '../data/repository_impl/voice_note_repository_impl.dart' as _i856;
+import '../domain/repository/assistant_repository.dart' as _i533;
 import '../domain/repository/auth_repository.dart' as _i306;
 import '../domain/repository/contact_repository.dart' as _i621;
 import '../domain/repository/device_repository.dart' as _i1057;
@@ -63,6 +66,16 @@ import '../domain/repository/send_otp_repository.dart' as _i943;
 import '../domain/repository/statistics_repository.dart' as _i413;
 import '../domain/repository/transaction_repository.dart' as _i132;
 import '../domain/repository/voice_note_repository.dart' as _i402;
+import '../domain/use_case/assistant/cancel_assistant_action_use_case.dart'
+    as _i153;
+import '../domain/use_case/assistant/confirm_assistant_action_use_case.dart'
+    as _i403;
+import '../domain/use_case/assistant/end_assistant_session_use_case.dart'
+    as _i980;
+import '../domain/use_case/assistant/send_assistant_command_use_case.dart'
+    as _i226;
+import '../domain/use_case/assistant/start_assistant_session_use_case.dart'
+    as _i757;
 import '../domain/use_case/create_contact_use_case.dart' as _i770;
 import '../domain/use_case/create_transaction_use_case.dart' as _i807;
 import '../domain/use_case/create_voice_note_use_case.dart' as _i618;
@@ -83,6 +96,7 @@ import '../domain/use_case/get_statistics_use_case.dart' as _i242;
 import '../domain/use_case/get_transaction_by_id_use_case.dart' as _i1060;
 import '../domain/use_case/get_vip_contacts_use_case.dart' as _i1063;
 import '../domain/use_case/get_voice_note_by_id_use_case.dart' as _i131;
+import '../domain/use_case/get_voice_notes_summary_use_case.dart' as _i560;
 import '../domain/use_case/logout_use_case.dart' as _i235;
 import '../domain/use_case/mark_all_notifications_read_use_case.dart' as _i180;
 import '../domain/use_case/mark_notification_read_use_case.dart' as _i495;
@@ -97,6 +111,10 @@ import '../domain/use_case/toggle_vip_contact_use_case.dart' as _i493;
 import '../domain/use_case/unregister_device_use_case.dart' as _i929;
 import '../domain/use_case/update_contact_use_case.dart' as _i52;
 import '../domain/use_case/verify_otp_use_case.dart' as _i484;
+import '../presentation/assistant/assistant_chat_cubit/assistant_chat_cubit.dart'
+    as _i661;
+import '../presentation/assistant/assistant_voice_cubit/assistant_voice_cubit.dart'
+    as _i637;
 import '../presentation/auth_verification/verify_otp_cubit/verify_otp_cubit.dart'
     as _i705;
 import '../presentation/customers/contact_form_cubit/contact_form_cubit.dart'
@@ -136,9 +154,15 @@ import '../presentation/voice_note/get_voice_note_by_id_cubit/get_voice_note_by_
     as _i1040;
 import '../presentation/voice_note/get_voice_note_cubit/get_voice_note_cubit.dart'
     as _i955;
+import '../presentation/voice_note/voice_notes_summary_cubit/voice_notes_summary_cubit.dart'
+    as _i872;
 import 'app_module.dart' as _i460;
+import 'assistant_audio_service.dart' as _i484;
+import 'data_refresh_manager.dart' as _i1070;
+import 'domain_text_normalizer.dart' as _i265;
 import 'notification_service.dart' as _i459;
 import 'session_manager.dart' as _i989;
+import 'speech_recognition_service.dart' as _i583;
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -154,6 +178,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i558.FlutterSecureStorage>(
       () => appModule.provideSecureStorage,
     );
+    gh.lazySingleton<_i1070.DataRefreshManager>(
+      () => _i1070.DataRefreshManager(),
+    );
     gh.lazySingleton<_i989.SessionManager>(() => _i989.SessionManager());
     gh.lazySingleton<_i1028.TokenLocalDataSource>(
       () => _i388.SecureTokenLocalDataSource(gh<_i558.FlutterSecureStorage>()),
@@ -163,6 +190,19 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i371.NetworkInfo>(
       () => _i371.NetworkInfoImpl(gh<_i973.InternetConnectionChecker>()),
+    );
+    gh.lazySingleton<_i583.SpeechRecognitionService>(
+      () => _i583.SpeechRecognitionServiceImpl(),
+    );
+    gh.factory<_i637.AssistantVoiceCubit>(
+      () => _i637.AssistantVoiceCubit(
+        gh<_i583.SpeechRecognitionService>(),
+        audioService: gh<_i484.AssistantAudioService>(),
+        normalizer: gh<_i265.DomainTextNormalizer>(),
+      ),
+    );
+    gh.lazySingleton<_i484.AssistantAudioService>(
+      () => _i484.AssistantAudioServiceImpl(gh<_i460.SharedPreferences>()),
     );
     gh.lazySingleton<_i603.OnboardingLocalDataSource>(
       () =>
@@ -247,6 +287,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i367.InstallmentRemoteDataSource>(
       () => _i367.InstallmentRemoteDataSourceImpl(gh<_i563.AppServiceClient>()),
     );
+    gh.lazySingleton<_i85.AssistantRemoteDataSource>(
+      () => _i85.AssistantRemoteDataSourceImpl(gh<_i563.AppServiceClient>()),
+    );
     gh.lazySingleton<_i621.ContactRepository>(
       () => _i956.ContactRepositoryImpl(
         gh<_i1006.ContactRemoteDataSource>(),
@@ -270,6 +313,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i745.GetNotificationsUseCase>(
       () => _i745.GetNotificationsUseCase(gh<_i821.NotificationRepository>()),
+    );
+    gh.lazySingleton<_i533.AssistantRepository>(
+      () => _i667.AssistantRepositoryImpl(
+        gh<_i85.AssistantRemoteDataSource>(),
+        gh<_i371.NetworkInfo>(),
+      ),
     );
     gh.lazySingleton<_i701.NotificationsCubit>(
       () => _i701.NotificationsCubit(
@@ -403,6 +452,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i474.GetListVoiceNotesUseCase>(
       () => _i474.GetListVoiceNotesUseCase(gh<_i402.VoiceNoteRepository>()),
     );
+    gh.lazySingleton<_i560.GetVoiceNotesSummaryUseCase>(
+      () => _i560.GetVoiceNotesSummaryUseCase(gh<_i402.VoiceNoteRepository>()),
+    );
     gh.factory<_i618.CreateVoiceNoteUseCase>(
       () => _i618.CreateVoiceNoteUseCase(gh<_i402.VoiceNoteRepository>()),
     );
@@ -426,6 +478,22 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i459.NotificationService>(),
       ),
     );
+    gh.factory<_i153.CancelAssistantActionUseCase>(
+      () => _i153.CancelAssistantActionUseCase(gh<_i533.AssistantRepository>()),
+    );
+    gh.factory<_i403.ConfirmAssistantActionUseCase>(
+      () =>
+          _i403.ConfirmAssistantActionUseCase(gh<_i533.AssistantRepository>()),
+    );
+    gh.factory<_i980.EndAssistantSessionUseCase>(
+      () => _i980.EndAssistantSessionUseCase(gh<_i533.AssistantRepository>()),
+    );
+    gh.factory<_i226.SendAssistantCommandUseCase>(
+      () => _i226.SendAssistantCommandUseCase(gh<_i533.AssistantRepository>()),
+    );
+    gh.factory<_i757.StartAssistantSessionUseCase>(
+      () => _i757.StartAssistantSessionUseCase(gh<_i533.AssistantRepository>()),
+    );
     gh.factory<_i235.LogoutUseCase>(
       () => _i235.LogoutUseCase(gh<_i306.AuthRepository>()),
     );
@@ -439,9 +507,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i452.InstallmentsDashboardCubit(
         gh<_i1063.GetInstallmentsDashboardUseCase>(),
       ),
-    );
-    gh.factory<_i472.TransactionFormCubit>(
-      () => _i472.TransactionFormCubit(gh<_i807.CreateTransactionUseCase>()),
     );
     gh.factory<_i273.DailyStatisticsUseCase>(
       () => _i273.DailyStatisticsUseCase(gh<_i413.StatisticsRepository>()),
@@ -458,12 +523,21 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i588.MonthlyStatisticsUseCase>(
       () => _i588.MonthlyStatisticsUseCase(gh<_i413.StatisticsRepository>()),
     );
-    gh.factory<_i876.PayInstallmentCubit>(
-      () => _i876.PayInstallmentCubit(gh<_i529.PayInstallmentUseCase>()),
+    gh.factory<_i472.TransactionFormCubit>(
+      () => _i472.TransactionFormCubit(
+        gh<_i807.CreateTransactionUseCase>(),
+        gh<_i1070.DataRefreshManager>(),
+      ),
     );
     gh.factory<_i783.InstallmentsHistoryCubit>(
       () => _i783.InstallmentsHistoryCubit(
         gh<_i200.GetInstallmentsHistoryUseCase>(),
+      ),
+    );
+    gh.factory<_i876.PayInstallmentCubit>(
+      () => _i876.PayInstallmentCubit(
+        gh<_i529.PayInstallmentUseCase>(),
+        gh<_i1070.DataRefreshManager>(),
       ),
     );
     gh.factory<_i705.VerifyOtpCubit>(
@@ -477,24 +551,48 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i437.VoiceNoteFormCubit>(
       () => _i437.VoiceNoteFormCubit(gh<_i618.CreateVoiceNoteUseCase>()),
     );
+    gh.factory<_i822.SplashCubit>(
+      () => _i822.SplashCubit(
+        gh<_i1028.TokenLocalDataSource>(),
+        gh<_i603.OnboardingLocalDataSource>(),
+        gh<_i1007.GetProfileCubit>(),
+        gh<_i459.NotificationService>(),
+      ),
+    );
     gh.factory<_i1000.StatisticsCubit>(
       () => _i1000.StatisticsCubit(
         gh<_i242.StatisticsUseCase>(),
         gh<_i242.DailyStatisticsUseCase>(),
         gh<_i242.MonthlyStatisticsUseCase>(),
+        gh<_i1070.DataRefreshManager>(),
+      ),
+    );
+    gh.factory<_i661.AssistantChatCubit>(
+      () => _i661.AssistantChatCubit(
+        gh<_i757.StartAssistantSessionUseCase>(),
+        gh<_i226.SendAssistantCommandUseCase>(),
+        gh<_i403.ConfirmAssistantActionUseCase>(),
+        gh<_i153.CancelAssistantActionUseCase>(),
+        gh<_i980.EndAssistantSessionUseCase>(),
+        gh<_i1070.DataRefreshManager>(),
       ),
     );
     gh.factory<_i955.GetListVoiceNotesCubit>(
       () => _i955.GetListVoiceNotesCubit(gh<_i474.GetListVoiceNotesUseCase>()),
     );
+    gh.factory<_i995.LogoutCubit>(
+      () => _i995.LogoutCubit(gh<_i235.LogoutUseCase>()),
+    );
     gh.factory<_i212.GetTransactionByIdCubit>(
       () => _i212.GetTransactionByIdCubit(
         gh<_i1060.GetTransactionByIdUseCase>(),
         gh<_i312.DeleteTransactionUseCase>(),
+        gh<_i1070.DataRefreshManager>(),
       ),
     );
-    gh.factory<_i995.LogoutCubit>(
-      () => _i995.LogoutCubit(gh<_i235.LogoutUseCase>()),
+    gh.factory<_i872.VoiceNotesSummaryCubit>(
+      () =>
+          _i872.VoiceNotesSummaryCubit(gh<_i560.GetVoiceNotesSummaryUseCase>()),
     );
     gh.factory<_i1040.GetVoiceNoteByIdCubit>(
       () => _i1040.GetVoiceNoteByIdCubit(
@@ -506,17 +604,9 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i710.SelectUserTypeCubit(gh<_i684.SelectUserTypeUseCase>()),
     );
     gh.factory<_i877.GetListTransactionCubit>(
-      () =>
-          _i877.GetListTransactionCubit(gh<_i463.GetListTransactionsUseCase>()),
-    );
-    gh.factory<_i822.SplashCubit>(
-      () => _i822.SplashCubit(
-        gh<_i1028.TokenLocalDataSource>(),
-        gh<_i603.OnboardingLocalDataSource>(),
-        gh<_i1007.GetProfileCubit>(),
-        gh<_i1000.StatisticsCubit>(),
-        gh<_i877.GetListTransactionCubit>(),
-        gh<_i459.NotificationService>(),
+      () => _i877.GetListTransactionCubit(
+        gh<_i463.GetListTransactionsUseCase>(),
+        gh<_i1070.DataRefreshManager>(),
       ),
     );
     return this;

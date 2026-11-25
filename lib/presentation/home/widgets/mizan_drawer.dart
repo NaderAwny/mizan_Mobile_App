@@ -83,6 +83,14 @@ class MizanDrawer extends StatelessWidget {
           },
         ),
         _DrawerItemModel(
+          icon: IconAssets.mic,
+          label: AppStrings.assistantTitle,
+          onTap: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pushNamed(Routes.assistantRoute);
+          },
+        ),
+        _DrawerItemModel(
           icon: IconAssets.receiptText,
           label: AppStrings.transactions,
           onTap: () {
